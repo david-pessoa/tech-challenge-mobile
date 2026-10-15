@@ -1,3 +1,6 @@
-import { createGlobalStyle } from 'styled-components';
+import styled from 'styled-components/native';
 
-export const GlobalStyles = createGlobalStyle``;
+export const AppContainer = styled.View`
+  flex: 1;
+  background-color: ${({ theme }) => theme.colors.background};
+`;
