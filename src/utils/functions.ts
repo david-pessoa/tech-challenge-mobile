@@ -1,6 +1,6 @@
 export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export function buildApiImageUrl(image: string | null, cacheKey?: string | number) {
   if (!image) {

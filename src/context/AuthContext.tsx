@@ -32,14 +32,21 @@ export function UserProvider({ children }: UserProviderProps) {
   async function refreshUser(options?: { refreshImage?: boolean }) {
     setIsLoading(true);
     try {
-      const userData = await getMe();
-      setUser(userData);
+      // const userData = await getMe();
+      const mockUserData: User = {
+        id: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c',
+        matricula: '101010',
+        nome: 'Francisco',
+        birthDate: new Date('1990-08-15'),
+        role: 'ADMIN',
+      };
+      setUser(mockUserData);
       if (options?.refreshImage) {
         setUserImageCacheKey(Date.now());
       }
     } catch (error) {
       console.error(error);
-      setUser(undefined)
+      setUser(undefined);
     }
     setIsLoading(false);
   }
