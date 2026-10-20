@@ -1,9 +1,10 @@
-import { HomeView, MainText } from "./styles";
+import Header from '@/components/Header';
+import { Screen } from './styles';
 
 export default function Home() {
   return (
-    <HomeView>
-      <MainText>Olá mundo</MainText>
-    </HomeView>
+    <Screen edges={['top', 'right', 'bottom', 'left']}>
+      <Header />
+    </Screen>
   );
 }

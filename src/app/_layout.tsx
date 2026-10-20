@@ -1,19 +1,20 @@
-import { ThemeProvider } from 'styled-components/native';
 import { theme } from '@/styles/theme';
-import Index from './index';
-import Routes from './routes'
+import { ThemeProvider } from 'styled-components/native';
+import { UserProvider } from '../context/AuthContext';
 import { AppContainer } from '../styles/GlobalStyles';
-import { UserProvider} from '../context/AuthContext';
-
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Routes from './routes';
 
 export default function Layout() {
   return (
-    <ThemeProvider theme={theme}>
-      <AppContainer>
-        <UserProvider>
-          <Routes />
-        </UserProvider>
-      </AppContainer>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider theme={theme}>
+        <AppContainer>
+          <UserProvider>
+            <Routes />
+          </UserProvider>
+        </AppContainer>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

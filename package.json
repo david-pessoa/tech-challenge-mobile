@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@material-symbols-svg/react-native": "^0.16.0",
     "axios": "^1.20.0",
     "expo": "~57.0.30",
     "expo-router": "~57.0.28",
@@ -11,6 +12,7 @@
     "jest-expo": "^57.0.6",
     "react": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
     "styled-components": "^6.6.0"
   },
   "devDependencies": {

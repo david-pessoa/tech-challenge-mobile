@@ -3,13 +3,13 @@ import { useUser } from '../context/AuthContext';
 import { Redirect, useNavigation } from 'expo-router';
 import styled from 'styled-components/native';
 import type { Role } from '../types/Roles';
+import { ActivityIndicator } from 'react-native';
 
 const LoadingWrapper = styled.View`
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh; 
+  flex: 1; 
   width: 100%;
   background-color: #FFFCF7;
 `;
@@ -17,19 +17,21 @@ const LoadingWrapper = styled.View`
 const Spinner = styled.View`
   width: 60px;
   height: 60px;
-  border: 6px solid #F6D4D9;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #f6d4d9;
   border-top-color: ${({ theme }) => theme.colors.primary};
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border-radius: 30px;
+  /* animation: spin 1s linear infinite; */
 
-  @keyframes spin {
+  /* @keyframes spin {
     to { transform: rotate(360deg); }
-  }
+  } */
 `;
 
 const LoadingText = styled.Text`
   margin-top: 16px;
-  font-size: 1.2rem;
+  font-size: 19px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.primary};
   font-family: ${({ theme }) => theme.typography.fontFamily};
@@ -46,7 +48,7 @@ export default function Index({ children, acceptedRoles }: PrivateRoutesProps) {
   if (isLoading) {
     return (
       <LoadingWrapper>
-        <Spinner />
+        <ActivityIndicator size="large" color="#C0765A"/>
         <LoadingText>Verificando acessos...</LoadingText>
       </LoadingWrapper>
     );

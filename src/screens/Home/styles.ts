@@ -1,14 +1,7 @@
 import styled from "styled-components/native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export const MainText = styled.Text`
-  font-size: 24px;
-  color: black;
-  font-family: Arial;
-  text-align: center;
-`;
-
-export const HomeView = styled.View`
+export const Screen = styled(SafeAreaView)`
   flex: 1;
-  align-items: center;
-  justify-content: center;
+  background-color: ${({ theme }) => theme.colors.background};
 `;
