@@ -29,7 +29,7 @@ async function renderIndex() {
 
 beforeEach(() => jest.clearAllMocks());
 
-it('renders session loading without unsupported CSS styles', async () => {
+it('Exibe o carregamento enquanto verifica a sessão', async () => {
   setSession(undefined, true);
   await renderIndex();
   expect(screen.getByText('Verificando acessos...')).toBeTruthy();
@@ -37,13 +37,13 @@ it('renders session loading without unsupported CSS styles', async () => {
   expect(Redirect).not.toHaveBeenCalled();
 });
 
-it('redirects an unauthenticated visitor to login after loading', async () => {
+it('Redireciona o visitante sem sessão para o login', async () => {
   setSession(undefined, false);
   await renderIndex();
   expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/login');
 });
 
-it('redirects an authenticated visitor home without requiring route props', async () => {
+it('Redireciona o usuário autenticado para a home', async () => {
   setSession({ id: 'user-1', matricula: '123', nome: 'Aluno', role: 'ALUNO' }, false);
   await renderIndex();
   expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/home');
