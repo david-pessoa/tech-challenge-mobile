@@ -23,6 +23,8 @@ const accessTypes: { label: string; value: Role }[] = [
   { label: 'Administrador', value: 'ADMIN' },
 ];
 
+type FormField = 'name' | 'birthDate' | 'role' | 'registration' | 'password' | 'confirmPassword' | 'photo';
+
 export default function UserRegister() {
   const { user, isLoading } = useUser();
   const router = useRouter();
@@ -43,6 +45,7 @@ export default function UserRegister() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,6 +71,7 @@ export default function UserRegister() {
       const file = event.dataTransfer?.files[0];
       if (isSaving || !file || !file.type.startsWith('image/')) return;
 
+      setErrors(current => ({ ...current, photo: undefined }));
       setPhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type });
     }
     element.addEventListener('dragover', preventDropNavigation);
@@ -84,6 +88,23 @@ export default function UserRegister() {
     };
   }, [photo]);
 
+  function clearFieldError(field: FormField) {
+    setErrors(current => ({ ...current, [field]: undefined }));
+  }
+
+  function validatePasswords(field: 'password' | 'confirmPassword') {
+    setFocusedField(undefined);
+    setErrors(current => ({
+      ...current,
+      password: !password.trim() ? 'A senha é obrigatória.' : undefined,
+      confirmPassword: field === 'confirmPassword' || confirmPassword
+        ? !confirmPassword
+          ? 'Confirme sua senha.'
+          : password !== confirmPassword ? 'As senhas não coincidem.' : undefined
+        : current.confirmPassword,
+    }));
+  }
+
   async function selectPhoto() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -93,10 +114,11 @@ export default function UserRegister() {
 
       if (!result.canceled) {
         setPhoto(result.assets[0]);
+        clearFieldError('photo');
       }
     } catch {
       setIsSuccess(false);
-      setMessage('Não foi possível selecionar a foto. Tente novamente.');
+      setErrors(current => ({ ...current, photo: 'Não foi possível selecionar a foto. Tente novamente.' }));
     }
   }
 
@@ -105,35 +127,18 @@ export default function UserRegister() {
     setMessage('');
     setIsSuccess(false);
 
-    if (!name.trim()) {
-      setMessage('Informe o nome completo.');
-      return;
-    }
-
-    if (!registration.trim()) {
-      setMessage('Informe a matrícula.');
-      return;
-    }
-
-    if (!selectedRole) {
-      setMessage('Selecione o tipo de acesso.');
-      return;
-    }
-
-    if (!password.trim()) {
-      setMessage('Informe a senha.');
-      return;
-    }
-
+    const validationErrors: Partial<Record<FormField, string>> = {};
+    if (!name.trim()) validationErrors.name = 'O nome completo é obrigatório.';
+    if (!registration.trim()) validationErrors.registration = 'A matrícula é obrigatória.';
+    if (!selectedRole) validationErrors.role = 'Selecione o tipo de acesso.';
+    if (!password.trim()) validationErrors.password = 'A senha é obrigatória.';
     if (!confirmPassword) {
-      setMessage('Confirme sua senha.');
-      return;
+      validationErrors.confirmPassword = 'Confirme sua senha.';
+    } else if (password !== confirmPassword) {
+      validationErrors.confirmPassword = 'As senhas não coincidem.';
     }
-
-    if (password !== confirmPassword) {
-      setMessage('As senhas não coincidem.');
-      return;
-    }
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0 || !selectedRole) return;
 
     const data = new FormData();
     data.append('nome', name.trim());
@@ -145,7 +150,7 @@ export default function UserRegister() {
       const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
 
       if (!match) {
-        setMessage('Informe a data de nascimento no formato DD/MM/AAAA.');
+        setErrors({ birthDate: 'Informe a data de nascimento no formato DD/MM/AAAA.' });
         return;
       }
 
@@ -159,12 +164,12 @@ export default function UserRegister() {
         date.getMonth() + 1 !== Number(month) ||
         date.getFullYear() !== Number(year)
       ) {
-        setMessage('Informe uma data de nascimento válida.');
+        setErrors({ birthDate: 'Informe uma data de nascimento válida.' });
         return;
       }
 
       if (date > new Date()) {
-        setMessage('A data de nascimento não pode ser futura.');
+        setErrors({ birthDate: 'A data de nascimento não pode ser futura.' });
         return;
       }
 
@@ -176,7 +181,7 @@ export default function UserRegister() {
     try {
       if (photo) {
         if (photo.fileSize && photo.fileSize > 5 * 1024 * 1024) {
-          setMessage('A foto deve ter no máximo 5 MB.');
+          setErrors({ photo: 'A foto deve ter no máximo 5 MB.' });
           return;
         }
 
@@ -204,7 +209,12 @@ export default function UserRegister() {
       setShowConfirmPassword(false);
       setMessage('Usuário cadastrado com sucesso!');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.');
+      const errorMessage = error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.';
+      if (/matr[ií]cula.*(cadastrad|existe)/i.test(errorMessage)) {
+        setErrors({ registration: errorMessage });
+      } else {
+        setMessage(errorMessage);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -274,7 +284,7 @@ export default function UserRegister() {
               {photo && (
                 <Pressable
                   style={styles.removePhotoButton}
-                  onPress={() => setPhoto(undefined)}
+                  onPress={() => { setPhoto(undefined); clearFieldError('photo'); }}
                   disabled={isSaving}
                   accessibilityRole="button"
                   accessibilityLabel="Remover foto do usuário"
@@ -285,9 +295,11 @@ export default function UserRegister() {
               )}
             </View>
 
+            {errors.photo && <Text style={[styles.fieldError, styles.photoError]} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.photo}</Text>}
+
             <View style={styles.fields}>
               <View style={styles.field}>
-                <Text style={styles.label}>Nome Completo</Text>
+                <Text style={styles.label}>Nome Completo <Text style={styles.required}>*</Text></Text>
                 <TextInput
                   editable={!isSaving}
                   style={[styles.input, focusedField === 'name' && styles.inputFocused]}
@@ -297,9 +309,10 @@ export default function UserRegister() {
                   accessibilityLabel="Nome completo"
                   placeholder="Digite o nome completo..."
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={value => { setName(value); clearFieldError('name'); }}
                   autoCapitalize="words"
                 />
+                {errors.name && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.name}</Text>}
               </View>
 
               <View style={styles.field}>
@@ -313,13 +326,14 @@ export default function UserRegister() {
                   accessibilityLabel="Data de nascimento"
                   placeholder="DD/MM/AAAA"
                   value={birthDate}
-                  onChangeText={setBirthDate}
+                  onChangeText={value => { setBirthDate(value); clearFieldError('birthDate'); }}
                   keyboardType="numbers-and-punctuation"
                 />
+                {errors.birthDate && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.birthDate}</Text>}
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Selecione o tipo de acesso:</Text>
+                <Text style={styles.label}>Selecione o tipo de acesso: <Text style={styles.required}>*</Text></Text>
                 <Pressable
                   style={[styles.input, styles.select, isProfessor && styles.disabled]}
                   accessibilityRole="button"
@@ -332,10 +346,11 @@ export default function UserRegister() {
                   <Text style={styles.selectText}>{selectedRoleLabel}</Text>
                   {!isProfessor && <Ionicons name="chevron-down" size={16} color={theme.colors.fieldPlaceholder} />}
                 </Pressable>
+                {errors.role && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.role}</Text>}
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Matrícula</Text>
+                <Text style={styles.label}>Matrícula <Text style={styles.required}>*</Text></Text>
                 <TextInput
                   editable={!isSaving}
                   style={[styles.input, focusedField === 'registration' && styles.inputFocused]}
@@ -345,25 +360,26 @@ export default function UserRegister() {
                   accessibilityLabel="Matrícula"
                   placeholder="Digite a matrícula..."
                   value={registration}
-                  onChangeText={setRegistration}
+                  onChangeText={value => { setRegistration(value); clearFieldError('registration'); }}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
+                {errors.registration && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.registration}</Text>}
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Senha</Text>
+                <Text style={styles.label}>Senha <Text style={styles.required}>*</Text></Text>
                 <View style={[styles.passwordField, focusedField === 'password' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
                     style={styles.passwordInput}
                     onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField(undefined)}
+                    onBlur={() => validatePasswords('password')}
                     placeholderTextColor={theme.colors.fieldPlaceholder}
                     accessibilityLabel="Senha"
                     placeholder="Digite a senha..."
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={value => { setPassword(value); clearFieldError('password'); }}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -372,21 +388,22 @@ export default function UserRegister() {
                     {showPassword ? <EyeIcon /> : <EyeOffIcon />}
                   </Pressable>
                 </View>
+                {errors.password && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.password}</Text>}
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Confirme sua senha</Text>
+                <Text style={styles.label}>Confirme sua senha <Text style={styles.required}>*</Text></Text>
                 <View style={[styles.passwordField, focusedField === 'confirmPassword' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
                     style={styles.passwordInput}
                     onFocus={() => setFocusedField('confirmPassword')}
-                    onBlur={() => setFocusedField(undefined)}
+                    onBlur={() => validatePasswords('confirmPassword')}
                     placeholderTextColor={theme.colors.fieldPlaceholder}
                     accessibilityLabel="Confirme sua senha"
                     placeholder="Repita a senha..."
                     value={confirmPassword}
-                    onChangeText={setConfirmPassword}
+                    onChangeText={value => { setConfirmPassword(value); clearFieldError('confirmPassword'); }}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -395,6 +412,7 @@ export default function UserRegister() {
                     {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
                   </Pressable>
                 </View>
+                {errors.confirmPassword && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.confirmPassword}</Text>}
               </View>
             </View>
 
@@ -424,7 +442,7 @@ export default function UserRegister() {
                 accessibilityRole="radio"
                 accessibilityLabel={accessType.label}
                 accessibilityState={{ checked: selectedRole === accessType.value }}
-                onPress={() => { setRole(accessType.value); setShowAccessTypes(false); }}
+                onPress={() => { setRole(accessType.value); clearFieldError('role'); setShowAccessTypes(false); }}
               >
                 <Text style={styles.optionText}>{accessType.label}</Text>
                 {selectedRole === accessType.value && <Ionicons name="checkmark" size={18} color={theme.colors.primary} />}

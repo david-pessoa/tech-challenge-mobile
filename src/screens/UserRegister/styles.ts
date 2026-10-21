@@ -46,6 +46,9 @@ export const styles = StyleSheet.create({
   photoHint: { fontFamily: 'PoppinsMedium', fontSize: 6.5, lineHeight: 9, textAlign: 'center', color: theme.colors.uploadText },
   fields: { gap: 24 },
   field: { gap: 6 },
+  required: { color: '#C62828' },
+  fieldError: { fontFamily: 'Poppins', fontSize: 11, lineHeight: 16, color: '#A52A36', paddingHorizontal: 12 },
+  photoError: { textAlign: 'center', marginTop: -16, marginBottom: 20 },
   label: { fontFamily: 'PoppinsSemiBold', fontSize: 14, color: theme.colors.text },
   input: {
     ...Platform.select({ web: { outlineWidth: 0, outlineStyle: 'solid', outlineColor: 'transparent' } }),
