@@ -32,9 +32,8 @@ const Spinner = styled.View`
 const LoadingText = styled.Text`
   margin-top: 16px;
   font-size: 19px;
-  font-weight: 600;
   color: ${({ theme }) => theme.colors.primary};
-  font-family: ${({ theme }) => theme.typography.fontFamily};
+  font-family: ${({ theme }) => theme.typography.fontFamily.bold};
 `;
 
 type PrivateRoutesProps = {
@@ -56,10 +55,10 @@ export default function Index({ children, acceptedRoles }: PrivateRoutesProps) {
   if (!user) {
     return <Redirect href='/login' />;
   }
-  if (!acceptedRoles.includes(user.role)) {
-    // Tela de acesso não autorizado
-  }
-  return <>{children}</>;
+  // if (!acceptedRoles.includes(user.role)) {
+  //   // Tela de acesso não autorizado
+  // }
+  return <Redirect href="/home" />;
 }
 
 

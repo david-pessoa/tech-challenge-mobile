@@ -72,7 +72,7 @@ export default function Header() {
             />
             <UserName $screenWidth={width}>{user.nome}</UserName>
             <LogoutButton onPress={handleLogout}>
-              <Logout width={28} height={28} />
+              <Logout width={width >= 600? 28 : 20} height={width >= 600? 28 : 20} />
             </LogoutButton>
           </LogoutContainer>
         </Nav>

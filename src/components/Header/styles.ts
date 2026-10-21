@@ -29,9 +29,9 @@ const userCircleColors = {
 };
 
 export const Circle = styled.Image.attrs({ resizeMode: 'cover' })<{ $role: Role, $screenWidth: number }>`
-  width: ${({ $screenWidth }) => $screenWidth > 500 ? 31 : 25}px;
-  height: ${({ $screenWidth }) => $screenWidth > 500 ? 31 : 25}px;
-  border-radius: 16px;
+  width: ${({ $screenWidth }) => $screenWidth > 500 ? 40 : 25}px;
+  height: ${({ $screenWidth }) => $screenWidth > 500 ? 40 : 25}px;
+  border-radius: 20px;
   border-width: 2px;
   border-style: solid;
   border-color: ${({ $role }) => userCircleColors[$role].borderColor};
@@ -51,7 +51,7 @@ export const LogoButton = styled.TouchableOpacity<{$screenWidth: number}>`
   justify-content: center;
   align-items: center;
   text-decoration: none;
-  margin-left: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 20}px;
+  margin-left: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px;
   gap: 10px;
 `;
 
@@ -62,22 +62,22 @@ export const LogoImage = styled.Image<{$screenWidth:number}>`
 
 export const Title = styled.Text<{$screenWidth:number}>`
   color: ${({ theme }) => theme.colors.text};
-  font-weight: 400;
-  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 24 : 14}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 24 : 12}px;
 `;
 
 export const UserName = styled.Text<{$screenWidth:number}>`
   color: ${({ theme }) => theme.colors.text};
-  font-weight: 400;
-  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 16 : 14}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 16 : 12}px;
 `;
 
 export const LogoutContainer = styled.View<{$screenWidth:number}>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-right: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 18}px
+  gap: ${({ $screenWidth }) => $screenWidth >= 600 ? 16 : 5}px;
+  margin-right: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px
 `;
 
 export const LogoutButton = styled.TouchableOpacity`
