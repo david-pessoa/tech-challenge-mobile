@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
@@ -9,6 +9,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
 import EyeIcon from '../../../assets/icons/eye.svg';
 import DownloadIcon from '../../../assets/icons/download-rounded.svg';
 import RemovePhotoIcon from '../../../assets/icons/remove-photo.svg';
@@ -47,6 +48,7 @@ export default function UserRegister() {
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
   const [isSuccess, setIsSuccess] = useState(false);
+  const closeToast = useCallback(() => setMessage(''), []);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAccessTypes, setShowAccessTypes] = useState(false);
@@ -212,9 +214,8 @@ export default function UserRegister() {
       const errorMessage = error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.';
       if (/matr[ií]cula.*(cadastrad|existe)/i.test(errorMessage)) {
         setErrors({ registration: errorMessage });
-      } else {
-        setMessage(errorMessage);
       }
+      setMessage(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -416,7 +417,6 @@ export default function UserRegister() {
               </View>
             </View>
 
-            {message ? <Text style={[styles.message, isSuccess ? styles.successMessage : styles.errorMessage]} accessibilityRole="alert" accessibilityLiveRegion="polite">{message}</Text> : null}
             <View style={styles.actions}>
               <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={goHome} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
@@ -430,6 +430,8 @@ export default function UserRegister() {
           <View style={styles.footer}><Footer /></View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {message ? <Toast message={message} type={isSuccess ? 'success' : 'error'} onClose={closeToast} /> : null}
 
       <Modal visible={showAccessTypes && !isProfessor} transparent animationType="fade" onRequestClose={() => setShowAccessTypes(false)}>
         <Pressable style={styles.overlay} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de perfil">
