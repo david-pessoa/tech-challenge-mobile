@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { Role } from '../../types/Roles';
+import Footer from '../../components/Footer';
+import { styles } from './styles';
 
 const accessTypes: { label: string; value: Role }[] = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -17,68 +19,88 @@ export default function UserRegister() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled">
-      <Text>Novo Usuário</Text>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+      <Text accessibilityRole="header">Novo Usuário</Text>
 
-      <Text>Nome Completo</Text>
-      <TextInput
-        accessibilityLabel="Nome completo"
-        value={name}
-        onChangeText={setName}
-        autoCapitalize="words"
-      />
-
-      <Text>Data de nascimento</Text>
-      <TextInput
-        accessibilityLabel="Data de nascimento"
-        value={birthDate}
-        onChangeText={setBirthDate}
-        keyboardType="numbers-and-punctuation"
-      />
-
-      <Text>Tipo de acesso</Text>
-      <View>
-        {accessTypes.map(accessType => (
-          <Pressable
-            key={accessType.value}
-            accessibilityRole="radio"
-            accessibilityLabel={accessType.label}
-            accessibilityState={{ checked: role === accessType.value }}
-            onPress={() => setRole(accessType.value)}
-          >
-            <Text>{role === accessType.value ? '◉' : '○'} {accessType.label}</Text>
-          </Pressable>
-        ))}
+      <View style={styles.field}>
+        <Text>Nome Completo</Text>
+        <TextInput
+          style={styles.input}
+          accessibilityLabel="Nome completo"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
       </View>
 
-      <Text>Matrícula</Text>
-      <TextInput
-        accessibilityLabel="Matrícula"
-        value={registration}
-        onChangeText={setRegistration}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      <View style={styles.field}>
+        <Text>Data de nascimento</Text>
+        <TextInput
+          style={styles.input}
+          accessibilityLabel="Data de nascimento"
+          value={birthDate}
+          onChangeText={setBirthDate}
+          keyboardType="numbers-and-punctuation"
+        />
+      </View>
 
-      <Text>Senha</Text>
-      <TextInput
-        accessibilityLabel="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      <View style={styles.field}>
+        <Text>Tipo de acesso</Text>
+        <View style={styles.accessTypes}>
+          {accessTypes.map(accessType => (
+            <Pressable
+              key={accessType.value}
+              accessibilityRole="radio"
+              accessibilityLabel={accessType.label}
+              accessibilityState={{ checked: role === accessType.value }}
+              onPress={() => setRole(accessType.value)}
+            >
+              <Text>{role === accessType.value ? '◉' : '○'} {accessType.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
-      <Text>Confirme sua senha</Text>
-      <TextInput
-        accessibilityLabel="Confirme sua senha"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      <View style={styles.field}>
+        <Text>Matrícula</Text>
+        <TextInput
+          style={styles.input}
+          accessibilityLabel="Matrícula"
+          value={registration}
+          onChangeText={setRegistration}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text>Senha</Text>
+        <TextInput
+          style={styles.input}
+          accessibilityLabel="Senha"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text>Confirme sua senha</Text>
+        <TextInput
+          style={styles.input}
+          accessibilityLabel="Confirme sua senha"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      </View>
+      <View style={styles.footer}>
+        <Footer />
+      </View>
     </ScrollView>
   );
 }
