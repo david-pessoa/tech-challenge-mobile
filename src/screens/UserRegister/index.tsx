@@ -25,8 +25,28 @@ export default function UserRegister() {
     if (isSaving) return;
     setMessage('');
 
-    if (!name.trim() || !registration.trim() || !role || !password) {
-      setMessage('Preencha nome, matrícula, tipo de acesso e senha.');
+    if (!name.trim()) {
+      setMessage('Informe o nome completo.');
+      return;
+    }
+
+    if (!registration.trim()) {
+      setMessage('Informe a matrícula.');
+      return;
+    }
+
+    if (!role) {
+      setMessage('Selecione o tipo de acesso.');
+      return;
+    }
+
+    if (!password.trim()) {
+      setMessage('Informe a senha.');
+      return;
+    }
+
+    if (!confirmPassword) {
+      setMessage('Confirme sua senha.');
       return;
     }
 
@@ -42,8 +62,33 @@ export default function UserRegister() {
     data.append('senha', password);
 
     if (birthDate.trim()) {
-      const [day, month, year] = birthDate.trim().split('/');
-      data.append('birthDate', `${year}-${month}-${day}`);
+      const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
+
+      if (!match) {
+        setMessage('Informe a data de nascimento no formato DD/MM/AAAA.');
+        return;
+      }
+
+      const [, day, month, year] = match;
+      const formattedDate = `${year}-${month}-${day}`;
+      const date = new Date(`${formattedDate}T00:00:00`);
+
+      if (
+        Number.isNaN(date.getTime()) ||
+        date.getDate() !== Number(day) ||
+        date.getMonth() + 1 !== Number(month) ||
+        date.getFullYear() !== Number(year)
+      ) {
+        setMessage('Informe uma data de nascimento válida.');
+        return;
+      }
+
+      if (date > new Date()) {
+        setMessage('A data de nascimento não pode ser futura.');
+        return;
+      }
+
+      data.append('birthDate', formattedDate);
     }
 
     setIsSaving(true);
