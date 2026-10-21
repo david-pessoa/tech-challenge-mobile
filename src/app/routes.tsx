@@ -18,7 +18,9 @@ export default function Routes() {
       >
         <Stack.Screen name="home" />
       </Stack.Protected>
-      <Stack.Screen name="user-register" />
+      <Stack.Protected guard={Boolean(user && ['ADMIN', 'PROFESSOR'].includes(user.role))}>
+        <Stack.Screen name="user-register" />
+      </Stack.Protected>
     </Stack>
   );
 }

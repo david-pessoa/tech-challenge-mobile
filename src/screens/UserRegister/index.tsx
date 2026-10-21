@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Button, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Button, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
 import { createUser } from '../../services/user.service';
@@ -12,6 +14,7 @@ const accessTypes: { label: string; value: Role }[] = [
 ];
 
 export default function UserRegister() {
+  const { user, isLoading } = useUser();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [role, setRole] = useState<Role>();
@@ -20,9 +23,16 @@ export default function UserRegister() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const canRegister = user?.role === 'ADMIN' || user?.role === 'PROFESSOR';
+  const isProfessor = user?.role === 'PROFESSOR';
+  const selectedRole = isProfessor ? 'ALUNO' : role;
+  const availableAccessTypes = isProfessor
+    ? accessTypes.filter(accessType => accessType.value === 'ALUNO')
+    : accessTypes;
+
 
   async function handleSubmit() {
-    if (isSaving) return;
+    if (isLoading || !canRegister || isSaving) return;
     setMessage('');
 
     if (!name.trim()) {
@@ -35,7 +45,7 @@ export default function UserRegister() {
       return;
     }
 
-    if (!role) {
+    if (!selectedRole) {
       setMessage('Selecione o tipo de acesso.');
       return;
     }
@@ -58,7 +68,7 @@ export default function UserRegister() {
     const data = new FormData();
     data.append('nome', name.trim());
     data.append('matricula', registration.trim());
-    data.append('role', role);
+    data.append('role', selectedRole);
     data.append('senha', password);
 
     if (birthDate.trim()) {
@@ -110,6 +120,10 @@ export default function UserRegister() {
   }
 
 
+  if (isLoading) return <ActivityIndicator accessibilityLabel="Carregando sessão" />;
+  if (!user) return <Redirect href="/login" />;
+  if (!canRegister) return <Redirect href="/home" />;
+
   return (
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       <Text accessibilityRole="header">Novo Usuário</Text>
@@ -143,16 +157,16 @@ export default function UserRegister() {
       <View style={styles.field}>
         <Text>Tipo de acesso</Text>
         <View style={styles.accessTypes}>
-          {accessTypes.map(accessType => (
+          {availableAccessTypes.map(accessType => (
             <Pressable
-              disabled={isSaving}
+              disabled={isSaving || isProfessor}
               key={accessType.value}
               accessibilityRole="radio"
               accessibilityLabel={accessType.label}
-              accessibilityState={{ checked: role === accessType.value, disabled: isSaving }}
+              accessibilityState={{ checked: selectedRole === accessType.value, disabled: isSaving || isProfessor }}
               onPress={() => setRole(accessType.value)}
             >
-              <Text>{role === accessType.value ? '◉' : '○'} {accessType.label}</Text>
+              <Text>{selectedRole === accessType.value ? '◉' : '○'} {accessType.label}</Text>
             </Pressable>
           ))}
         </View>
