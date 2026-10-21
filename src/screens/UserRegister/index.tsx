@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { ActivityIndicator, Button, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { Redirect } from 'expo-router';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFonts } from 'expo-font';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Redirect, useRouter } from 'expo-router';
 import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
+import EyeIcon from '../../../assets/icons/eye.svg';
+import EyeOffIcon from '../../../assets/icons/eyeOff.svg';
 import { createUser } from '../../services/user.service';
 import { styles } from './styles';
+import { theme } from '../../styles/Theme';
 
 const accessTypes: { label: string; value: Role }[] = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -15,6 +21,14 @@ const accessTypes: { label: string; value: Role }[] = [
 
 export default function UserRegister() {
   const { user, isLoading } = useUser();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [fontsLoaded, fontError] = useFonts({
+    Poppins: require('../../../assets/fonts/Poppins-Regular.ttf'),
+    PoppinsMedium: require('../../../assets/fonts/Poppins-Medium.ttf'),
+    PoppinsSemiBold: require('../../../assets/fonts/Poppins-SemiBold.ttf'),
+    ...Ionicons.font,
+  });
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [role, setRole] = useState<Role>();
@@ -23,6 +37,11 @@ export default function UserRegister() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showAccessTypes, setShowAccessTypes] = useState(false);
+  const [focusedField, setFocusedField] = useState<string>();
   const canRegister = user?.role === 'ADMIN' || user?.role === 'PROFESSOR';
   const isProfessor = user?.role === 'PROFESSOR';
   const selectedRole = isProfessor ? 'ALUNO' : role;
@@ -34,6 +53,7 @@ export default function UserRegister() {
   async function handleSubmit() {
     if (isLoading || !canRegister || isSaving) return;
     setMessage('');
+    setIsSuccess(false);
 
     if (!name.trim()) {
       setMessage('Informe o nome completo.');
@@ -111,6 +131,9 @@ export default function UserRegister() {
       setRegistration('');
       setPassword('');
       setConfirmPassword('');
+      setIsSuccess(true);
+      setShowPassword(false);
+      setShowConfirmPassword(false);
       setMessage('Usuário cadastrado com sucesso!');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.');
@@ -120,107 +143,196 @@ export default function UserRegister() {
   }
 
 
-  if (isLoading) return <ActivityIndicator accessibilityLabel="Carregando sessão" />;
+  if (isLoading || (!fontsLoaded && !fontError)) {
+    return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando sessão" />;
+  }
   if (!user) return <Redirect href="/login" />;
   if (!canRegister) return <Redirect href="/home" />;
+  if (fontError) return <Text>Não foi possível carregar a tela de cadastro.</Text>;
+
+  const profileLabel = isProfessor ? 'Professor' : 'Admin';
+  const selectedRoleLabel = accessTypes.find(accessType => accessType.value === selectedRole)?.label ?? 'Selecione o tipo de acesso...';
+
+  function goHome() {
+    router.replace('/home');
+  }
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-      <Text accessibilityRole="header">Novo Usuário</Text>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.header, isProfessor ? styles.professorHeader : styles.adminHeader]}>
+            <View style={styles.headerGroup}>
+              <Image source={require('../../../assets/images/logoEdify.png')} style={styles.logo} accessibilityLabel="Edify" />
+              <Text style={styles.headerText}>Edify {isProfessor ? 'Professores' : 'Administradores'}</Text>
+            </View>
+            <View style={styles.headerGroup}>
+              <View style={[styles.profileDot, isProfessor ? styles.professorDot : styles.adminDot]} />
+              <Text style={styles.profileText}>{profileLabel}</Text>
+            </View>
+          </View>
 
-      <View style={styles.field}>
-        <Text>Nome Completo</Text>
-        <TextInput
-          editable={!isSaving}
-          style={styles.input}
-          accessibilityLabel="Nome completo"
-          placeholder="Digite o nome completo..."
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text>Data de nascimento</Text>
-        <TextInput
-          editable={!isSaving}
-          style={styles.input}
-          accessibilityLabel="Data de nascimento"
-          placeholder="DD/MM/AAAA"
-          value={birthDate}
-          onChangeText={setBirthDate}
-          keyboardType="numbers-and-punctuation"
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text>Tipo de acesso</Text>
-        <View style={styles.accessTypes}>
-          {availableAccessTypes.map(accessType => (
-            <Pressable
-              disabled={isSaving || isProfessor}
-              key={accessType.value}
-              accessibilityRole="radio"
-              accessibilityLabel={accessType.label}
-              accessibilityState={{ checked: selectedRole === accessType.value, disabled: isSaving || isProfessor }}
-              onPress={() => setRole(accessType.value)}
-            >
-              <Text>{selectedRole === accessType.value ? '◉' : '○'} {accessType.label}</Text>
+          <View style={styles.form}>
+            <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar à tela de início">
+              <Ionicons name="arrow-back" size={18} color={theme.colors.backIcon} />
+              <Text style={styles.backText}>Voltar à tela de início</Text>
             </Pressable>
-          ))}
-        </View>
-      </View>
+            <View style={styles.titleRow}>
+              <Text style={styles.title} accessibilityRole="header">Novo Usuário</Text>
+              <Image source={require('../../../assets/images/red-doodle.png')} style={styles.decoration} resizeMode="contain" />
+            </View>
 
-      <View style={styles.field}>
-        <Text>Matrícula</Text>
-        <TextInput
-          editable={!isSaving}
-          style={styles.input}
-          accessibilityLabel="Matrícula"
-          placeholder="Digite a matrícula..."
-          value={registration}
-          onChangeText={setRegistration}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
+            <View style={styles.fields}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Nome Completo</Text>
+                <TextInput
+                  editable={!isSaving}
+                  style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField(undefined)}
+                  placeholderTextColor={theme.colors.fieldPlaceholder}
+                  accessibilityLabel="Nome completo"
+                  placeholder="Digite o nome completo..."
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </View>
 
-      <View style={styles.field}>
-        <Text>Senha</Text>
-        <TextInput
-          editable={!isSaving}
-          style={styles.input}
-          accessibilityLabel="Senha"
-          placeholder="Digite a senha..."
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
+              <View style={styles.field}>
+                <Text style={styles.label}>Data de nascimento</Text>
+                <TextInput
+                  editable={!isSaving}
+                  style={[styles.input, focusedField === 'birthDate' && styles.inputFocused]}
+                  onFocus={() => setFocusedField('birthDate')}
+                  onBlur={() => setFocusedField(undefined)}
+                  placeholderTextColor={theme.colors.fieldPlaceholder}
+                  accessibilityLabel="Data de nascimento"
+                  placeholder="DD/MM/AAAA"
+                  value={birthDate}
+                  onChangeText={setBirthDate}
+                  keyboardType="numbers-and-punctuation"
+                />
+              </View>
 
-      <View style={styles.field}>
-        <Text>Confirme sua senha</Text>
-        <TextInput
-          editable={!isSaving}
-          style={styles.input}
-          accessibilityLabel="Confirme sua senha"
-          placeholder="Repita a senha..."
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
-      {message ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite">{message}</Text> : null}
-      <Button title={isSaving ? 'Enviando...' : 'Enviar'} onPress={handleSubmit} disabled={isSaving} />
+              <View style={styles.field}>
+                <Text style={styles.label}>Selecione o tipo de acesso:</Text>
+                <Pressable
+                  style={[styles.input, styles.select, isProfessor && styles.disabled]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tipo de acesso"
+                  accessibilityValue={{ text: selectedRoleLabel }}
+                  accessibilityState={{ disabled: isSaving || isProfessor, expanded: showAccessTypes }}
+                  disabled={isSaving || isProfessor}
+                  onPress={() => setShowAccessTypes(true)}
+                >
+                  <Text style={styles.selectText}>{selectedRoleLabel}</Text>
+                  {!isProfessor && <Ionicons name="chevron-down" size={16} color={theme.colors.fieldPlaceholder} />}
+                </Pressable>
+              </View>
 
-      <View style={styles.footer}>
-        <Footer />
-      </View>
-    </ScrollView>
+              <View style={styles.field}>
+                <Text style={styles.label}>Matrícula</Text>
+                <TextInput
+                  editable={!isSaving}
+                  style={[styles.input, focusedField === 'registration' && styles.inputFocused]}
+                  onFocus={() => setFocusedField('registration')}
+                  onBlur={() => setFocusedField(undefined)}
+                  placeholderTextColor={theme.colors.fieldPlaceholder}
+                  accessibilityLabel="Matrícula"
+                  placeholder="Digite a matrícula..."
+                  value={registration}
+                  onChangeText={setRegistration}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Senha</Text>
+                <View style={[styles.passwordField, focusedField === 'password' && styles.inputFocused]}>
+                  <TextInput
+                    editable={!isSaving}
+                    style={styles.passwordInput}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(undefined)}
+                    placeholderTextColor={theme.colors.fieldPlaceholder}
+                    accessibilityLabel="Senha"
+                    placeholder="Digite a senha..."
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowPassword(!showPassword)} accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
+                    {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Confirme sua senha</Text>
+                <View style={[styles.passwordField, focusedField === 'confirmPassword' && styles.inputFocused]}>
+                  <TextInput
+                    editable={!isSaving}
+                    style={styles.passwordInput}
+                    onFocus={() => setFocusedField('confirmPassword')}
+                    onBlur={() => setFocusedField(undefined)}
+                    placeholderTextColor={theme.colors.fieldPlaceholder}
+                    accessibilityLabel="Confirme sua senha"
+                    placeholder="Repita a senha..."
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowConfirmPassword(!showConfirmPassword)} accessibilityRole="button" accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'}>
+                    {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+
+            {message ? <Text style={[styles.message, isSuccess ? styles.successMessage : styles.errorMessage]} accessibilityRole="alert" accessibilityLiveRegion="polite">{message}</Text> : null}
+            <View style={styles.actions}>
+              <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={goHome} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
+                <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={[styles.button, styles.submitButton, isSaving && styles.disabled]} onPress={handleSubmit} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Enviar" accessibilityState={{ disabled: isSaving, busy: isSaving }}>
+                {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.buttonText, styles.submitText]}>Enviar</Text>}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.footer}><Footer /></View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <Modal visible={showAccessTypes && !isProfessor} transparent animationType="fade" onRequestClose={() => setShowAccessTypes(false)}>
+        <Pressable style={styles.overlay} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de perfil">
+          <View style={styles.options} accessibilityViewIsModal>
+            <Text style={styles.label}>Tipo de acesso</Text>
+            {availableAccessTypes.map(accessType => (
+              <Pressable
+                key={accessType.value}
+                style={[styles.option, selectedRole === accessType.value && styles.optionSelected]}
+                accessibilityRole="radio"
+                accessibilityLabel={accessType.label}
+                accessibilityState={{ checked: selectedRole === accessType.value }}
+                onPress={() => { setRole(accessType.value); setShowAccessTypes(false); }}
+              >
+                <Text style={styles.optionText}>{accessType.label}</Text>
+                {selectedRole === accessType.value && <Ionicons name="checkmark" size={18} color={theme.colors.primary} />}
+              </Pressable>
+            ))}
+            <Pressable style={styles.option} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar">
+              <Text style={styles.optionText}>Fechar</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
