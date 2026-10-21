@@ -1,76 +1,130 @@
-# Welcome to your Expo app 👋
+# Edify — Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo educacional desenvolvido para o Tech Challenge da Fase 4. O Edify conecta professores e alunos da rede pública, facilitando o acesso às aulas e a organização dos usuários da escola.
 
-## Get started
+A interface foi desenvolvida em React Native, seguindo o protótipo do grupo e utilizando o back-end das fases anteriores.
 
-1. Install dependencies
+## Problema
 
-   ```bash
-   npm install
-   ```
+Professores e alunos precisam de um espaço para compartilhar e consultar aulas pelo celular. Também é necessário organizar os usuários e definir quais ações cada perfil pode realizar.
 
-2. Start the app
+## Solução
 
-   ```bash
-   npx expo start
-   ```
+O aplicativo leva o Edify para o ambiente mobile, com acesso por perfil e integração com a API. O desenvolvimento está em andamento: a tela de cadastro de usuários está implementada, enquanto o login e as demais telas ainda precisam ser concluídos e integrados.
 
-In the output, you'll find options to open the app in a
+## Funcionalidades do cadastro
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Cadastro de usuários por administradores e professores.
+- Campos para nome completo, data de nascimento, perfil, matrícula e senha.
+- Seleção, prévia, troca e remoção da foto do usuário.
+- Envio da foto junto com os dados para o servidor.
+- Campos obrigatórios identificados com asterisco vermelho.
+- Mensagens de validação abaixo dos campos.
+- Validação de senha e confirmação ao sair dos campos.
+- Opção para mostrar ou ocultar as senhas.
+- Avisos de sucesso e erro após o envio.
+- Limpeza dos campos e da foto após o cadastro bem-sucedido.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Regras de acesso autorizadas pelos professores
 
-## Get a fresh project
+O grupo consultou os professores sobre manter na Fase 4 as regras de negócio implementadas na Fase 2, mesmo com a redação dos requisitos 5, 6 e 7 sobre gestão de professores. A manutenção foi autorizada com a condição de registrar a decisão no README:
 
-When you're ready, run:
+> Se já estiver dessa forma, pode manter, deixa isso explicito na documentação do Readme para eu não esquecer quando for corrigir (Ou outro professor).
+
+| Perfil | Posts | Gestão de usuários |
+| --- | --- | --- |
+| `ADMIN` | Cria, consulta, edita e exclui qualquer post. | Cadastra, consulta, edita e exclui alunos, professores e administradores. |
+| `PROFESSOR` | Consulta e cria posts; edita e exclui somente os próprios posts. | Cadastra e atualiza alunos. Não pode excluir alunos nem gerenciar professores ou administradores. |
+| `ALUNO` | Consulta os posts. | Não gerencia usuários. |
+
+Assim, o gerenciamento de professores e a exclusão de alunos ficam sob responsabilidade do administrador. Os demais requisitos da Fase 4 continuam aplicáveis.
+
+Na tela de cadastro, professores têm apenas o perfil **Aluno**, sem possibilidade de alteração. Administradores podem escolher entre **Aluno**, **Professor** e **Administrador**.
+
+## Tecnologias
+
+- React Native e Expo
+- React e TypeScript
+- Expo Router
+- Context API
+- Axios
+- StyleSheet e styled-components
+- Expo ImagePicker para seleção de fotos
+- Expo Font e React Native SVG para fontes e ícones
+- Jest e Testing Library
+
+## Arquitetura
+
+O projeto está organizado em telas, componentes e serviços. As telas cuidam da interação com o usuário, os componentes reúnem elementos reutilizáveis e os serviços fazem a comunicação com a API.
+
+```text
+assets/          Imagens, fontes e ícones
+src/
+  app/           Rotas e layout principal
+  screens/       Telas do aplicativo
+  components/    Componentes compartilhados
+  context/       Informações da sessão
+  services/      Comunicação com o back-end
+  styles/        Tema e estilos globais
+  types/         Tipos compartilhados
+  hooks/         Hooks auxiliares
+  utils/         Funções auxiliares
+  __tests__/     Testes automatizados
+```
+
+## Como rodar
+
+### Pré-requisitos
+
+- Node.js e npm. O desenvolvimento foi realizado com Node.js 24.
+- Back-end configurado e em execução.
+- Navegador, celular ou emulador com ambiente compatível com a versão do Expo utilizada.
+
+### Instalação
+
+Dentro da pasta do projeto, execute:
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+O `npm install` instala todas as dependências necessárias, incluindo os pacotes de fotos, fontes, ícones e testes.
 
-### Other setup steps
+No arquivo `.env`, informe o endereço do back-end:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
-
-## Teste temporário de autenticação no navegador
-
-Enquanto o login mobile está em desenvolvimento, o cliente HTTP aceita um token
-manual na versão web em modo de desenvolvimento. Abra o console do navegador na
-página do Expo e execute, substituindo o valor por um JWT válido do backend local:
-
-```javascript
-localStorage.setItem('token', 'SEU_TOKEN');
+```env
+EXPO_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-As requisições seguintes enviam `Authorization: Bearer`, exceto as de login e logout.
-O backend continua validando o token e suas permissões; o usuário simulado na tela
-não concede autorização. O mecanismo de cookie permanece ativo e tem prioridade
-no backend atual. Essa adaptação não lê o armazenamento no Android, iOS ou na
-renderização no servidor e não é habilitada na build de produção.
+O aplicativo acrescenta `/api` ao endereço automaticamente. Para testar em um celular físico, substitua `localhost` pelo IP do computador e mantenha os dois na mesma rede.
 
-Para encerrar o teste, execute `localStorage.removeItem('token')`. Remover o
-interceptor temporário de `src/services/api.ts` quando o login estiver integrado.
+Inicie o aplicativo:
+
+```bash
+npx expo start
+```
+
+Pressione **w** para abrir no navegador ou **a** para abrir no emulador Android configurado. Para utilizar o QR code no celular, use uma versão do Expo compatível com o projeto.
+
+### Back-end
+
+Na pasta do back-end, após configurar o `.env`, execute:
+
+```bash
+docker compose up -d --build
+```
+
+As instruções completas estão no [repositório do back-end](https://github.com/david-pessoa/tech-challenge-backend). A documentação dos endpoints fica em `http://localhost:3000/docs`.
+
+Para testar no navegador, o back-end precisa permitir a origem do Expo, normalmente `http://localhost:8081`, na configuração `FRONTEND_URL`.
+
+### Outros comandos
+
+```bash
+npx expo start --clear
+npx tsc --noEmit
+npm test -- --runInBand
+```
+
+Os comandos acima reiniciam o Expo com o cache limpo, verificam os tipos e executam os testes, respectivamente.
