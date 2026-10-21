@@ -327,9 +327,6 @@ export default function UserRegister() {
                 {selectedRole === accessType.value && <Ionicons name="checkmark" size={18} color={theme.colors.primary} />}
               </Pressable>
             ))}
-            <Pressable style={styles.option} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar">
-              <Text style={styles.optionText}>Fechar</Text>
-            </Pressable>
           </View>
         </Pressable>
       </Modal>
