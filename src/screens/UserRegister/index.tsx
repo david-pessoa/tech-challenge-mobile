@@ -174,6 +174,23 @@ export default function UserRegister() {
     setIsSaving(true);
 
     try {
+      if (photo) {
+        if (photo.fileSize && photo.fileSize > 5 * 1024 * 1024) {
+          setMessage('A foto deve ter no máximo 5 MB.');
+          return;
+        }
+
+        const type = photo.mimeType ?? 'image/jpeg';
+        const fileName = photo.fileName ?? (type === 'image/png' ? 'foto.png' : 'foto.jpg');
+
+        if (Platform.OS === 'web') {
+          const file = photo.file ?? await (await fetch(photo.uri)).blob();
+          data.append('image', file, fileName);
+        } else {
+          data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
+        }
+      }
+
       await createUser(data);
       setPhoto(undefined);
       setName('');
