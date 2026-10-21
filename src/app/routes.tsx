@@ -18,6 +18,7 @@ export default function Routes() {
       >
         <Stack.Screen name="home" />
       </Stack.Protected>
+      <Stack.Screen name="user-register" />
     </Stack>
   );
 }
