@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
+import * as ImagePicker from 'expo-image-picker';
+import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
 import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
 import EyeIcon from '../../../assets/icons/eye.svg';
+import DownloadIcon from '../../../assets/icons/download-rounded.svg';
+import RemovePhotoIcon from '../../../assets/icons/remove-photo.svg';
 import EyeOffIcon from '../../../assets/icons/eyeOff.svg';
 import { createUser } from '../../services/user.service';
 import { styles } from './styles';
@@ -29,6 +33,8 @@ export default function UserRegister() {
     PoppinsSemiBold: require('../../../assets/fonts/Poppins-SemiBold.ttf'),
     ...Ionicons.font,
   });
+  const photoPickerRef = useRef<View>(null);
+  const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [role, setRole] = useState<Role>();
@@ -49,6 +55,50 @@ export default function UserRegister() {
     ? accessTypes.filter(accessType => accessType.value === 'ALUNO')
     : accessTypes;
 
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !photoPickerRef.current) return;
+
+    const element = photoPickerRef.current as unknown as HTMLElement;
+    function preventDropNavigation(event: DragEvent) {
+      event.preventDefault();
+    }
+    function handleDrop(event: DragEvent) {
+      event.preventDefault();
+      const file = event.dataTransfer?.files[0];
+      if (isSaving || !file || !file.type.startsWith('image/')) return;
+
+      setPhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type });
+    }
+    element.addEventListener('dragover', preventDropNavigation);
+    element.addEventListener('drop', handleDrop);
+    return () => {
+      element.removeEventListener('dragover', preventDropNavigation);
+      element.removeEventListener('drop', handleDrop);
+    };
+  }, [fontsLoaded, isLoading, canRegister, isSaving]);
+
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
+    };
+  }, [photo]);
+
+  async function selectPhoto() {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setPhoto(result.assets[0]);
+      }
+    } catch {
+      setIsSuccess(false);
+      setMessage('Não foi possível selecionar a foto. Tente novamente.');
+    }
+  }
 
   async function handleSubmit() {
     if (isLoading || !canRegister || isSaving) return;
@@ -125,6 +175,7 @@ export default function UserRegister() {
 
     try {
       await createUser(data);
+      setPhoto(undefined);
       setName('');
       setBirthDate('');
       setRole(undefined);
@@ -180,6 +231,41 @@ export default function UserRegister() {
             <View style={styles.titleRow}>
               <Text style={styles.title} accessibilityRole="header">Novo Usuário</Text>
               <Image source={require('../../../assets/images/red-doodle.png')} style={styles.decoration} resizeMode="contain" />
+            </View>
+
+            <View style={styles.photoContainer}>
+              <Pressable
+                ref={photoPickerRef}
+                style={[styles.photoPicker, isSaving && styles.disabled]}
+                onPress={selectPhoto}
+                disabled={isSaving}
+                accessibilityRole="button"
+                accessibilityLabel={photo ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
+              >
+                <Svg width={88} height={88} viewBox="0 0 88 88" style={styles.photoBorder} pointerEvents="none">
+                  <Circle cx={44} cy={44} r={43.5} fill="none" stroke={theme.colors.primary} strokeWidth={1} strokeDasharray="17 17.165" />
+                </Svg>
+                {photo ? (
+                  <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" />
+                ) : (
+                  <>
+                    <DownloadIcon width={14} height={14} />
+                    <Text style={styles.photoHint}>Clique para carregar{Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}</Text>
+                  </>
+                )}
+              </Pressable>
+              {photo && (
+                <Pressable
+                  style={styles.removePhotoButton}
+                  onPress={() => setPhoto(undefined)}
+                  disabled={isSaving}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remover foto do usuário"
+                  hitSlop={8}
+                >
+                  <RemovePhotoIcon width={20} height={20} />
+                </Pressable>
+              )}
             </View>
 
             <View style={styles.fields}>
