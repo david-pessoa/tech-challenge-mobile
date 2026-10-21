@@ -75,6 +75,7 @@ export default function UserRegister() {
           editable={!isSaving}
           style={styles.input}
           accessibilityLabel="Nome completo"
+          placeholder="Digite o nome completo..."
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
@@ -87,6 +88,7 @@ export default function UserRegister() {
           editable={!isSaving}
           style={styles.input}
           accessibilityLabel="Data de nascimento"
+          placeholder="DD/MM/AAAA"
           value={birthDate}
           onChangeText={setBirthDate}
           keyboardType="numbers-and-punctuation"
@@ -117,6 +119,7 @@ export default function UserRegister() {
           editable={!isSaving}
           style={styles.input}
           accessibilityLabel="Matrícula"
+          placeholder="Digite a matrícula..."
           value={registration}
           onChangeText={setRegistration}
           autoCapitalize="none"
@@ -130,6 +133,7 @@ export default function UserRegister() {
           editable={!isSaving}
           style={styles.input}
           accessibilityLabel="Senha"
+          placeholder="Digite a senha..."
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -144,6 +148,7 @@ export default function UserRegister() {
           editable={!isSaving}
           style={styles.input}
           accessibilityLabel="Confirme sua senha"
+          placeholder="Repita a senha..."
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
