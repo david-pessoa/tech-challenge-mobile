@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const theme = {
   colors: {
     primary: '#C0765A',
@@ -28,7 +30,7 @@ export const theme = {
   },
 
   typography: {
-    fontFamily: 'Poppins, sans-serif',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'system-ui' }),
     color: '#32434D',
     h1: {
       fontSize: '2rem',
