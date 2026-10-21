@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { theme } from '../../styles/Theme';
 
 export const styles = StyleSheet.create({
@@ -32,7 +32,7 @@ export const styles = StyleSheet.create({
   field: { gap: 6 },
   label: { fontFamily: 'PoppinsSemiBold', fontSize: 14, color: theme.colors.text },
   input: {
-    minHeight: 44,
+    ...Platform.select({ web: { outlineWidth: 0 } }),    minHeight: 44,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 24,
@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FAF8F0',
     boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.13)',
   },
-  passwordInput: { flex: 1, minWidth: 0, minHeight: 44, paddingHorizontal: 16, paddingVertical: 10, fontFamily: 'PoppinsMedium', fontSize: 12, color: theme.colors.text },
+  passwordInput: { ...Platform.select({ web: { outlineWidth: 0 } }), flex: 1, minWidth: 0, minHeight: 44, paddingHorizontal: 16, paddingVertical: 10, fontFamily: 'PoppinsMedium', fontSize: 12, color: theme.colors.text },
   eyeButton: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   message: { fontFamily: 'Poppins', fontSize: 12, lineHeight: 18, marginTop: 20 },
   errorMessage: { color: '#A52A36' },

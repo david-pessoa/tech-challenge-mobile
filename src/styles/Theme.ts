@@ -10,7 +10,7 @@ export const theme = {
     fieldBackground: '#FBF6EA',
     fieldPlaceholder: '#9A8372',
     fieldShadow: '#D8D0BF',
-    fieldFocus: '#F2C0AD',
+    fieldFocus: '#FF9800',
     uploadText: '#98816D',
     backLink: '#3A505D',
     backIcon: '#F6A4B0',
