@@ -54,3 +54,23 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+## Teste temporário de autenticação no navegador
+
+Enquanto o login mobile está em desenvolvimento, o cliente HTTP aceita um token
+manual na versão web em modo de desenvolvimento. Abra o console do navegador na
+página do Expo e execute, substituindo o valor por um JWT válido do backend local:
+
+```javascript
+localStorage.setItem('token', 'SEU_TOKEN');
+```
+
+As requisições seguintes enviam `Authorization: Bearer`, exceto as de login e logout.
+O backend continua validando o token e suas permissões; o usuário simulado na tela
+não concede autorização. O mecanismo de cookie permanece ativo e tem prioridade
+no backend atual. Essa adaptação não lê o armazenamento no Android, iOS ou na
+renderização no servidor e não é habilitada na build de produção.
+
+Para encerrar o teste, execute `localStorage.removeItem('token')`. Remover o
+interceptor temporário de `src/services/api.ts` quando o login estiver integrado.
