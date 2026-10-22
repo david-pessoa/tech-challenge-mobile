@@ -1,3 +1,4 @@
+import { ResponsiveProps } from '@/types/Props';
 import { Role } from '@/types/Roles';
 import styled from 'styled-components/native';
 
@@ -46,7 +47,7 @@ export const Nav = styled.View`
   width: 100%;
 `;
 
-export const LogoButton = styled.TouchableOpacity<{$screenWidth: number}>`
+export const LogoButton = styled.TouchableOpacity<ResponsiveProps>`
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -55,24 +56,24 @@ export const LogoButton = styled.TouchableOpacity<{$screenWidth: number}>`
   gap: 10px;
 `;
 
-export const LogoImage = styled.Image<{$screenWidth:number}>`
+export const LogoImage = styled.Image<ResponsiveProps>`
   width: ${({ $screenWidth }) => $screenWidth > 500 ? 61 : 30}px;
   height: ${({ $screenWidth }) => $screenWidth > 500 ? 57 : 28}px;
 `;
 
-export const Title = styled.Text<{$screenWidth:number}>`
+export const Title = styled.Text<ResponsiveProps>`
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
   font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 24 : 12}px;
 `;
 
-export const UserName = styled.Text<{$screenWidth:number}>`
+export const UserName = styled.Text<ResponsiveProps>`
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
   font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 16 : 12}px;
 `;
 
-export const LogoutContainer = styled.View<{$screenWidth:number}>`
+export const LogoutContainer = styled.View<ResponsiveProps>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;

@@ -1,8 +1,5 @@
+import { ResponsiveProps } from '@/types/Props';
 import styled from 'styled-components/native';
-
-type ResponsiveProps = {
-  $screenWidth: number;
-};
 
 const shadowStyle = {
   shadowColor: '#c0b58b',
