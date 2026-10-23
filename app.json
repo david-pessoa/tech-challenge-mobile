@@ -18,7 +18,8 @@
       "favicon": "./assets/public/Logo.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

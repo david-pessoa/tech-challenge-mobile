@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const theme = {
   colors: {
     primary: '#C0765A',
@@ -8,7 +10,7 @@ export const theme = {
     fieldBackground: '#FBF6EA',
     fieldPlaceholder: '#9A8372',
     fieldShadow: '#D8D0BF',
-    fieldFocus: '#F2C0AD',
+    fieldFocus: '#FF9800',
     uploadText: '#98816D',
     backLink: '#3A505D',
     backIcon: '#F6A4B0',
@@ -28,7 +30,7 @@ export const theme = {
   },
 
   typography: {
-    fontFamily: 'Poppins, sans-serif',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'system-ui' }),
     color: '#32434D',
     h1: {
       fontSize: '2rem',

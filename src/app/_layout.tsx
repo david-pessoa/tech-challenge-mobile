@@ -1,5 +1,5 @@
 import { ThemeProvider } from 'styled-components/native';
-import { theme } from '@/styles/theme';
+import { theme } from '@/styles/Theme';
 import Index from './index';
 import Routes from './routes'
 import { AppContainer } from '../styles/GlobalStyles';
