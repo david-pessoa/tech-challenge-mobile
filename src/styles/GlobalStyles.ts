@@ -10,3 +10,6 @@ export const Screen = styled(SafeAreaView)`
   flex: 1;
   background-color: ${({ theme }) => theme.colors.background};
 `;
+export const Scroll = styled.ScrollView`
+  flex: 1;
+`;

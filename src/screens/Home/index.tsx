@@ -1,9 +1,14 @@
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
-import { Screen } from '@/styles/GlobalStyles';
+import { useUser } from '@/context/AuthContext';
+import { BASE_URL } from '@/services/api';
+import { Screen, Scroll } from '@/styles/GlobalStyles';
+import { capitalize } from '@/utils/functions';
+import { useRouter } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 import redDoodle from '../../../assets/images/red-doodle.png';
-import userImage from '../../../assets/images/user-default-image.png';
 import sparkle from '../../../assets/images/sparkle.png';
+import userImage from '../../../assets/images/user-default-image.png';
 import {
   DoodleImage,
   Figcaption,
@@ -21,10 +26,6 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
-import { capitalize } from '@/utils/functions';
-import { useUser } from '@/context/AuthContext';
-import { useWindowDimensions } from 'react-native';
-import { BASE_URL } from '@/services/api';
 
 export default function Home() {
   const { user } = useUser();
@@ -32,6 +33,7 @@ export default function Home() {
 
   return (
     <Screen edges={['top', 'right', 'bottom', 'left']}>
+      <Scroll>
       <Header />
       <Main $screenWidth={width}>
         <ProfileContainer $screenWidth={width}>
@@ -57,7 +59,7 @@ export default function Home() {
           <TopContainer $screenWidth={width}>
             <TitleContainer $screenWidth={width}>
               <Title $screenWidth={width}>Tela Inicial</Title>
-              <SparkleImage source={sparkle} alt="Sparkle" $screenWidth={width}/>
+              <SparkleImage source={sparkle} alt="Sparkle" $screenWidth={width} />
             </TitleContainer>
             {/* <SearchPostContainerInput /> */}
           </TopContainer>
@@ -65,6 +67,7 @@ export default function Home() {
         </MainContentContainer>
       </Main>
       <Footer />
+      </Scroll>
     </Screen>
   );
 }

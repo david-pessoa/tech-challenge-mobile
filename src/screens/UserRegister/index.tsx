@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-
-import { useFonts } from 'expo-font';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +12,7 @@ import { createUser } from '../../services/user.service';
 import { styles } from './styles';
 import { theme } from '../../styles/Theme';
 import { ArrowBack, Cancel, Check, Download, KeyboardArrowDown, Visibility, VisibilityOff } from '@material-symbols-svg/react-native';
+import Header from '@/components/Header';
 
 const accessTypes: { label: string; value: Role }[] = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -27,11 +26,6 @@ export default function UserRegister() {
   const { user, isLoading } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [fontsLoaded, fontError] = useFonts({
-    Poppins: require('../../../assets/fonts/Poppins-Regular.ttf'),
-    PoppinsMedium: require('../../../assets/fonts/Poppins-Medium.ttf'),
-    PoppinsSemiBold: require('../../../assets/fonts/Poppins-SemiBold.ttf'),
-  });
   const photoPickerRef = useRef<View>(null);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [name, setName] = useState('');
@@ -78,7 +72,7 @@ export default function UserRegister() {
       element.removeEventListener('dragover', preventDropNavigation);
       element.removeEventListener('drop', handleDrop);
     };
-  }, [fontsLoaded, isLoading, canRegister, isSaving]);
+  }, [isLoading, canRegister, isSaving]);
 
   useEffect(() => {
     return () => {
@@ -218,12 +212,11 @@ export default function UserRegister() {
   }
 
 
-  if (isLoading || (!fontsLoaded && !fontError)) {
+  if (isLoading) {
     return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando sessão" />;
   }
   if (!user) return <Redirect href="/login" />;
   if (!canRegister) return <Redirect href="/home" />;
-  if (fontError) return <Text>Não foi possível carregar a tela de cadastro.</Text>;
 
   const profileLabel = isProfessor ? 'Professor' : 'Admin';
   const selectedRoleLabel = accessTypes.find(accessType => accessType.value === selectedRole)?.label ?? 'Selecione o tipo de acesso...';
@@ -236,16 +229,7 @@ export default function UserRegister() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
-          <View style={[styles.header, isProfessor ? styles.professorHeader : styles.adminHeader]}>
-            <View style={styles.headerGroup}>
-              <Image source={require('../../../assets/images/logoEdify.png')} style={styles.logo} accessibilityLabel="Edify" />
-              <Text style={styles.headerText}>Edify {isProfessor ? 'Professores' : 'Administradores'}</Text>
-            </View>
-            <View style={styles.headerGroup}>
-              <View style={[styles.profileDot, isProfessor ? styles.professorDot : styles.adminDot]} />
-              <Text style={styles.profileText}>{profileLabel}</Text>
-            </View>
-          </View>
+          <Header />
 
           <View style={styles.form}>
             <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar à tela de início">
@@ -423,7 +407,7 @@ export default function UserRegister() {
             </View>
           </View>
 
-          <View style={styles.footer}><Footer /></View>
+          <Footer />
         </ScrollView>
       </KeyboardAvoidingView>
 

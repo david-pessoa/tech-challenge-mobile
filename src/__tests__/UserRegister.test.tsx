@@ -22,6 +22,10 @@ jest.mock('../services/user.service', () => ({ createUser: jest.fn() }));
 jest.mock('expo-router', () => ({
   Redirect: jest.fn(() => null),
   useRouter: () => ({ replace: mockReplace }),
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+  usePathname: () => '/home',
 }));
 jest.mock('expo-font', () => ({ useFonts: () => [true, null] }));
 jest.mock('@expo/vector-icons/Ionicons', () => ({
@@ -46,7 +50,8 @@ jest.mock(
       KeyboardArrowDown: MockIcon,
       Visibility: MockIcon,
       VisibilityOff: MockIcon,
-      Download: MockIcon
+      Download: MockIcon,
+      Logout: MockIcon
     };
   },
   { virtual: true },
