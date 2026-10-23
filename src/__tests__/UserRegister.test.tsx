@@ -5,6 +5,9 @@ import UserRegister from '../screens/UserRegister';
 import { useUser } from '../context/AuthContext';
 import { createUser } from '../services/user.service';
 import type { Role } from '../types/Roles';
+import { ReactElement } from 'react';
+import { ThemeProvider } from 'styled-components/native';
+import { theme } from '@/styles/Theme';
 
 const mockReplace = jest.fn();
 const originalFormData = globalThis.FormData;
@@ -19,6 +22,10 @@ jest.mock('../services/user.service', () => ({ createUser: jest.fn() }));
 jest.mock('expo-router', () => ({
   Redirect: jest.fn(() => null),
   useRouter: () => ({ replace: mockReplace }),
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+  usePathname: () => '/home',
 }));
 jest.mock('expo-font', () => ({ useFonts: () => [true, null] }));
 jest.mock('@expo/vector-icons/Ionicons', () => ({
@@ -29,10 +36,27 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }));
-jest.mock('../../assets/icons/eye.svg', () => 'EyeIcon');
-jest.mock('../../assets/icons/eyeOff.svg', () => 'EyeOffIcon');
-jest.mock('../../assets/icons/download-rounded.svg', () => 'DownloadIcon');
-jest.mock('../../assets/icons/remove-photo.svg', () => 'RemovePhotoIcon');
+
+jest.mock(
+  '@material-symbols-svg/react-native',
+  () => {
+    const MockIcon = () => null;
+
+    return {
+      Close: MockIcon,
+      Cancel: MockIcon,
+      ArrowBack: MockIcon,
+      Check: MockIcon,
+      KeyboardArrowDown: MockIcon,
+      Visibility: MockIcon,
+      VisibilityOff: MockIcon,
+      Download: MockIcon,
+      Logout: MockIcon
+    };
+  },
+  { virtual: true },
+);
+
 
 const mockUseUser = jest.mocked(useUser);
 const mockCreateUser = jest.mocked(createUser);
@@ -73,6 +97,14 @@ function sentParts() {
   return form.getParts();
 }
 
+function renderWithTheme(component: ReactElement) {
+  return render(
+    <ThemeProvider theme={theme}>
+      {component}
+    </ThemeProvider>
+  );
+}
+
 beforeEach(() => {
   jest.resetAllMocks();
   setSession();
@@ -81,14 +113,14 @@ beforeEach(() => {
 
 describe('Permissões do cadastro', () => {
   it.each(['Aluno', 'Professor', 'Administrador'])('Administrador consegue selecionar o perfil %s', async label => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await selectRole(label);
     expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: label });
   });
 
   it('Professor tem apenas o perfil de aluno e envia o cadastro com essa permissão', async () => {
     setSession('PROFESSOR');
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     expect(screen.getByLabelText('Tipo de acesso')).toBeDisabled();
     expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: 'Aluno' });
     await fireEvent.press(screen.getByLabelText('Tipo de acesso'));
@@ -101,7 +133,7 @@ describe('Permissões do cadastro', () => {
 
   it('Aluno é redirecionado para a home sem acessar o formulário', async () => {
     setSession('ALUNO');
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/home');
     expect(screen.queryByLabelText('Enviar')).toBeNull();
     expect(mockCreateUser).not.toHaveBeenCalled();
@@ -109,7 +141,7 @@ describe('Permissões do cadastro', () => {
 
   it('Visitante sem sessão é redirecionado para o login', async () => {
     mockUseUser.mockReturnValue({ user: undefined, isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn() });
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/login');
     expect(mockCreateUser).not.toHaveBeenCalled();
   });
@@ -117,7 +149,7 @@ describe('Permissões do cadastro', () => {
 
 describe('Validações dos campos', () => {
   it('Mostra os campos obrigatórios e impede o envio quando o formulário está vazio', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(screen.getByText('O nome completo é obrigatório.')).toBeTruthy();
     expect(screen.getByText('A matrícula é obrigatória.')).toBeTruthy();
@@ -128,7 +160,7 @@ describe('Validações dos campos', () => {
   });
 
   it('Valida a senha obrigatória ao sair do campo sem enviar o formulário', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fireEvent(screen.getByLabelText('Senha'), 'blur');
     expect(screen.getByText('A senha é obrigatória.')).toBeTruthy();
     expect(screen.queryByText('Confirme sua senha.')).toBeNull();
@@ -136,7 +168,7 @@ describe('Validações dos campos', () => {
   });
 
   it('Valida a confirmação vazia ao sair do campo', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fireEvent.changeText(screen.getByLabelText('Senha'), 'Senha123@');
     await fireEvent(screen.getByLabelText('Confirme sua senha'), 'blur');
     expect(screen.getByText('Confirme sua senha.')).toBeTruthy();
@@ -144,7 +176,7 @@ describe('Validações dos campos', () => {
   });
 
   it('Mostra senhas diferentes ao sair do campo e remove o erro depois da correção', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fireEvent.changeText(screen.getByLabelText('Senha'), 'Senha123@');
     await fireEvent.changeText(screen.getByLabelText('Confirme sua senha'), 'OutraSenha');
     await fireEvent(screen.getByLabelText('Confirme sua senha'), 'blur');
@@ -160,7 +192,7 @@ describe('Validações dos campos', () => {
     ['31/02/2013', 'Informe uma data de nascimento válida.'],
     ['01/01/2999', 'A data de nascimento não pode ser futura.'],
   ])('Impede o cadastro com a data %s', async (value, message) => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), value);
@@ -170,7 +202,7 @@ describe('Validações dos campos', () => {
   });
 
   it('Converte uma data válida de ano bissexto para o formato aceito pela API', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), '29/02/2012');
@@ -181,7 +213,7 @@ describe('Validações dos campos', () => {
 
 describe('Foto e envio do cadastro', () => {
   it('Permite selecionar e remover uma foto sem abrir a galeria novamente', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await selectPhoto();
     expect(screen.getByLabelText('Trocar foto do usuário')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Remover foto do usuário'));
@@ -191,7 +223,7 @@ describe('Foto e envio do cadastro', () => {
   });
 
   it('Mantém a foto anterior quando a troca é cancelada', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await selectPhoto();
     mockPickPhoto.mockResolvedValueOnce({ canceled: true, assets: null });
     await fireEvent.press(screen.getByLabelText('Trocar foto do usuário'));
@@ -202,7 +234,7 @@ describe('Foto e envio do cadastro', () => {
   });
 
   it('Envia a foto e limpa os campos e a imagem depois do cadastro bem-sucedido', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole('Professor');
     await selectPhoto();
@@ -222,7 +254,7 @@ describe('Foto e envio do cadastro', () => {
   });
 
   it('Permite cadastrar sem foto e sem data de nascimento', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await fireEvent.press(screen.getByLabelText('Enviar'));
@@ -231,7 +263,7 @@ describe('Foto e envio do cadastro', () => {
   });
 
   it('Impede enviar uma foto acima de 5 MB', async () => {
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await selectPhoto({ ...photo, fileSize: 5 * 1024 * 1024 + 1 });
@@ -243,7 +275,7 @@ describe('Foto e envio do cadastro', () => {
 
   it('Exibe matrícula duplicada no campo e no toast e mantém os dados preenchidos', async () => {
     mockCreateUser.mockRejectedValueOnce(new Error('Matrícula já cadastrada'));
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await selectPhoto();
@@ -256,7 +288,7 @@ describe('Foto e envio do cadastro', () => {
 
   it('Apresenta o erro da API e permite tentar novamente sem preencher tudo outra vez', async () => {
     mockCreateUser.mockRejectedValueOnce(new Error('Token não informado'));
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     await fireEvent.press(screen.getByLabelText('Enviar'));
@@ -270,7 +302,7 @@ describe('Foto e envio do cadastro', () => {
   it('Bloqueia novos envios enquanto aguarda a resposta da API', async () => {
     let complete!: (value: unknown) => void;
     mockCreateUser.mockReturnValueOnce(new Promise(resolve => { complete = resolve; }));
-    await render(<UserRegister />);
+    await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
     const submission = fireEvent.press(screen.getByLabelText('Enviar'));

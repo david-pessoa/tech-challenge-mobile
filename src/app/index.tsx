@@ -18,7 +18,7 @@ export default function Index() {
         <Text
           style={[
             styles.message,
-            { color: theme.colors.primary, fontFamily: theme.typography.fontFamily },
+            { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium },
           ]}
         >
           Verificando acessos...

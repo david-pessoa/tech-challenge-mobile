@@ -7,5 +7,5 @@ export const styles = StyleSheet.create({
   error: { backgroundColor: '#A52A36' },
   message: { flex: 1, fontFamily: 'Poppins', fontSize: 12, lineHeight: 18, color: '#FFFFFF' },
   closeButton: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  closeText: { fontSize: 24, color: '#FFFFFF' },
+  closeText: { width: 24, height: 24, color: '#FFFFFF' },
 });

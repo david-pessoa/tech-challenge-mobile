@@ -30,35 +30,40 @@ export const theme = {
   },
 
   typography: {
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'system-ui' }),
+    fontFamily: {
+      regular: 'Poppins_400Regular',
+      medium: 'Poppins_500Medium',
+      semiBold: 'Poppins_600SemiBold',
+      bold: 'Poppins_700Bold',
+    },
     color: '#32434D',
     h1: {
-      fontSize: '2rem',
+      fontSize: '32px',
       lineHeight: '100%',
       fontWeight: '600',
     },
     h2: {
-      fontSize: '1.5rem',
+      fontSize: '24px',
     },
     h3: {
-      fontSize: '1rem',
+      fontSize: '16px',
     },
     field: {
-      fontSize: '1rem',
-      lineHeight: '1.25rem',
+      fontSize: '16px',
+      lineHeight: '20px',
       fontWeight: '600',
     },
     backLink: {
-      fontSize: '0.938rem',
+      fontSize: '15px',
       fontWeight: '400',
     },
     uploadHint: {
-      fontSize: '0.625rem',
-      lineHeight: '1.25rem',
+      fontSize: '10px',
+      lineHeight: '20px',
       fontWeight: '600',
     },
     passwordIcon: {
-      fontSize: '1.5rem',
+      fontSize: '24px',
     },
   },
 };

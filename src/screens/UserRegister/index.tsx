@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFonts } from 'expo-font';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,13 +8,11 @@ import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
-import EyeIcon from '../../../assets/icons/eye.svg';
-import DownloadIcon from '../../../assets/icons/download-rounded.svg';
-import RemovePhotoIcon from '../../../assets/icons/remove-photo.svg';
-import EyeOffIcon from '../../../assets/icons/eyeOff.svg';
 import { createUser } from '../../services/user.service';
 import { styles } from './styles';
 import { theme } from '../../styles/Theme';
+import { ArrowBack, Cancel, Check, Download, KeyboardArrowDown, Visibility, VisibilityOff } from '@material-symbols-svg/react-native';
+import Header from '@/components/Header';
 
 const accessTypes: { label: string; value: Role }[] = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -30,12 +26,6 @@ export default function UserRegister() {
   const { user, isLoading } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [fontsLoaded, fontError] = useFonts({
-    Poppins: require('../../../assets/fonts/Poppins-Regular.ttf'),
-    PoppinsMedium: require('../../../assets/fonts/Poppins-Medium.ttf'),
-    PoppinsSemiBold: require('../../../assets/fonts/Poppins-SemiBold.ttf'),
-    ...Ionicons.font,
-  });
   const photoPickerRef = useRef<View>(null);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [name, setName] = useState('');
@@ -82,7 +72,7 @@ export default function UserRegister() {
       element.removeEventListener('dragover', preventDropNavigation);
       element.removeEventListener('drop', handleDrop);
     };
-  }, [fontsLoaded, isLoading, canRegister, isSaving]);
+  }, [isLoading, canRegister, isSaving]);
 
   useEffect(() => {
     return () => {
@@ -222,12 +212,11 @@ export default function UserRegister() {
   }
 
 
-  if (isLoading || (!fontsLoaded && !fontError)) {
+  if (isLoading) {
     return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando sessão" />;
   }
   if (!user) return <Redirect href="/login" />;
   if (!canRegister) return <Redirect href="/home" />;
-  if (fontError) return <Text>Não foi possível carregar a tela de cadastro.</Text>;
 
   const profileLabel = isProfessor ? 'Professor' : 'Admin';
   const selectedRoleLabel = accessTypes.find(accessType => accessType.value === selectedRole)?.label ?? 'Selecione o tipo de acesso...';
@@ -240,20 +229,11 @@ export default function UserRegister() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
-          <View style={[styles.header, isProfessor ? styles.professorHeader : styles.adminHeader]}>
-            <View style={styles.headerGroup}>
-              <Image source={require('../../../assets/images/logoEdify.png')} style={styles.logo} accessibilityLabel="Edify" />
-              <Text style={styles.headerText}>Edify {isProfessor ? 'Professores' : 'Administradores'}</Text>
-            </View>
-            <View style={styles.headerGroup}>
-              <View style={[styles.profileDot, isProfessor ? styles.professorDot : styles.adminDot]} />
-              <Text style={styles.profileText}>{profileLabel}</Text>
-            </View>
-          </View>
+          <Header />
 
           <View style={styles.form}>
             <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar à tela de início">
-              <Ionicons name="arrow-back" size={18} color={theme.colors.backIcon} />
+              <ArrowBack size={18} color={theme.colors.backIcon} />
               <Text style={styles.backText}>Voltar à tela de início</Text>
             </Pressable>
             <View style={styles.titleRow}>
@@ -277,7 +257,7 @@ export default function UserRegister() {
                   <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" />
                 ) : (
                   <>
-                    <DownloadIcon width={14} height={14} />
+                    <Download width={14} height={14} />
                     <Text style={styles.photoHint}>Clique para carregar{Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}</Text>
                   </>
                 )}
@@ -291,7 +271,7 @@ export default function UserRegister() {
                   accessibilityLabel="Remover foto do usuário"
                   hitSlop={8}
                 >
-                  <RemovePhotoIcon width={20} height={20} />
+                  <Cancel width={20} height={20} />
                 </Pressable>
               )}
             </View>
@@ -345,7 +325,7 @@ export default function UserRegister() {
                   onPress={() => setShowAccessTypes(true)}
                 >
                   <Text style={styles.selectText}>{selectedRoleLabel}</Text>
-                  {!isProfessor && <Ionicons name="chevron-down" size={16} color={theme.colors.fieldPlaceholder} />}
+                  {!isProfessor && <KeyboardArrowDown size={16} color={theme.colors.fieldPlaceholder} />}
                 </Pressable>
                 {errors.role && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.role}</Text>}
               </View>
@@ -386,7 +366,7 @@ export default function UserRegister() {
                     autoCorrect={false}
                   />
                   <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowPassword(!showPassword)} accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
-                    {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                    {showPassword ? <Visibility /> : <VisibilityOff />}
                   </Pressable>
                 </View>
                 {errors.password && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.password}</Text>}
@@ -410,7 +390,7 @@ export default function UserRegister() {
                     autoCorrect={false}
                   />
                   <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowConfirmPassword(!showConfirmPassword)} accessibilityRole="button" accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'}>
-                    {showConfirmPassword ? <EyeIcon /> : <EyeOffIcon />}
+                    {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
                   </Pressable>
                 </View>
                 {errors.confirmPassword && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.confirmPassword}</Text>}
@@ -427,7 +407,7 @@ export default function UserRegister() {
             </View>
           </View>
 
-          <View style={styles.footer}><Footer /></View>
+          <Footer />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -447,7 +427,7 @@ export default function UserRegister() {
                 onPress={() => { setRole(accessType.value); clearFieldError('role'); setShowAccessTypes(false); }}
               >
                 <Text style={styles.optionText}>{accessType.label}</Text>
-                {selectedRole === accessType.value && <Ionicons name="checkmark" size={18} color={theme.colors.primary} />}
+                {selectedRole === accessType.value && <Check size={18} color={theme.colors.primary} />}
               </Pressable>
             ))}
           </View>

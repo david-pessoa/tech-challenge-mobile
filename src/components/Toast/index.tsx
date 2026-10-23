@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { styles } from './Toast.styles';
+import { styles } from './styles';
+import { Close } from '@material-symbols-svg/react-native';
 
 type ToastProps = {
   message: string;
@@ -22,7 +23,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
       <View style={[styles.toast, type === 'success' ? styles.success : styles.error]}>
         <Text style={styles.message} accessibilityRole="alert" accessibilityLiveRegion="polite">{message}</Text>
         <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Fechar notificação" style={styles.closeButton}>
-          <Text style={styles.closeText}>×</Text>
+          <Close style={styles.closeText} />
         </Pressable>
       </View>
     </View>
