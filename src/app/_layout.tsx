@@ -1,9 +1,10 @@
-import { theme } from '@/styles/theme';
-import { ThemeProvider } from 'styled-components/native';
 import { UserProvider } from '../context/AuthContext';
+import { ThemeProvider } from 'styled-components/native';
+import { theme } from '@/styles/Theme';
+import Index from './index';
+import Routes from './routes'
 import { AppContainer } from '../styles/GlobalStyles';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Routes from './routes';
 
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';

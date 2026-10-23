@@ -1,64 +1,44 @@
-import { type ReactNode } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { useTheme } from 'styled-components/native';
 import { useUser } from '../context/AuthContext';
-import { Redirect, useNavigation } from 'expo-router';
-import styled from 'styled-components/native';
-import type { Role } from '../types/Roles';
-import { ActivityIndicator } from 'react-native';
 
-const LoadingWrapper = styled.View`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1; 
-  width: 100%;
-  background-color: #FFFCF7;
-`;
-
-const Spinner = styled.View`
-  width: 60px;
-  height: 60px;
-  border-width: 6px;
-  border-style: solid;
-  border-color: #f6d4d9;
-  border-top-color: ${({ theme }) => theme.colors.primary};
-  border-radius: 30px;
-  /* animation: spin 1s linear infinite; */
-
-  /* @keyframes spin {
-    to { transform: rotate(360deg); }
-  } */
-`;
-
-const LoadingText = styled.Text`
-  margin-top: 16px;
-  font-size: 19px;
-  color: ${({ theme }) => theme.colors.primary};
-  font-family: ${({ theme }) => theme.typography.fontFamily.bold};
-`;
-
-type PrivateRoutesProps = {
-  children: ReactNode;
-  acceptedRoles: Role[];
-};
-
-export default function Index({ children, acceptedRoles }: PrivateRoutesProps) {
+export default function Index() {
   const { user, isLoading } = useUser();
-  
+  const theme = useTheme();
+
   if (isLoading) {
     return (
-      <LoadingWrapper>
-        <ActivityIndicator size="large" color="#C0765A"/>
-        <LoadingText>Verificando acessos...</LoadingText>
-      </LoadingWrapper>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator
+          size="large"
+          color={theme.colors.primary}
+          accessibilityLabel="Carregando sessão"
+        />
+        <Text
+          style={[
+            styles.message,
+            { color: theme.colors.primary, fontFamily: theme.typography.fontFamily.medium },
+          ]}
+        >
+          Verificando acessos...
+        </Text>
+      </View>
     );
   }
-  if (!user) {
-    return <Redirect href='/login' />;
-  }
-  // if (!acceptedRoles.includes(user.role)) {
-  //   // Tela de acesso não autorizado
-  // }
-  return <Redirect href="/home" />;
+
+  return <Redirect href={user ? '/home' : '/login'} />;
 }
 
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  message: {
+    marginTop: 16,
+    fontSize: 19,
+    fontWeight: '600',
+  },
+});

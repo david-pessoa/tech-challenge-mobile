@@ -37,7 +37,7 @@ export const Box = styled.View.attrs({ style: shadowStyle })<ResponsiveProps>`
   padding-right: ${({ $screenWidth }) => ($screenWidth > 700 ? 24 : 11)}px;
 `;
 
-export const LogoContainer = styled.View`
+export const LogoContainer = styled.View<ResponsiveProps>`
   align-items: center;
   flex-direction: row;
   gap: 16px;

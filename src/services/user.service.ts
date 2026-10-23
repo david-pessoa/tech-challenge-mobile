@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { api } from './api';
 import { getBackendErrorMessage } from './auth.service';
 
@@ -26,7 +27,9 @@ export async function createUser(user: FormData) {
     const response = await api.post('/user', user);
     return response.data;
   } catch (error) {
-    console.error('Erro na criação de usuário:', error);
+    if (!isAxiosError(error) || !error.response || error.response.status >= 500) {
+      console.error('Erro na criação de usuário:', error);
+    }
     throw new Error(getBackendErrorMessage(error));
   }
 }
