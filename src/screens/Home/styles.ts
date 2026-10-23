@@ -3,7 +3,7 @@ import styled from 'styled-components/native';
 
 export const Main = styled.View<ResponsiveProps>`
   padding-left: 20px;
-  flex-direction: row;
+  flex-direction: column;
   width: 100%;
   justify-content: ${({ $screenWidth }) => ($screenWidth > 854 ? 'space-between' : 'flex-start')};
   gap: 18px;
@@ -30,10 +30,17 @@ export const TopContainer = styled.View<ResponsiveProps>`
 `;
 
 export const Title = styled.Text<ResponsiveProps>`
-  font-family: ${({ theme }) => theme.typography.fontFamily.bold};
+  font-family: ${({ theme }) => theme.typography.fontFamily.semiBold};
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ $screenWidth }) => ($screenWidth > 1000 ? 32 : $screenWidth > 600 ? 24 : 15)}px;
 `;
+
+export const Paragraph = styled.Text<ResponsiveProps>`
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ $screenWidth }) => ($screenWidth > 1000 ? 16 : $screenWidth > 600 ? 14 : 10)}px;
+`;
+
 export const TitleContainer = styled.View<ResponsiveProps>`
   flex-direction: row;
   align-items: center;
@@ -42,7 +49,8 @@ export const TitleContainer = styled.View<ResponsiveProps>`
 `;
 
 export const SparkleImage = styled.Image<ResponsiveProps>`
-  height: ${({ $screenWidth }) => ($screenWidth > 900 ? 'auto' : 42)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 900 ? 66 : $screenWidth > 600 ? 42 : 23)}px;
+  width: ${({ $screenWidth }) => ($screenWidth > 900 ? 66 : $screenWidth > 600 ? 42 : 23)}px;
 `;
 
 export const FigureContainer = styled.View`
@@ -51,13 +59,12 @@ export const FigureContainer = styled.View`
 `;
 
 export const ProfileContainer = styled.View<ResponsiveProps>`
-  padding-left: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 20)}px;
+  
 `;
 
 export const ProfileImageContainer = styled.View`
   align-items: center;
   position: relative;
-  width: fit-content;
   margin-top: 0;
   margin-bottom: 0;
   margin-left: auto;
@@ -66,6 +73,7 @@ export const ProfileImageContainer = styled.View`
 
 export const DoodleImage = styled.Image<ResponsiveProps>`
   width: ${({ $screenWidth }) => ($screenWidth > 600 ? 84.28 : 45)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 600 ? 84.28 * 82/98 : 45 * 82/98)}px;
   position: absolute;
   top: ${({ $screenWidth }) => ($screenWidth > 900 ? -15 : $screenWidth > 600 ? -35 : -20)}px;
   left: ${({ $screenWidth }) => ($screenWidth > 900 ? 67 : $screenWidth > 600 ? 85 : 45)}px;
@@ -74,9 +82,9 @@ export const DoodleImage = styled.Image<ResponsiveProps>`
 
 export const ProfileImage = styled.Image<ResponsiveProps>`
   position: relative;
-  border-radius: 50%;
-  aspect-ratio: 1 / 1;
+  border-radius: ${({ $screenWidth }) => ($screenWidth > 900 ? 70 : $screenWidth > 600 ? 61 : 45)}px;
   width: ${({ $screenWidth }) => ($screenWidth > 900 ? 140 : $screenWidth > 600 ? 162 : 90)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 900 ? 140 : $screenWidth > 600 ? 162 : 90)}px;
   margin-top: ${({ $screenWidth }) => ($screenWidth > 900 ? 20 : 0)}px;
 `;
 
@@ -93,5 +101,5 @@ export const Figcaption = styled.View`
 `;
 
 export const Figure = styled.View`
-  margin-bottom: 20px;
+  
 `;

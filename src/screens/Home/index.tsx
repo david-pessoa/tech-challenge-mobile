@@ -11,6 +11,7 @@ import {
   FigureContainer,
   Main,
   MainContentContainer,
+  Paragraph,
   ProfileContainer,
   ProfileImage,
   ProfileImageContainer,
@@ -26,7 +27,6 @@ import { useWindowDimensions } from 'react-native';
 import { BASE_URL } from '@/services/api';
 
 export default function Home() {
-  document.title = 'Edify | Home';
   const { user } = useUser();
   const { width } = useWindowDimensions();
 
@@ -48,20 +48,20 @@ export default function Home() {
               </ProfileImageContainer>
               <Figcaption>
                 {user && <StudentName $screenWidth={width}>{user.nome}</StudentName>}
-                <p>{capitalize(user?.role ?? 'aluno')}</p>
+                <Paragraph $screenWidth={width}>{capitalize(user?.role ?? 'aluno')}</Paragraph>
               </Figcaption>
             </Figure>
           </FigureContainer>
         </ProfileContainer>
         <MainContentContainer $screenWidth={width}>
-          {/* <TopContainer>
-            <TitleContainer>
+          <TopContainer $screenWidth={width}>
+            <TitleContainer $screenWidth={width}>
               <Title $screenWidth={width}>Tela Inicial</Title>
-              <SparkleImage source={sparkle} alt="Sparkle" />
+              <SparkleImage source={sparkle} alt="Sparkle" $screenWidth={width}/>
             </TitleContainer>
-            <SearchPostContainerInput />
+            {/* <SearchPostContainerInput /> */}
           </TopContainer>
-          <PostsContainer /> */}
+          {/* <PostsContainer /> */}
         </MainContentContainer>
       </Main>
       <Footer />
