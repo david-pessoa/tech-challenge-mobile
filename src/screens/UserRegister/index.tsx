@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +26,9 @@ export default function UserRegister() {
   const { user, isLoading } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+  const photoSize = isTablet ? 144 : 88;
   const photoPickerRef = useRef<View>(null);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [name, setName] = useState('');
@@ -231,59 +234,60 @@ export default function UserRegister() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
           <Header />
 
-          <View style={styles.form}>
+          <View style={[styles.form, isTablet && styles.tabletForm]}>
             <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar à tela de início">
               <ArrowBack size={18} color={theme.colors.backIcon} />
               <Text style={styles.backText}>Voltar à tela de início</Text>
             </Pressable>
-            <View style={styles.titleRow}>
-              <Text style={styles.title} accessibilityRole="header">Novo Usuário</Text>
+            <View style={[styles.titleRow, isTablet && styles.tabletTitleRow]}>
+              <Text style={[styles.title, isTablet && styles.tabletTitle]} accessibilityRole="header">Novo Usuário</Text>
               <Image source={require('../../../assets/images/red-doodle.png')} style={styles.decoration} resizeMode="contain" />
             </View>
 
-            <View style={styles.photoContainer}>
-              <Pressable
-                ref={photoPickerRef}
-                style={[styles.photoPicker, isSaving && styles.disabled]}
-                onPress={selectPhoto}
-                disabled={isSaving}
-                accessibilityRole="button"
-                accessibilityLabel={photo ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
-              >
-                <Svg width={88} height={88} viewBox="0 0 88 88" style={styles.photoBorder} pointerEvents="none">
-                  <Circle cx={44} cy={44} r={43.5} fill="none" stroke={theme.colors.primary} strokeWidth={1} strokeDasharray="17 17.165" />
-                </Svg>
-                {photo ? (
-                  <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" />
-                ) : (
-                  <>
-                    <Download width={14} height={14} />
-                    <Text style={styles.photoHint}>Clique para carregar{Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}</Text>
-                  </>
-                )}
-              </Pressable>
-              {photo && (
-                <Pressable
-                  style={styles.removePhotoButton}
-                  onPress={() => { setPhoto(undefined); clearFieldError('photo'); }}
-                  disabled={isSaving}
-                  accessibilityRole="button"
-                  accessibilityLabel="Remover foto do usuário"
-                  hitSlop={8}
-                >
-                  <Cancel width={20} height={20} />
-                </Pressable>
-              )}
-            </View>
+            <View style={[styles.photoNameRow, isTablet && styles.tabletPhotoNameRow]}>
+              <View style={isTablet ? styles.tabletPhotoField : undefined}>
+                <View style={[styles.photoContainer, isTablet && styles.tabletPhotoContainer]}>
+                  <Pressable
+                    ref={photoPickerRef}
+                    style={[styles.photoPicker, isTablet && styles.tabletPhotoPicker, isSaving && styles.disabled]}
+                    onPress={selectPhoto}
+                    disabled={isSaving}
+                    accessibilityRole="button"
+                    accessibilityLabel={photo ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
+                  >
+                    <Svg width={photoSize} height={photoSize} viewBox="0 0 88 88" style={styles.photoBorder} pointerEvents="none">
+                      <Circle cx={44} cy={44} r={43.5} fill="none" stroke={theme.colors.primary} strokeWidth={1} strokeDasharray="17 17.165" />
+                    </Svg>
+                    {photo ? (
+                      <Image source={{ uri: photo.uri }} style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]} resizeMode="cover" />
+                    ) : (
+                      <>
+                        <Download width={isTablet ? 24 : 14} height={isTablet ? 24 : 14} color={theme.colors.primary} />
+                        <Text style={[styles.photoHint, isTablet && styles.tabletPhotoHint]}>Clique para carregar{Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}</Text>
+                      </>
+                    )}
+                  </Pressable>
+                  {photo && (
+                    <Pressable
+                      style={styles.removePhotoButton}
+                      onPress={() => { setPhoto(undefined); clearFieldError('photo'); }}
+                      disabled={isSaving}
+                      accessibilityRole="button"
+                      accessibilityLabel="Remover foto do usuário"
+                      hitSlop={8}
+                    >
+                      <Cancel width={20} height={20} />
+                    </Pressable>
+                  )}
+                </View>
 
-            {errors.photo && <Text style={[styles.fieldError, styles.photoError]} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.photo}</Text>}
-
-            <View style={styles.fields}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Nome Completo <Text style={styles.required}>*</Text></Text>
+                {errors.photo && <Text style={[styles.fieldError, styles.photoError, isTablet && styles.tabletPhotoError]} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.photo}</Text>}
+              </View>
+              <View style={[styles.field, isTablet && styles.tabletNameField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Nome Completo <Text style={styles.required}>*</Text></Text>
                 <TextInput
                   editable={!isSaving}
-                  style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'name' && styles.inputFocused]}
                   onFocus={() => setFocusedField('name')}
                   onBlur={() => setFocusedField(undefined)}
                   placeholderTextColor={theme.colors.fieldPlaceholder}
@@ -295,12 +299,14 @@ export default function UserRegister() {
                 />
                 {errors.name && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.name}</Text>}
               </View>
+            </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Data de nascimento</Text>
+            <View style={[styles.fields, isTablet && styles.tabletFields]}>
+              <View style={[styles.field, isTablet && styles.tabletField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Data de nascimento</Text>
                 <TextInput
                   editable={!isSaving}
-                  style={[styles.input, focusedField === 'birthDate' && styles.inputFocused]}
+                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'birthDate' && styles.inputFocused]}
                   onFocus={() => setFocusedField('birthDate')}
                   onBlur={() => setFocusedField(undefined)}
                   placeholderTextColor={theme.colors.fieldPlaceholder}
@@ -313,10 +319,10 @@ export default function UserRegister() {
                 {errors.birthDate && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.birthDate}</Text>}
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Selecione o tipo de acesso: <Text style={styles.required}>*</Text></Text>
+              <View style={[styles.field, isTablet && styles.tabletField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Selecione o tipo de acesso: <Text style={styles.required}>*</Text></Text>
                 <Pressable
-                  style={[styles.input, styles.select, isProfessor && styles.disabled]}
+                  style={[styles.input, isTablet && styles.tabletControl, styles.select, isProfessor && styles.disabled]}
                   accessibilityRole="button"
                   accessibilityLabel="Tipo de acesso"
                   accessibilityValue={{ text: selectedRoleLabel }}
@@ -324,17 +330,17 @@ export default function UserRegister() {
                   disabled={isSaving || isProfessor}
                   onPress={() => setShowAccessTypes(true)}
                 >
-                  <Text style={styles.selectText}>{selectedRoleLabel}</Text>
+                  <Text numberOfLines={1} style={[styles.selectText, isTablet && styles.tabletText]}>{selectedRoleLabel}</Text>
                   {!isProfessor && <KeyboardArrowDown size={16} color={theme.colors.fieldPlaceholder} />}
                 </Pressable>
                 {errors.role && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.role}</Text>}
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Matrícula <Text style={styles.required}>*</Text></Text>
+              <View style={[styles.field, isTablet && styles.tabletFullField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Matrícula <Text style={styles.required}>*</Text></Text>
                 <TextInput
                   editable={!isSaving}
-                  style={[styles.input, focusedField === 'registration' && styles.inputFocused]}
+                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'registration' && styles.inputFocused]}
                   onFocus={() => setFocusedField('registration')}
                   onBlur={() => setFocusedField(undefined)}
                   placeholderTextColor={theme.colors.fieldPlaceholder}
@@ -348,12 +354,12 @@ export default function UserRegister() {
                 {errors.registration && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.registration}</Text>}
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Senha <Text style={styles.required}>*</Text></Text>
-                <View style={[styles.passwordField, focusedField === 'password' && styles.inputFocused]}>
+              <View style={[styles.field, isTablet && styles.tabletField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Senha <Text style={styles.required}>*</Text></Text>
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'password' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
-                    style={styles.passwordInput}
+                    style={[styles.passwordInput, isTablet && styles.tabletInput]}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => validatePasswords('password')}
                     placeholderTextColor={theme.colors.fieldPlaceholder}
@@ -366,18 +372,18 @@ export default function UserRegister() {
                     autoCorrect={false}
                   />
                   <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowPassword(!showPassword)} accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
-                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                    {showPassword ? <Visibility size={18} color={theme.colors.passwordIcon} /> : <VisibilityOff size={18} color={theme.colors.passwordIcon} />}
                   </Pressable>
                 </View>
                 {errors.password && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.password}</Text>}
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Confirme sua senha <Text style={styles.required}>*</Text></Text>
-                <View style={[styles.passwordField, focusedField === 'confirmPassword' && styles.inputFocused]}>
+              <View style={[styles.field, isTablet && styles.tabletField]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Confirme sua senha <Text style={styles.required}>*</Text></Text>
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'confirmPassword' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
-                    style={styles.passwordInput}
+                    style={[styles.passwordInput, isTablet && styles.tabletInput]}
                     onFocus={() => setFocusedField('confirmPassword')}
                     onBlur={() => validatePasswords('confirmPassword')}
                     placeholderTextColor={theme.colors.fieldPlaceholder}
@@ -390,14 +396,14 @@ export default function UserRegister() {
                     autoCorrect={false}
                   />
                   <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowConfirmPassword(!showConfirmPassword)} accessibilityRole="button" accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'}>
-                    {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                    {showConfirmPassword ? <Visibility size={18} color={theme.colors.passwordIcon} /> : <VisibilityOff size={18} color={theme.colors.passwordIcon} />}
                   </Pressable>
                 </View>
                 {errors.confirmPassword && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.confirmPassword}</Text>}
               </View>
             </View>
 
-            <View style={styles.actions}>
+            <View style={[styles.actions, isTablet && styles.tabletActions]}>
               <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={goHome} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
               </Pressable>
@@ -416,7 +422,7 @@ export default function UserRegister() {
       <Modal visible={showAccessTypes && !isProfessor} transparent animationType="fade" onRequestClose={() => setShowAccessTypes(false)}>
         <Pressable style={styles.overlay} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de perfil">
           <View style={styles.options} accessibilityViewIsModal>
-            <Text style={styles.label}>Tipo de acesso</Text>
+            <Text style={[styles.label, isTablet && styles.tabletLabel]}>Tipo de acesso</Text>
             {availableAccessTypes.map(accessType => (
               <Pressable
                 key={accessType.value}
