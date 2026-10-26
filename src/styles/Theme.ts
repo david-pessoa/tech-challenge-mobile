@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const theme = {
   colors: {
     primary: '#C0765A',
@@ -8,7 +10,7 @@ export const theme = {
     fieldBackground: '#FBF6EA',
     fieldPlaceholder: '#9A8372',
     fieldShadow: '#D8D0BF',
-    fieldFocus: '#F2C0AD',
+    fieldFocus: '#FF9800',
     uploadText: '#98816D',
     backLink: '#3A505D',
     backIcon: '#F6A4B0',
@@ -28,35 +30,40 @@ export const theme = {
   },
 
   typography: {
-    fontFamily: 'Poppins, sans-serif',
+    fontFamily: {
+      regular: 'Poppins_400Regular',
+      medium: 'Poppins_500Medium',
+      semiBold: 'Poppins_600SemiBold',
+      bold: 'Poppins_700Bold',
+    },
     color: '#32434D',
     h1: {
-      fontSize: '2rem',
+      fontSize: '32px',
       lineHeight: '100%',
       fontWeight: '600',
     },
     h2: {
-      fontSize: '1.5rem',
+      fontSize: '24px',
     },
     h3: {
-      fontSize: '1rem',
+      fontSize: '16px',
     },
     field: {
-      fontSize: '1rem',
-      lineHeight: '1.25rem',
+      fontSize: '16px',
+      lineHeight: '20px',
       fontWeight: '600',
     },
     backLink: {
-      fontSize: '0.938rem',
+      fontSize: '15px',
       fontWeight: '400',
     },
     uploadHint: {
-      fontSize: '0.625rem',
-      lineHeight: '1.25rem',
+      fontSize: '10px',
+      lineHeight: '20px',
       fontWeight: '600',
     },
     passwordIcon: {
-      fontSize: '1.5rem',
+      fontSize: '24px',
     },
   },
 };
