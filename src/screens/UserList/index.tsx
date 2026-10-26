@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -10,6 +11,10 @@ export default function UserList() {
         <Header />
         <View>
           <Text accessibilityRole="header">Lista completa</Text>
+          <View>
+            <Link href="/home">Voltar à tela de início</Link>
+            <Link href="/user-register">Novo Usuário</Link>
+          </View>
         </View>
         <Footer />
       </Scroll>
