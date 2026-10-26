@@ -83,7 +83,7 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
               <Text>{formatBirthDate(listedUser.birthDate)}</Text>
             </View>
             <View style={styles.column}>
-              <Text>{listedUser.birthDate}</Text>
+              <Text>{listedUser.matricula}</Text>
             </View>
             <View style={styles.column} />
           </View>
