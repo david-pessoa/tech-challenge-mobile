@@ -1,10 +1,12 @@
 import { isAxiosError } from 'axios';
 import { api } from './api';
+import type { Role } from '../types/Roles';
+import type { UserListResponse } from '../types/UserList';
 import { getBackendErrorMessage } from './auth.service';
 
-export async function getAllUsers() {
+export async function getAllUsers(params?: { role?: Role; p?: number; l?: number }) {
   try {
-    const response = await api.get('/user');
+    const response = await api.get<UserListResponse>('/user', { params });
     return response.data;
   } catch (error) {
     console.error('Erro na obtenção de lista de usuários:', error);
