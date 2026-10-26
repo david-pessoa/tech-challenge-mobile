@@ -4,7 +4,6 @@ import { useUser } from '@/context/AuthContext';
 import { BASE_URL } from '@/services/api';
 import { Screen, Scroll } from '@/styles/GlobalStyles';
 import { capitalize } from '@/utils/functions';
-import { useRouter } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
 import redDoodle from '../../../assets/images/red-doodle.png';
 import sparkle from '../../../assets/images/sparkle.png';
