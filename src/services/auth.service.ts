@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { api } from './api';
-import { clearToken } from '../utils/tokenStorage';
 
 /**
  * Extrai uma mensagem amigável de um erro vindo do back-end.
@@ -30,25 +29,14 @@ export function getBackendErrorMessage(error: unknown): string {
   return 'Não foi possível concluir a operação.';
 }
 
-/** Resposta do POST /api/auth/login */
-export type LoginResponse = {
-  message: string;
-  token: string;
-  usuario: {
-    id: string;
-    nome: string;
-    matricula: string;
-    role: string;
-  };
-};
-
 /**
- * Faz login. Em caso de sucesso devolve { token, usuario }.
- * Em caso de erro lança um Error com a mensagem já tratada.
+ * Faz login. O back-end grava o token no cookie HttpOnly "session" e
+ * devolve só os dados públicos do usuário. Em caso de erro lança um Error
+ * com a mensagem já tratada.
  */
-export async function login(matricula: string, password: string): Promise<LoginResponse> {
+export async function login(matricula: string, password: string) {
   try {
-    const response = await api.post<LoginResponse>('/auth/login', {
+    const response = await api.post('/auth/login', {
       matricula,
       senha: password,
     });
@@ -59,10 +47,7 @@ export async function login(matricula: string, password: string): Promise<LoginR
   }
 }
 
-/**
- * Logout. O back-end não tem rota de logout (o JWT é "stateless"),
- * então basta apagar o token do dispositivo.
- */
+/** Logout: o back-end remove o cookie de sessão (POST /api/auth/logout). */
 export async function logout() {
-  await clearToken();
+  await api.post('/auth/logout');
 }
