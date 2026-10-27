@@ -472,7 +472,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
             </View>
 
             <View style={[styles.actions, isTablet && styles.tabletActions]}>
-              <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={goHome} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
+              <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={() => router.replace('/user-list')} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
               </Pressable>
               <Pressable style={[styles.button, styles.submitButton, (isSaving || isEditing) && styles.disabled]} onPress={handleSubmit} disabled={isSaving || isEditing} accessibilityRole="button" accessibilityLabel={submitLabel} accessibilityState={{ disabled: isSaving || isEditing, busy: isSaving }}>

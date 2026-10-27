@@ -359,3 +359,10 @@ describe('Carregamento da edição de usuários', () => {
     expect(getUserById).toHaveBeenCalledTimes(2);
   });
 });
+
+it('Volta para a listagem ao cancelar um novo cadastro', async () => {
+  await renderWithTheme(<UserRegister />);
+  await fireEvent.press(screen.getByLabelText('Cancelar'));
+  expect(mockReplace).toHaveBeenCalledWith('/user-list');
+  expect(createUser).not.toHaveBeenCalled();
+});
