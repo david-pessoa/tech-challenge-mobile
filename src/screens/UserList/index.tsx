@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'expo-router';
-import { ActivityIndicator, Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { Add, ArrowBack, ChevronLeft, ChevronRight, Delete, Edit } from '@material-symbols-svg/react-native';
+import { ActivityIndicator, Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Add, ArrowBack, ChevronLeft, ChevronRight, Delete, Edit, KeyboardArrowDown } from '@material-symbols-svg/react-native';
 import { createStyles } from './styles';
 import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
@@ -31,6 +31,9 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
   const [retryCount, setRetryCount] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [pageLength, setPageLength] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+  const [showPageLengths, setShowPageLengths] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -39,10 +42,11 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
       setIsLoading(true);
       setError('');
       try {
-        const response = await getAllUsers({ role, p: page, l: 10 });
+        const response = await getAllUsers({ role, p: page, l: pageLength });
         if (active) {
           setUsers(response.users);
           setTotalPages(response.pagination.totalPages);
+          setTotalItems(response.pagination.totalItems);
         }
       } catch (error) {
         if (active) {
@@ -57,7 +61,7 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
     return () => {
       active = false;
     };
-  }, [role, retryCount, page]);
+  }, [role, retryCount, page, pageLength]);
 
   return (
     <View style={styles.section}>
@@ -126,9 +130,25 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
           </View>
         ))
       )}
-      {!isLoading && !error && totalPages > 0 && (
+      {!isLoading && !error && (
         <View style={styles.pagination}>
-          <Text style={styles.pageText} accessibilityLiveRegion="polite">Mostrar {page} de {totalPages}</Text>
+          <View style={styles.pageLengthControl}>
+            <Text style={styles.pageLabel}>Mostrar:</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Quantidade de ${title.toLowerCase()} por página`}
+              accessibilityValue={{ text: String(pageLength) }}
+              accessibilityState={{ expanded: showPageLengths }}
+              style={styles.pageLengthButton}
+              onPress={() => setShowPageLengths(true)}
+            >
+              <Text style={styles.pageText}>{pageLength}</Text>
+              <KeyboardArrowDown width={20} height={20} fill="#596A86" />
+            </Pressable>
+          </View>
+          <Text style={styles.pageText} accessibilityLiveRegion="polite">
+            {users.length ? (page - 1) * pageLength + 1 : 0}–{users.length ? (page - 1) * pageLength + users.length : 0} de {totalItems}
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Página anterior de ${title.toLowerCase()}`}
@@ -149,6 +169,29 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
           </Pressable>
         </View>
       )}
+      <Modal visible={showPageLengths} transparent animationType="fade" onRequestClose={() => setShowPageLengths(false)}>
+        <Pressable style={styles.optionsOverlay} onPress={() => setShowPageLengths(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de quantidade">
+          <View style={styles.pageLengthOptions} accessibilityViewIsModal>
+            <Text style={styles.optionsTitle}>Itens por página</Text>
+            {[5, 10, 20].map(quantity => (
+              <Pressable
+                key={quantity}
+                accessibilityRole="radio"
+                accessibilityLabel={`Mostrar ${quantity} itens`}
+                accessibilityState={{ checked: pageLength === quantity }}
+                style={[styles.pageLengthOption, pageLength === quantity && styles.selectedOption]}
+                onPress={() => {
+                  setPageLength(quantity);
+                  setPage(1);
+                  setShowPageLengths(false);
+                }}
+              >
+                <Text style={styles.pageText}>{quantity}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

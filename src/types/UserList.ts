@@ -15,5 +15,6 @@ export type UserListResponse = {
     currentPage: number;
     totalPages: number;
     pageLength: number;
+    totalItems: number;
   };
 };

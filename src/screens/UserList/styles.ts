@@ -31,9 +31,17 @@ export function createStyles(width: number) {
     errorText: { color: '#A52A36' },
     retryButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderColor: theme.colors.primary, borderRadius: 22 },
     retryText: { fontFamily: theme.typography.fontFamily.medium, color: theme.colors.primary, fontSize: 13 },
-    pagination: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 8 },
+    pagination: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: 4, marginTop: 8 },
     pageText: { fontFamily: theme.typography.fontFamily.regular, fontSize: tablet ? 14 : 12, color: '#596A86' },
     pageButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    pageLengthControl: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    pageLabel: { fontFamily: theme.typography.fontFamily.regular, fontSize: tablet ? 14 : 12, color: '#A6A6A6' },
+    pageLengthButton: { minWidth: 48, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+    optionsOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(50, 67, 77, 0.3)' },
+    pageLengthOptions: { width: '100%', maxWidth: 280, backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, gap: 8 },
+    optionsTitle: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 16, color: theme.colors.text, marginBottom: 8 },
+    pageLengthOption: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12 },
+    selectedOption: { backgroundColor: '#FFFBEB' },
     disabled: { opacity: 0.35 },
   });
 }
