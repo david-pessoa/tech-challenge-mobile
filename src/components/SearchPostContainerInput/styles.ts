@@ -35,6 +35,7 @@ export const ResultsList = styled.ScrollView<ResponsiveProps>`
   z-index: 100;
   list-style: none;
   margin-top: 5px;
+  max-height: 240px;
   background-color: #fef4d0;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;

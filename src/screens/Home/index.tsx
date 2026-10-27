@@ -26,6 +26,7 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
+import SearchPostContainerInput from '@/components/SearchPostContainerInput';
 
 export default function Home() {
   const { user } = useUser();
@@ -61,7 +62,7 @@ export default function Home() {
               <Title $screenWidth={width}>Tela Inicial</Title>
               <SparkleImage source={sparkle} alt="Sparkle" $screenWidth={width} />
             </TitleContainer>
-            {/* <SearchPostContainerInput /> */}
+            <SearchPostContainerInput />
           </TopContainer>
           {/* <PostsContainer /> */}
         </MainContentContainer>
