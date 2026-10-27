@@ -8,7 +8,7 @@ import { useUser } from '../../context/AuthContext';
 import type { Role } from '../../types/Roles';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
-import { createUser, getUserById } from '../../services/user.service';
+import { createUser, getUserById, updateUser } from '../../services/user.service';
 import { buildApiImageUrl } from '../../utils/functions';
 import { styles } from './styles';
 import { theme } from '../../styles/Theme';
@@ -167,7 +167,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
   }
 
   async function handleSubmit() {
-    if (isLoading || !canRegister || isSaving || isEditing) return;
+    if (isLoading || !canRegister || isSaving || isLoadingUser || userLoadError) return;
     setMessage('');
     setIsSuccess(false);
 
@@ -175,11 +175,13 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     if (!name.trim()) validationErrors.name = 'O nome completo é obrigatório.';
     if (!registration.trim()) validationErrors.registration = 'A matrícula é obrigatória.';
     if (!selectedRole) validationErrors.role = 'Selecione o tipo de acesso.';
-    if (!password.trim()) validationErrors.password = 'A senha é obrigatória.';
-    if (!confirmPassword) {
-      validationErrors.confirmPassword = 'Confirme sua senha.';
-    } else if (password !== confirmPassword) {
-      validationErrors.confirmPassword = 'As senhas não coincidem.';
+    if (!isEditing || password || confirmPassword) {
+      if (!password.trim()) validationErrors.password = 'A senha é obrigatória.';
+      if (!confirmPassword) {
+        validationErrors.confirmPassword = 'Confirme sua senha.';
+      } else if (password !== confirmPassword) {
+        validationErrors.confirmPassword = 'As senhas não coincidem.';
+      }
     }
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0 || !selectedRole) return;
@@ -188,7 +190,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     data.append('nome', name.trim());
     data.append('matricula', registration.trim());
     data.append('role', selectedRole);
-    data.append('senha', password);
+    if (password) data.append('senha', password);
 
     if (birthDate.trim()) {
       const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
@@ -240,21 +242,27 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         }
       }
 
-      await createUser(data);
+      if (userId) {
+        if (!photo && !existingPhoto) data.append('removeImage', 'true');
+        const updatedUser = await updateUser(userId, data);
+        setExistingPhoto(updatedUser.image ? buildApiImageUrl(updatedUser.image, Date.now()) : undefined);
+      } else {
+        await createUser(data);
+        setName('');
+        setBirthDate('');
+        setRole(undefined);
+        setRegistration('');
+      }
       setPhoto(undefined);
-      setName('');
-      setBirthDate('');
-      setRole(undefined);
-      setRegistration('');
       setPassword('');
       setConfirmPassword('');
       setIsSuccess(true);
       setShowPassword(false);
       setShowConfirmPassword(false);
-      setMessage('Usuário cadastrado com sucesso!');
+      setMessage(isEditing ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.';
-      if (/matr[ií]cula.*(cadastrad|existe)/i.test(errorMessage)) {
+      const errorMessage = error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar o usuário.' : 'Não foi possível cadastrar o usuário.';
+      if (/(matr[ií]cula.*(cadastrad|existe)|(cadastrad|existe).*matr[ií]cula)/i.test(errorMessage)) {
         setErrors({ registration: errorMessage });
       }
       setMessage(errorMessage);
@@ -475,7 +483,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
               <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={() => router.replace('/user-list')} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
               </Pressable>
-              <Pressable style={[styles.button, styles.submitButton, (isSaving || isEditing) && styles.disabled]} onPress={handleSubmit} disabled={isSaving || isEditing} accessibilityRole="button" accessibilityLabel={submitLabel} accessibilityState={{ disabled: isSaving || isEditing, busy: isSaving }}>
+              <Pressable style={[styles.button, styles.submitButton, isSaving && styles.disabled]} onPress={handleSubmit} disabled={isSaving} accessibilityRole="button" accessibilityLabel={submitLabel} accessibilityState={{ disabled: isSaving, busy: isSaving }}>
                 {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.buttonText, styles.submitText]}>{submitLabel}</Text>}
               </Pressable>
             </View>
