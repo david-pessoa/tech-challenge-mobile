@@ -1,7 +1,7 @@
 import { Search } from '@material-symbols-svg/react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { useWindowDimensions, Text } from 'react-native';
 import { useDebounce } from '../../hooks/debounce';
 import type { Post } from '../../types/Posts';
 import {
@@ -10,7 +10,8 @@ import {
   InputSearch,
   ListItem,
   ListItemButton,
-  ListItemText,
+  ListItemDescription,
+  ListItemTitle,
   ResultsList,
 } from './styles';
 
@@ -67,6 +68,42 @@ export default function SearchPostContainerInput() {
           createdAt: new Date('2026-01-01'),
           editedAt: new Date('2026-01-01')
         },
+        {
+          postId: '5',
+          titulo: 'Teste1',
+          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
+          materia: 'Matemática',
+          autor: 'Victor Hugo',
+          createdAt: new Date('2026-01-01'),
+          editedAt: new Date('2026-01-01')
+        },
+        {
+          postId: '6',
+          titulo: 'Teste1',
+          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
+          materia: 'Matemática',
+          autor: 'Victor Hugo',
+          createdAt: new Date('2026-01-01'),
+          editedAt: new Date('2026-01-01')
+        },
+        {
+          postId: '7',
+          titulo: 'Teste1',
+          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
+          materia: 'Matemática',
+          autor: 'Victor Hugo',
+          createdAt: new Date('2026-01-01'),
+          editedAt: new Date('2026-01-01')
+        },
+        {
+          postId: '8',
+          titulo: 'Teste1',
+          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
+          materia: 'Matemática',
+          autor: 'Victor Hugo',
+          createdAt: new Date('2026-01-01'),
+          editedAt: new Date('2026-01-01')
+        },
       ];
       setSearchedPostsList(relatedPosts.slice(0, 10));
     } catch (error) {
@@ -112,8 +149,8 @@ export default function SearchPostContainerInput() {
               })}
             >
               <ListItem $screenWidth={width}>
-                <ListItemText $screenWidth={width}>{post.titulo}</ListItemText>
-                <ListItemText $screenWidth={width}>{post.descricao}</ListItemText>
+                <ListItemTitle $screenWidth={width}>{post.titulo}</ListItemTitle>
+                <ListItemDescription $screenWidth={width}>{post.descricao}</ListItemDescription>
               </ListItem>
             </ListItemButton>
           ))}

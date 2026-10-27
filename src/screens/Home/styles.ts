@@ -2,21 +2,16 @@ import { ResponsiveProps } from '@/types/Props';
 import styled from 'styled-components/native';
 
 export const Main = styled.View<ResponsiveProps>`
-  padding-left: 20px;
+  margin-left: 18px;
   flex-direction: column;
-  width: 100%;
   justify-content: ${({ $screenWidth }) => ($screenWidth > 854 ? 'space-between' : 'flex-start')};
   gap: 18px;
-  padding-right: 15px;
+  margin-right: 18px;
 `;
 
 export const MainContentContainer = styled.View<ResponsiveProps>`
-  width: ${({ $screenWidth }) =>
-    $screenWidth > 1200
-      ? $screenWidth * 0.644135
-      : $screenWidth > 900
-        ? $screenWidth * 0.5827
-        : $screenWidth * 1}px;
+  width: 100%;
+  flex: 1;
 `;
 
 export const TopContainer = styled.View<ResponsiveProps>`
