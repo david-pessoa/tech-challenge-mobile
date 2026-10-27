@@ -1,7 +1,7 @@
 import { Search } from '@material-symbols-svg/react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useDebounce } from '../../hooks/debounce';
 import { searchPost } from '../../services/post.service';
 import type { Post } from '../../types/Posts';
@@ -11,6 +11,7 @@ import {
   InputSearch,
   ListItem,
   ListItemButton,
+  ListItemText,
   ResultsList,
 } from './styles';
 
@@ -20,6 +21,7 @@ export default function SearchPostContainerInput() {
   const [hideSearchResults, setHideSearchResults] = useState(true);
   const debouncedQuery = useDebounce(searchedText, 300);
   const router = useRouter();
+  const { width } = useWindowDimensions();
 
   async function handleInputChange() {
     if (searchedText === '') {
@@ -48,23 +50,30 @@ export default function SearchPostContainerInput() {
   }
 
   return (
-    <InputContainer onPress={() => setHideSearchResults(false)}>
-      <InnerInputContainer>
+    <InputContainer $screenWidth={width} onPress={() => setHideSearchResults(false)}>
+      <InnerInputContainer $screenWidth={width}>
         <InputSearch
+          $screenWidth={width}
           placeholder="Pesquise aqui..."
           value={searchedText}
           onChangeText={setSearchedText}
           onBlur={() => setHideSearchResults(true)}
         />
-        <Search />
+        <Search height={16} width={16} />
       </InnerInputContainer>
       {hideSearchResults && (
-        <ResultsList>
+        <ResultsList $screenWidth={width}>
           {searchedPostsList.map((post, i) => (
-            <ListItemButton onPress={() => goToPost(post.postId)}>
-              <ListItem key={i}>
-                <Text>{post.titulo}</Text>
-                <Text>{post.descricao}</Text>
+            <ListItemButton
+              $screenWidth={width}
+              onPress={() => goToPost(post.postId)}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#6f674c6b' : '#fef4d0',
+              })}
+            >
+              <ListItem key={i} $screenWidth={width}>
+                <ListItemText $screenWidth={width}>{post.titulo}</ListItemText>
+                <ListItemText $screenWidth={width}>{post.descricao}</ListItemText>
               </ListItem>
             </ListItemButton>
           ))}
