@@ -61,7 +61,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
 
 
   const photoUri = photo?.uri ?? existingPhoto;
-  const submitLabel = isEditing ? 'Salvar alterações' : 'Enviar';
+  const submitLabel = isEditing ? 'Salvar' : 'Enviar';
   const backLabel = isEditing ? 'Voltar à lista de usuários' : 'Voltar à tela de início';
 
   useEffect(() => {

@@ -333,7 +333,7 @@ describe('Carregamento da edição de usuários', () => {
     expect(screen.getByLabelText('Senha')).toHaveDisplayValue('');
     expect(screen.getByLabelText('Confirme sua senha')).toHaveDisplayValue('');
     expect(screen.getByLabelText('Trocar foto do usuário')).toBeTruthy();
-    expect(screen.getByLabelText('Salvar alterações')).toBeDisabled();
+    expect(screen.getByLabelText('Salvar')).toBeDisabled();
     expect(createUser).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByLabelText('Cancelar'));
     expect(mockReplace).toHaveBeenCalledWith('/user-list');
