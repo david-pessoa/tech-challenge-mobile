@@ -117,7 +117,7 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
       )}
       {!isLoading && !error && totalPages > 0 && (
         <View style={styles.pagination}>
-          <Text style={styles.pageText} accessibilityLiveRegion="polite">Página {page} de {totalPages}</Text>
+          <Text style={styles.pageText} accessibilityLiveRegion="polite">Mostrar {page} de {totalPages}</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Página anterior de ${title.toLowerCase()}`}
