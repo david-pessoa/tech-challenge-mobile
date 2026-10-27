@@ -23,6 +23,7 @@ export function createStyles(width: number) {
     dateColumn: { flex: 1.35 },
     actionsColumn: { flex: 0.8 },
     actionIcons: { flexDirection: 'row', gap: 4 },
+    editButton: { minHeight: 44, justifyContent: 'center', alignItems: 'center', flex: 1 },
     cellText: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: tablet ? 13 : 10, lineHeight: tablet ? 20 : 15, color: theme.colors.text, textAlign: 'center' },
     photo: { width: tablet ? 48 : 34, height: tablet ? 48 : 34, borderRadius: tablet ? 24 : 17 },
     status: { padding: 24, alignItems: 'center', gap: 12, backgroundColor: '#FFFBEB' },

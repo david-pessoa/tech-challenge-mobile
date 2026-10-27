@@ -114,7 +114,11 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
               <Text style={styles.cellText}>{listedUser.matricula}</Text>
             </View>
             <View style={[styles.column, styles.actionsColumn, styles.actionIcons]}>
-              <Edit width={iconSize} height={iconSize} fill="#A15E6D" accessibilityLabel={`Editar ${listedUser.nome}`} />
+              <Link href={{ pathname: '/user-edit/[userId]', params: { userId: listedUser.id } }} asChild>
+                <Pressable accessibilityRole="link" accessibilityLabel={`Editar ${listedUser.nome}`} style={styles.editButton}>
+                  <Edit width={iconSize} height={iconSize} fill="#A15E6D" />
+                </Pressable>
+              </Link>
               {user?.role === 'ADMIN' && (
                 <Delete width={iconSize} height={iconSize} fill="#E64B63" accessibilityLabel={`Excluir ${listedUser.nome}`} />
               )}
