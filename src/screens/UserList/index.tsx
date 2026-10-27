@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'expo-router';
 import { ActivityIndicator, Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { Add, ArrowBack, ChevronLeft, ChevronRight } from '@material-symbols-svg/react-native';
+import { Add, ArrowBack, ChevronLeft, ChevronRight, Delete, Edit } from '@material-symbols-svg/react-native';
 import { createStyles } from './styles';
 import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
@@ -21,7 +21,9 @@ function formatBirthDate(date: string | null) {
 }
 
 function UserListSection({ title, role }: { title: string; role: Role }) {
+  const { user } = useUser();
   const { width } = useWindowDimensions();
+  const iconSize = width >= 600 ? 20 : 14;
   const styles = createStyles(width);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +113,12 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
             <View style={styles.column}>
               <Text style={styles.cellText}>{listedUser.matricula}</Text>
             </View>
-            <View style={[styles.column, styles.actionsColumn]} />
+            <View style={[styles.column, styles.actionsColumn, styles.actionIcons]}>
+              <Edit width={iconSize} height={iconSize} fill="#A15E6D" accessibilityLabel={`Editar ${listedUser.nome}`} />
+              {user?.role === 'ADMIN' && (
+                <Delete width={iconSize} height={iconSize} fill="#E64B63" accessibilityLabel={`Excluir ${listedUser.nome}`} />
+              )}
+            </View>
           </View>
         ))
       )}
