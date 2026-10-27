@@ -3,7 +3,7 @@ import { Redirect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import UserRegister from '../screens/UserRegister';
 import { useUser } from '../context/AuthContext';
-import { createUser } from '../services/user.service';
+import { createUser, getUserById } from '../services/user.service';
 import type { Role } from '../types/Roles';
 import { ReactElement } from 'react';
 import { ThemeProvider } from 'styled-components/native';
@@ -18,7 +18,7 @@ beforeAll(() => {
 afterAll(() => { globalThis.FormData = originalFormData; });
 
 jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
-jest.mock('../services/user.service', () => ({ createUser: jest.fn() }));
+jest.mock('../services/user.service', () => ({ createUser: jest.fn(), getUserById: jest.fn() }));
 jest.mock('expo-router', () => ({
   Redirect: jest.fn(() => null),
   useRouter: () => ({ replace: mockReplace }),
@@ -312,5 +312,50 @@ describe('Foto e envio do cadastro', () => {
     await act(async () => { complete({ id: 'novo-usuario' }); });
     await submission;
     expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+  });
+});
+
+describe('Carregamento da edição de usuários', () => {
+  const selectedUser = {
+    id: 'aluno-2', nome: 'Serena Ramos', matricula: '935374',
+    role: 'ALUNO' as const, birthDate: '2013-01-05', image: '/api/user/aluno-2/image',
+  };
+
+  it('Preenche os dados do usuário selecionado e mantém as senhas vazias', async () => {
+    jest.mocked(getUserById).mockResolvedValue(selectedUser);
+    await renderWithTheme(<UserRegister userId="aluno-2" />);
+    await waitFor(() => expect(screen.getByText('Editar Usuário')).toBeTruthy());
+    expect(getUserById).toHaveBeenCalledWith('aluno-2');
+    expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Ramos');
+    expect(screen.getByLabelText('Matrícula')).toHaveDisplayValue('935374');
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+    expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: 'Aluno' });
+    expect(screen.getByLabelText('Senha')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Confirme sua senha')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Trocar foto do usuário')).toBeTruthy();
+    expect(screen.getByLabelText('Salvar alterações')).toBeDisabled();
+    expect(createUser).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Cancelar'));
+    expect(mockReplace).toHaveBeenCalledWith('/user-list');
+  });
+
+  it('Professor não consegue abrir a edição de outro professor', async () => {
+    setSession('PROFESSOR');
+    jest.mocked(getUserById).mockResolvedValue({ ...selectedUser, role: 'PROFESSOR' });
+    await renderWithTheme(<UserRegister userId="professor-2" />);
+    await waitFor(() => expect(screen.getByText('Você só pode editar usuários alunos.')).toBeTruthy());
+    expect(screen.queryByLabelText('Nome completo')).toBeNull();
+    expect(createUser).not.toHaveBeenCalled();
+  });
+
+  it('Permite tentar novamente quando o carregamento falha', async () => {
+    jest.mocked(getUserById)
+      .mockRejectedValueOnce(new Error('Não foi possível carregar o usuário.'))
+      .mockResolvedValueOnce(selectedUser);
+    await renderWithTheme(<UserRegister userId="aluno-2" />);
+    await waitFor(() => expect(screen.getByText('Não foi possível carregar o usuário.')).toBeTruthy());
+    await fireEvent.press(screen.getByText('Tentar novamente'));
+    await waitFor(() => expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Ramos'));
+    expect(getUserById).toHaveBeenCalledTimes(2);
   });
 });
