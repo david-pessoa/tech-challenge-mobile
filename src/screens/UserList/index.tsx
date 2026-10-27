@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'expo-router';
-import { ActivityIndicator, Button, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Add, ArrowBack, ChevronLeft, ChevronRight } from '@material-symbols-svg/react-native';
+import { createStyles } from './styles';
+import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useUser } from '../../context/AuthContext';
@@ -18,10 +21,14 @@ function formatBirthDate(date: string | null) {
 }
 
 function UserListSection({ title, role }: { title: string; role: Role }) {
+  const { width } = useWindowDimensions();
+  const styles = createStyles(width);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -30,8 +37,11 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
       setIsLoading(true);
       setError('');
       try {
-        const response = await getAllUsers({ role, p: 1, l: 10 });
-        if (active) setUsers(response.users);
+        const response = await getAllUsers({ role, p: page, l: 10 });
+        if (active) {
+          setUsers(response.users);
+          setTotalPages(response.pagination.totalPages);
+        }
       } catch (error) {
         if (active) {
           setError(error instanceof Error ? error.message : 'Não foi possível carregar os usuários.');
@@ -45,49 +55,88 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
     return () => {
       active = false;
     };
-  }, [role, retryCount]);
+  }, [role, retryCount, page]);
 
   return (
-    <View>
-      <Text accessibilityRole="header">{title}</Text>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
       <View style={styles.tableHeader}>
-        <View style={styles.column}><Text>Foto</Text></View>
-        <View style={styles.column}><Text>Nome completo</Text></View>
-        <View style={styles.column}><Text>Data de nascimento</Text></View>
-        <View style={styles.column}><Text>Matrícula</Text></View>
-        <View style={styles.column}><Text>Ações</Text></View>
+        <View style={[styles.column, styles.photoColumn]}>
+          <Text style={styles.headerText}>Foto</Text>
+        </View>
+        <View style={[styles.column, styles.nameColumn]}>
+          <Text style={styles.headerText}>Nome completo</Text>
+        </View>
+        <View style={[styles.column, styles.dateColumn]}>
+          <Text style={styles.headerText}>Data de nascimento</Text>
+        </View>
+        <View style={styles.column}>
+          <Text style={styles.headerText}>Matrícula</Text>
+        </View>
+        <View style={[styles.column, styles.actionsColumn]}>
+          <Text style={styles.headerText}>Ações</Text>
+        </View>
       </View>
       {isLoading ? (
-        <ActivityIndicator accessibilityLabel={`Carregando ${title.toLowerCase()}`} />
+        <View style={styles.status}>
+          <ActivityIndicator color={theme.colors.primary} accessibilityLabel={`Carregando ${title.toLowerCase()}`} />
+        </View>
       ) : error ? (
-        <View>
-          <Text accessibilityRole="alert">{error}</Text>
-          <Button title="Tentar novamente" onPress={() => setRetryCount(value => value + 1)} />
+        <View style={styles.status}>
+          <Text style={[styles.statusText, styles.errorText]} accessibilityRole="alert">{error}</Text>
+          <Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => setRetryCount(value => value + 1)}>
+            <Text style={styles.retryText}>Tentar novamente</Text>
+          </Pressable>
         </View>
       ) : users.length === 0 ? (
-        <Text>Nenhum usuário encontrado.</Text>
+        <View style={styles.status}>
+          <Text style={styles.statusText}>Nenhum usuário encontrado.</Text>
+        </View>
       ) : (
         users.map(listedUser => (
-          <View key={listedUser.id} style={styles.tableHeader}>
-            <View style={styles.column}>
+          <View key={listedUser.id} style={styles.row}>
+            <View style={[styles.column, styles.photoColumn]}>
               <Image
                 source={listedUser.image ? { uri: buildApiImageUrl(listedUser.image) } : defaultUserImage}
                 style={styles.photo}
                 accessibilityLabel={`Foto de ${listedUser.nome}`}
               />
             </View>
-            <View style={styles.column}>
-              <Text>{listedUser.nome}</Text>
+            <View style={[styles.column, styles.nameColumn]}>
+              <Text style={styles.cellText}>{listedUser.nome}</Text>
+            </View>
+            <View style={[styles.column, styles.dateColumn]}>
+              <Text style={styles.cellText}>{formatBirthDate(listedUser.birthDate)}</Text>
             </View>
             <View style={styles.column}>
-              <Text>{formatBirthDate(listedUser.birthDate)}</Text>
+              <Text style={styles.cellText}>{listedUser.matricula}</Text>
             </View>
-            <View style={styles.column}>
-              <Text>{listedUser.matricula}</Text>
-            </View>
-            <View style={styles.column} />
+            <View style={[styles.column, styles.actionsColumn]} />
           </View>
         ))
+      )}
+      {!isLoading && !error && totalPages > 0 && (
+        <View style={styles.pagination}>
+          <Text style={styles.pageText} accessibilityLiveRegion="polite">Página {page} de {totalPages}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Página anterior de ${title.toLowerCase()}`}
+            style={[styles.pageButton, page <= 1 && styles.disabled]}
+            disabled={page <= 1}
+            onPress={() => setPage(currentPage => Math.max(1, currentPage - 1))}
+          >
+            <ChevronLeft width={24} height={24} fill="#596A86" />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Próxima página de ${title.toLowerCase()}`}
+            style={[styles.pageButton, page >= totalPages && styles.disabled]}
+            disabled={page >= totalPages}
+            onPress={() => setPage(currentPage => Math.min(totalPages, currentPage + 1))}
+          >
+            <ChevronRight width={24} height={24} fill="#596A86" />
+          </Pressable>
+        </View>
       )}
     </View>
   );
@@ -95,41 +144,39 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
 
 export default function UserList() {
   const { user } = useUser();
+  const { width } = useWindowDimensions();
+  const styles = createStyles(width);
 
   return (
-    <Screen edges={['top', 'right', 'bottom', 'left']}>
-      <Scroll>
+    <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
+      <Scroll contentContainerStyle={styles.content}>
         <Header />
-        <View>
-          <Text accessibilityRole="header">Lista completa</Text>
-          <View>
-            <Link href="/home">Voltar à tela de início</Link>
-            <Link href="/user-register">Novo Usuário</Link>
+        <View style={styles.main}>
+          <Text style={styles.title} accessibilityRole="header">Lista completa</Text>
+          <View style={styles.navigation}>
+            <Link href="/home" asChild>
+              <Pressable style={styles.link} accessibilityRole="link">
+                <ArrowBack width={22} height={22} fill={theme.colors.backIcon} />
+                <Text style={styles.linkText}>Voltar à tela de início</Text>
+              </Pressable>
+            </Link>
+            <Link href="/user-register" asChild>
+              <Pressable style={styles.link} accessibilityRole="link">
+                <Add width={24} height={24} fill="#EE798A" />
+                <Text style={styles.linkText}>Novo Usuário</Text>
+              </Pressable>
+            </Link>
           </View>
+          {user?.role === 'ADMIN' && (
+            <>
+              <UserListSection title="Administradores" role="ADMIN" />
+              <UserListSection title="Professores" role="PROFESSOR" />
+            </>
+          )}
+          <UserListSection title="Alunos" role="ALUNO" />
         </View>
-        {user?.role === 'ADMIN' && (
-          <>
-            <UserListSection title="Administradores" role="ADMIN" />
-            <UserListSection title="Professores" role="PROFESSOR" />
-          </>
-        )}
-        <UserListSection title="Alunos" role="ALUNO" />
         <Footer />
       </Scroll>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  tableHeader: {
-    flexDirection: 'row',
-  },
-  column: {
-    flex: 1,
-    minWidth: 0,
-  },
-  photo: {
-    width: 40,
-    height: 40,
-  },
-});
