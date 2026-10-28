@@ -27,6 +27,7 @@ import {
   TopContainer,
 } from './styles';
 import SearchPostContainerInput from '@/components/SearchPostContainerInput';
+import PostsContainer from '@/components/PostsContainer';
 
 export default function Home() {
   const { user } = useUser();
@@ -64,7 +65,7 @@ export default function Home() {
             </TitleContainer>
             <SearchPostContainerInput />
           </TopContainer>
-          {/* <PostsContainer /> */}
+          <PostsContainer />
         </MainContentContainer>
       </Main>
       <Footer />

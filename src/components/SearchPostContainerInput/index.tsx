@@ -24,6 +24,7 @@ export default function SearchPostContainerInput() {
   const { width } = useWindowDimensions();
 
   async function handleInputChange() {
+    console.log(searchedText)
     if (searchedText === '') {
       setSearchedPostsList([]);
       return;

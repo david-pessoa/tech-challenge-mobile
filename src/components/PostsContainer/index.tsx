@@ -17,6 +17,7 @@ import {
   Container,
   ContentContainer,
   Paragraph,
+  ParagraphMarginBottom,
   Title,
 } from './styles';
 
@@ -45,8 +46,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '2',
@@ -61,8 +62,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '3',
@@ -77,8 +78,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '4',
@@ -93,8 +94,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '5',
@@ -109,8 +110,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '6',
@@ -125,8 +126,8 @@ export default function PostsContainer() {
               nome: 'Roberta',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'outro'
-            }
+              userId: 'outro',
+            },
           },
           {
             postId: '7',
@@ -141,8 +142,8 @@ export default function PostsContainer() {
               nome: 'Camila',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c'
-            }
+              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c',
+            },
           },
           {
             postId: '8',
@@ -157,8 +158,8 @@ export default function PostsContainer() {
               nome: 'Camila',
               tipoUsuario: 'PROFESSOR',
               image: null,
-              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c'
-            }
+              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c',
+            },
           },
         ];
         setPosts(postsList);
@@ -184,11 +185,11 @@ export default function PostsContainer() {
       <ContentContainer>
         <Container $screenWidth={width}>
           <Title $screenWidth={width}>Novas Aulas</Title>
-          <Paragraph $screenWidth={width}>
+          <ParagraphMarginBottom $screenWidth={width}>
             Últimas postagens de aulas feitas pelos seus professores
-          </Paragraph>
+          </ParagraphMarginBottom>
           {isLoading ? (
-            <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
+            <ParagraphMarginBottom $screenWidth={width}>Carregando aulas...</ParagraphMarginBottom>
           ) : newPosts.length == 0 ? (
             <CenteredParagraph $screenWidth={width}>
               Você já visualizou todas as aulas!
@@ -199,7 +200,9 @@ export default function PostsContainer() {
         </Container>
         <Container $screenWidth={width}>
           <Title $screenWidth={width}>Aulas Finalizadas</Title>
-          <Paragraph $screenWidth={width}>Você já finalizou estas atividades</Paragraph>
+          <ParagraphMarginBottom $screenWidth={width}>
+            Você já finalizou estas atividades
+          </ParagraphMarginBottom>
           <PostsTable dados={isLoading ? [] : viewedPosts} />
         </Container>
       </ContentContainer>
@@ -229,7 +232,9 @@ export default function PostsContainer() {
         </Container>
         <Container $screenWidth={width}>
           <Title $screenWidth={width}>Outras aulas</Title>
-          <Paragraph $screenWidth={width}>Aulas criadas por outros professores</Paragraph>
+          <ParagraphMarginBottom $screenWidth={width}>
+            Aulas criadas por outros professores
+          </ParagraphMarginBottom>
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
           ) : (
@@ -253,7 +258,7 @@ export default function PostsContainer() {
             </Paragraph>
             <AddClassButton $screenWidth={width} onPress={goToCreateNewPost}>
               <Add height={width > 600 ? 32 : 24} width={width > 600 ? 32 : 24} color="#ee798a" />
-              <p>Nova aula</p>
+              <AddClassButtonText $screenWidth={width}>Nova aula</AddClassButtonText>
             </AddClassButton>
           </AddClassContainer>
           {isLoading ? (
@@ -268,7 +273,9 @@ export default function PostsContainer() {
         </Container>
         <Container $screenWidth={width}>
           <Title $screenWidth={width}>Acervo da Escola</Title>
-          <Paragraph $screenWidth={width}>Todas as aulas postadas</Paragraph>
+          <ParagraphMarginBottom $screenWidth={width}>
+            Todas as aulas postadas
+          </ParagraphMarginBottom>
           <PostsTable dados={isLoading ? [] : posts} />
         </Container>
       </ContentContainer>
@@ -277,7 +284,7 @@ export default function PostsContainer() {
 
   return (
     user && (
-      <div>
+      <ContentContainer>
         {user.role === 'PROFESSOR' ? (
           <TeacherContainer />
         ) : user.role === 'ALUNO' ? (
@@ -285,7 +292,7 @@ export default function PostsContainer() {
         ) : (
           <AdminContainer />
         )}
-      </div>
+      </ContentContainer>
     )
   );
 }

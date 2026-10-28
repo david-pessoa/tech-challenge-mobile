@@ -5,10 +5,11 @@ export const InputContainer = styled.Pressable<ResponsiveProps>`
   position: relative;
   background-color: #fde9a06b;
   border-radius: 20px;
-  min-height: ${({ $screenWidth }) => ($screenWidth > 900 ? 42 : $screenWidth > 600 ? 39 : 21)}px;
   flex: 1;
+  height: ${({ $screenWidth }) => ($screenWidth > 900 ? 42 : $screenWidth > 600 ? 39 : 30)}px;
   padding: ${({ $screenWidth }) => ($screenWidth > 900 ? 15 : $screenWidth > 600 ? 9 : 3)}px;
   box-sizing: border-box;
+  z-index: 30;
 `;
 
 export const InnerInputContainer = styled.View<ResponsiveProps>`
@@ -30,7 +31,7 @@ export const ResultsList = styled.ScrollView<ResponsiveProps>`
   left: 0;
   top: ${({ $screenWidth }) => ($screenWidth > 900 ? '70%' : '55%')};
   box-sizing: border-box;
-  z-index: 100;
+  z-index: 900;
   margin-top: 5px;
   height: 240px;
   flex-grow: 0;
@@ -59,6 +60,7 @@ export const ListItemTitle = styled.Text<ResponsiveProps>`
   overflow: hidden;
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : $screenWidth > 600 ? 14 : 10)}px;
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  color: ${({ theme }) => theme.colors.text};
 `;
 export const ListItemDescription = styled.Text.attrs({
   numberOfLines: 1,
@@ -69,13 +71,18 @@ export const ListItemDescription = styled.Text.attrs({
   flex-shrink: 1;
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : $screenWidth > 600 ? 14 : 10)}px;
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
-export const InputSearch = styled.TextInput<ResponsiveProps>`
-  border: none;
+export const InputSearch = styled.TextInput.attrs({
+  underlineColorAndroid: 'transparent',
+})<ResponsiveProps>`
   background: transparent;
   font-size: ${({ $screenWidth }) => ($screenWidth > 600 ? 14 : 10)}px;
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  color: ${({ theme }) => theme.colors.text};
   width: 100%;
   flex: 1;
+  padding: 0;
+  align-items: center;
 `;
