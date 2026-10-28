@@ -21,6 +21,7 @@ export default function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={Boolean(user && ['ADMIN', 'PROFESSOR'].includes(user.role))}>
         <Stack.Screen name="user-register" />
+        <Stack.Screen name="post/new" />
       </Stack.Protected>
     </Stack>
   );
