@@ -32,7 +32,8 @@ export const ResultsList = styled.ScrollView<ResponsiveProps>`
   box-sizing: border-box;
   z-index: 100;
   margin-top: 5px;
-  max-height: 240px;
+  height: 240px;
+  flex-grow: 0;
   background-color: #fef4d0;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
@@ -57,6 +58,7 @@ export const ListItem = styled.View<ResponsiveProps>`
 export const ListItemTitle = styled.Text<ResponsiveProps>`
   overflow: hidden;
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : $screenWidth > 600 ? 14 : 10)}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
 `;
 export const ListItemDescription = styled.Text.attrs({
   numberOfLines: 1,
@@ -66,12 +68,14 @@ export const ListItemDescription = styled.Text.attrs({
   min-width: 0;
   flex-shrink: 1;
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : $screenWidth > 600 ? 14 : 10)}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
 `;
 
 export const InputSearch = styled.TextInput<ResponsiveProps>`
   border: none;
   background: transparent;
   font-size: ${({ $screenWidth }) => ($screenWidth > 600 ? 14 : 10)}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
   width: 100%;
   flex: 1;
 `;

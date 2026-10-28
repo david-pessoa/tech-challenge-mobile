@@ -1,7 +1,7 @@
 import { Search } from '@material-symbols-svg/react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useWindowDimensions, Text } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useDebounce } from '../../hooks/debounce';
 import type { Post } from '../../types/Posts';
 import {
@@ -24,7 +24,6 @@ export default function SearchPostContainerInput() {
   const { width } = useWindowDimensions();
 
   async function handleInputChange() {
-    console.log(searchedText)
     if (searchedText === '') {
       setSearchedPostsList([]);
       return;
@@ -39,70 +38,70 @@ export default function SearchPostContainerInput() {
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '2',
-          titulo: 'Teste1',
+          titulo: 'Teste2',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '3',
-          titulo: 'Teste1',
+          titulo: 'Teste3',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '4',
-          titulo: 'Teste1',
+          titulo: 'Teste4',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '5',
-          titulo: 'Teste1',
+          titulo: 'Teste5',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '6',
-          titulo: 'Teste1',
+          titulo: 'Teste6',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '7',
-          titulo: 'Teste1',
+          titulo: 'Teste7',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
         {
           postId: '8',
-          titulo: 'Teste1',
+          titulo: 'Teste8',
           descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
           materia: 'Matemática',
           autor: 'Victor Hugo',
           createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01')
+          editedAt: new Date('2026-01-01'),
         },
       ];
       setSearchedPostsList(relatedPosts.slice(0, 10));
@@ -132,13 +131,19 @@ export default function SearchPostContainerInput() {
           placeholder="Pesquise aqui..."
           value={searchedText}
           onChangeText={setSearchedText}
-          onFocus={() => setHideSearchResults(false)}
           onBlur={() => setHideSearchResults(true)}
+          onFocus={() => setHideSearchResults(false)}
         />
-        <Search height={16} width={16} />
+        <Search height={width > 600 ? 20 : 16} width={width > 600 ? 20 : 16} />
       </InnerInputContainer>
       {!hideSearchResults && searchedPostsList.length > 0 && (
-        <ResultsList $screenWidth={width}>
+        <ResultsList
+          $screenWidth={width}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={true}
+          persistentScrollbar
+        >
           {searchedPostsList.map((post, i) => (
             <ListItemButton
               key={i}

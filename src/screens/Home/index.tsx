@@ -34,7 +34,7 @@ export default function Home() {
 
   return (
     <Screen edges={['top', 'right', 'bottom', 'left']}>
-      <Scroll>
+      <Scroll nestedScrollEnabled keyboardShouldPersistTaps="handled">
       <Header />
       <Main $screenWidth={width}>
         <ProfileContainer $screenWidth={width}>
