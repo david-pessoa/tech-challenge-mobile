@@ -36,6 +36,10 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }));
+jest.mock('@react-native-community/datetimepicker', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (props: object) => <View {...props} testID="birth-date-picker" /> };
+});
 
 jest.mock(
   '@material-symbols-svg/react-native',
@@ -43,6 +47,7 @@ jest.mock(
     const MockIcon = () => null;
 
     return {
+      CalendarMonth: MockIcon,
       Close: MockIcon,
       Cancel: MockIcon,
       ArrowBack: MockIcon,
@@ -188,7 +193,7 @@ describe('Validações dos campos', () => {
   });
 
   it.each([
-    ['2013-01-05', 'Informe a data de nascimento no formato DD/MM/AAAA.'],
+    ['05/01/20', 'Informe a data de nascimento no formato DD/MM/AAAA.'],
     ['31/02/2013', 'Informe uma data de nascimento válida.'],
     ['01/01/2999', 'A data de nascimento não pode ser futura.'],
   ])('Impede o cadastro com a data %s', async (value, message) => {
@@ -472,4 +477,69 @@ describe('Salvamento da edição de usuários', () => {
     await submission;
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'updated' } });
   });
+});
+
+describe('Máscara de data de nascimento', () => {
+  it.each([
+    ['05012013', '05/01/2013'],
+    ['a05b01c2013', '05/01/2013'],
+    ['05-01.2013', '05/01/2013'],
+    ['050120131234', '05/01/2013'],
+    ['05/01/2013', '05/01/2013'],
+  ])('Formata a entrada %s como %s', async (input, expected) => {
+    await renderWithTheme(<UserRegister />);
+    await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), input);
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue(expected);
+  });
+
+  it('Insere as barras durante a digitação e permite apagar a data', async () => {
+    await renderWithTheme(<UserRegister />);
+    const input = screen.getByLabelText('Data de nascimento');
+    for (const [value, expected] of [
+      ['0', '0'], ['05', '05'], ['050', '05/0'], ['05/01', '05/01'],
+      ['05/012', '05/01/2'], ['05/01/201', '05/01/201'], ['05/01/20', '05/01/20'], ['', ''],
+    ]) {
+      await fireEvent.changeText(input, value);
+      expect(input).toHaveDisplayValue(expected);
+    }
+  });
+});
+
+describe('Calendário de nascimento', () => {
+  it('Preenche a data selecionada no calendário com o formato DD/MM/AAAA', async () => {
+    await renderWithTheme(<UserRegister />);
+    await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
+    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2013, 0, 5));
+    await fireEvent.press(screen.getByLabelText('Confirmar data de nascimento'));
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+    expect(screen.queryByTestId('birth-date-picker')).toBeNull();
+  });
+
+  it('Mantém a data anterior quando cancela a seleção', async () => {
+    await renderWithTheme(<UserRegister />);
+    await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), '05012013');
+    await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
+    expect(screen.getByTestId('birth-date-picker').props.value).toEqual(new Date(2013, 0, 5));
+    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2014, 0, 5));
+    await fireEvent.press(screen.getByLabelText('Cancelar seleção da data'));
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+  });
+});
+
+it('Confirma e fecha o calendário diretamente no Android', async () => {
+  const { Platform } = require('react-native');
+  const platform = jest.replaceProperty(Platform, 'OS', 'android');
+  try {
+    await renderWithTheme(<UserRegister />);
+    await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
+    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2013, 0, 5));
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+    expect(screen.queryByTestId('birth-date-picker')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
+    await fireEvent(screen.getByTestId('birth-date-picker'), 'dismiss');
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+    expect(screen.queryByTestId('birth-date-picker')).toBeNull();
+  } finally {
+    platform.restore();
+  }
 });

@@ -1,19 +1,40 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import Header from '@/components/Header';
+import {
+  ArrowBack,
+  Cancel,
+  Check,
+  Download,
+  KeyboardArrowDown,
+  Visibility,
+  VisibilityOff,
+} from '@material-symbols-svg/react-native';
 import * as ImagePicker from 'expo-image-picker';
-import Svg, { Circle } from 'react-native-svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
-import { useUser } from '../../context/AuthContext';
-import type { Role } from '../../types/Roles';
+import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
+import BirthDateCalendar from '../../components/BirthDateCalendar';
+import { useUser } from '../../context/AuthContext';
 import { createUser, getUserById, updateUser } from '../../services/user.service';
 import { buildApiImageUrl } from '../../utils/functions';
-import { styles } from './styles';
 import { theme } from '../../styles/Theme';
-import { ArrowBack, Cancel, Check, Download, KeyboardArrowDown, Visibility, VisibilityOff } from '@material-symbols-svg/react-native';
-import Header from '@/components/Header';
+import type { Role } from '../../types/Roles';
+import { styles } from './styles';
 
 const accessTypes: { label: string; value: Role }[] = [
   { label: 'Aluno', value: 'ALUNO' },
@@ -21,7 +42,14 @@ const accessTypes: { label: string; value: Role }[] = [
   { label: 'Administrador', value: 'ADMIN' },
 ];
 
-type FormField = 'name' | 'birthDate' | 'role' | 'registration' | 'password' | 'confirmPassword' | 'photo';
+type FormField =
+  | 'name'
+  | 'birthDate'
+  | 'role'
+  | 'registration'
+  | 'password'
+  | 'confirmPassword'
+  | 'photo';
 
 export default function UserRegister({ userId }: { userId?: string } = {}) {
   const isEditing = Boolean(userId);
@@ -35,7 +63,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
   const photoSize = isTablet ? 144 : 88;
-  const photoPickerRef = useRef<View>(null);
+  const photoPickerRef = useRef<ComponentRef<typeof Pressable>>(null);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -112,7 +140,14 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       if (isSaving || !file || !file.type.startsWith('image/')) return;
 
       setErrors(current => ({ ...current, photo: undefined }));
-      setPhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type });
+      setPhoto({
+        uri: URL.createObjectURL(file),
+        width: 0,
+        height: 0,
+        file,
+        fileName: file.name,
+        mimeType: file.type,
+      });
     }
     element.addEventListener('dragover', preventDropNavigation);
     element.addEventListener('drop', handleDrop);
@@ -128,6 +163,17 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     };
   }, [photo]);
 
+  function handleBirthDateChange(value: string) {
+    const formattedDate = value
+      .replace(/\D/g, '')
+      .slice(0, 8)
+      .replace(/^(\d{2})(\d)/, '$1/$2')
+      .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+
+    setBirthDate(formattedDate);
+    clearFieldError('birthDate');
+  }
+
   function clearFieldError(field: FormField) {
     setErrors(current => ({ ...current, [field]: undefined }));
   }
@@ -141,11 +187,14 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     setErrors(current => ({
       ...current,
       password: !password.trim() ? 'A senha é obrigatória.' : undefined,
-      confirmPassword: field === 'confirmPassword' || confirmPassword
-        ? !confirmPassword
-          ? 'Confirme sua senha.'
-          : password !== confirmPassword ? 'As senhas não coincidem.' : undefined
-        : current.confirmPassword,
+      confirmPassword:
+        field === 'confirmPassword' || confirmPassword
+          ? !confirmPassword
+            ? 'Confirme sua senha.'
+            : password !== confirmPassword
+              ? 'As senhas não coincidem.'
+              : undefined
+          : current.confirmPassword,
     }));
   }
 
@@ -162,7 +211,10 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       }
     } catch {
       setIsSuccess(false);
-      setErrors(current => ({ ...current, photo: 'Não foi possível selecionar a foto. Tente novamente.' }));
+      setErrors(current => ({
+        ...current,
+        photo: 'Não foi possível selecionar a foto. Tente novamente.',
+      }));
     }
   }
 
@@ -235,7 +287,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         const fileName = photo.fileName ?? (type === 'image/png' ? 'foto.png' : 'foto.jpg');
 
         if (Platform.OS === 'web') {
-          const file = photo.file ?? await (await fetch(photo.uri)).blob();
+          const file = photo.file ?? (await (await fetch(photo.uri)).blob());
           data.append('image', file, fileName);
         } else {
           data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
@@ -271,9 +323,14 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     }
   }
 
-
   if (isLoading) {
-    return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando sessão" />;
+    return (
+      <ActivityIndicator
+        style={styles.loading}
+        color={theme.colors.primary}
+        accessibilityLabel="Carregando sessão"
+      />
+    );
   }
   if (!user) return <Redirect href="/login" />;
   if (!canRegister) return <Redirect href="/home" />;
@@ -306,8 +363,15 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 30}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}
+        >
           <Header />
 
           <View style={[styles.form, isTablet && styles.tabletForm]}>
@@ -325,21 +389,46 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                 <View style={[styles.photoContainer, isTablet && styles.tabletPhotoContainer]}>
                   <Pressable
                     ref={photoPickerRef}
-                    style={[styles.photoPicker, isTablet && styles.tabletPhotoPicker, isSaving && styles.disabled]}
+                    style={[
+                      styles.photoPicker,
+                      isTablet && styles.tabletPhotoPicker,
+                      isSaving && styles.disabled,
+                    ]}
                     onPress={selectPhoto}
                     disabled={isSaving}
                     accessibilityRole="button"
                     accessibilityLabel={photoUri ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
                   >
-                    <Svg width={photoSize} height={photoSize} viewBox="0 0 88 88" style={styles.photoBorder} pointerEvents="none">
-                      <Circle cx={44} cy={44} r={43.5} fill="none" stroke={theme.colors.primary} strokeWidth={1} strokeDasharray="17 17.165" />
+                    <Svg
+                      width={photoSize}
+                      height={photoSize}
+                      viewBox="0 0 88 88"
+                      style={styles.photoBorder}
+                      pointerEvents="none"
+                    >
+                      <Circle
+                        cx={44}
+                        cy={44}
+                        r={43.5}
+                        fill="none"
+                        stroke={theme.colors.primary}
+                        strokeWidth={1}
+                        strokeDasharray="17 17.165"
+                      />
                     </Svg>
                     {photoUri ? (
                       <Image source={{ uri: photoUri }} style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]} resizeMode="cover" />
                     ) : (
                       <>
-                        <Download width={isTablet ? 24 : 14} height={isTablet ? 24 : 14} color={theme.colors.primary} />
-                        <Text style={[styles.photoHint, isTablet && styles.tabletPhotoHint]}>Clique para carregar{Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}</Text>
+                        <Download
+                          width={isTablet ? 24 : 14}
+                          height={isTablet ? 24 : 14}
+                          color={theme.colors.primary}
+                        />
+                        <Text style={[styles.photoHint, isTablet && styles.tabletPhotoHint]}>
+                          Clique para carregar
+                          {Platform.OS === 'web' ? '\nou\narraste e solte.' : '\nsua foto'}
+                        </Text>
                       </>
                     )}
                   </Pressable>
@@ -357,77 +446,161 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                   )}
                 </View>
 
-                {errors.photo && <Text style={[styles.fieldError, styles.photoError, isTablet && styles.tabletPhotoError]} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.photo}</Text>}
+                {errors.photo && (
+                  <Text
+                    style={[
+                      styles.fieldError,
+                      styles.photoError,
+                      isTablet && styles.tabletPhotoError,
+                    ]}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.photo}
+                  </Text>
+                )}
               </View>
               <View style={[styles.field, isTablet && styles.tabletNameField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Nome Completo <Text style={styles.required}>*</Text></Text>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Nome Completo <Text style={styles.required}>*</Text>
+                </Text>
                 <TextInput
                   editable={!isSaving}
-                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'name' && styles.inputFocused]}
+                  style={[
+                    styles.input,
+                    isTablet && styles.tabletInput,
+                    focusedField === 'name' && styles.inputFocused,
+                  ]}
                   onFocus={() => setFocusedField('name')}
                   onBlur={() => setFocusedField(undefined)}
                   placeholderTextColor={theme.colors.fieldPlaceholder}
                   accessibilityLabel="Nome completo"
                   placeholder="Digite o nome completo..."
                   value={name}
-                  onChangeText={value => { setName(value); clearFieldError('name'); }}
+                  onChangeText={value => {
+                    setName(value);
+                    clearFieldError('name');
+                  }}
                   autoCapitalize="words"
                 />
-                {errors.name && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.name}</Text>}
+                {errors.name && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.name}
+                  </Text>
+                )}
               </View>
             </View>
 
             <View style={[styles.fields, isTablet && styles.tabletFields]}>
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Data de nascimento</Text>
-                <TextInput
-                  editable={!isSaving}
-                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'birthDate' && styles.inputFocused]}
-                  onFocus={() => setFocusedField('birthDate')}
-                  onBlur={() => setFocusedField(undefined)}
-                  placeholderTextColor={theme.colors.fieldPlaceholder}
-                  accessibilityLabel="Data de nascimento"
-                  placeholder="DD/MM/AAAA"
-                  value={birthDate}
-                  onChangeText={value => { setBirthDate(value); clearFieldError('birthDate'); }}
-                  keyboardType="numbers-and-punctuation"
-                />
-                {errors.birthDate && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.birthDate}</Text>}
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Data de nascimento
+                </Text>
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'birthDate' && styles.inputFocused]}>
+                  <TextInput
+                    editable={!isSaving}
+                    style={[styles.passwordInput, isTablet && styles.tabletInput]}
+                    onFocus={() => setFocusedField('birthDate')}
+                    onBlur={() => setFocusedField(undefined)}
+                    placeholderTextColor={theme.colors.fieldPlaceholder}
+                    accessibilityLabel="Data de nascimento"
+                    placeholder="DD/MM/AAAA"
+                    value={birthDate}
+                    onChangeText={handleBirthDateChange}
+                    keyboardType="number-pad"
+                  />
+                  <BirthDateCalendar value={birthDate} onChange={handleBirthDateChange} disabled={isSaving} />
+                </View>
+                {errors.birthDate && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.birthDate}
+                  </Text>
+                )}
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Selecione o tipo de acesso: <Text style={styles.required}>*</Text></Text>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Selecione o tipo de acesso: <Text style={styles.required}>*</Text>
+                </Text>
                 <Pressable
-                  style={[styles.input, isTablet && styles.tabletControl, styles.select, isProfessor && styles.disabled]}
+                  style={[
+                    styles.input,
+                    isTablet && styles.tabletControl,
+                    styles.select,
+                    isProfessor && styles.disabled,
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel="Tipo de acesso"
                   accessibilityValue={{ text: selectedRoleLabel }}
-                  accessibilityState={{ disabled: isSaving || isProfessor, expanded: showAccessTypes }}
+                  accessibilityState={{
+                    disabled: isSaving || isProfessor,
+                    expanded: showAccessTypes,
+                  }}
                   disabled={isSaving || isProfessor}
                   onPress={() => setShowAccessTypes(true)}
                 >
-                  <Text numberOfLines={1} style={[styles.selectText, isTablet && styles.tabletText]}>{selectedRoleLabel}</Text>
-                  {!isProfessor && <KeyboardArrowDown size={16} color={theme.colors.fieldPlaceholder} />}
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.selectText, isTablet && styles.tabletText]}
+                  >
+                    {selectedRoleLabel}
+                  </Text>
+                  {!isProfessor && (
+                    <KeyboardArrowDown size={16} color={theme.colors.fieldPlaceholder} />
+                  )}
                 </Pressable>
-                {errors.role && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.role}</Text>}
+                {errors.role && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.role}
+                  </Text>
+                )}
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletFullField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Matrícula <Text style={styles.required}>*</Text></Text>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Matrícula <Text style={styles.required}>*</Text>
+                </Text>
                 <TextInput
                   editable={!isSaving}
-                  style={[styles.input, isTablet && styles.tabletInput, focusedField === 'registration' && styles.inputFocused]}
+                  style={[
+                    styles.input,
+                    isTablet && styles.tabletInput,
+                    focusedField === 'registration' && styles.inputFocused,
+                  ]}
                   onFocus={() => setFocusedField('registration')}
                   onBlur={() => setFocusedField(undefined)}
                   placeholderTextColor={theme.colors.fieldPlaceholder}
                   accessibilityLabel="Matrícula"
                   placeholder="Digite a matrícula..."
                   value={registration}
-                  onChangeText={value => { setRegistration(value); clearFieldError('registration'); }}
+                  onChangeText={value => {
+                    setRegistration(value);
+                    clearFieldError('registration');
+                  }}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                {errors.registration && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.registration}</Text>}
+                {errors.registration && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.registration}
+                  </Text>
+                )}
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
@@ -442,16 +615,37 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                     accessibilityLabel="Senha"
                     placeholder={isEditing ? 'Digite uma nova senha...' : 'Digite a senha...'}
                     value={password}
-                    onChangeText={value => { setPassword(value); clearFieldError('password'); }}
+                    onChangeText={value => {
+                      setPassword(value);
+                      clearFieldError('password');
+                    }}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
-                  <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowPassword(!showPassword)} accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
-                    {showPassword ? <Visibility size={18} color={theme.colors.passwordIcon} /> : <VisibilityOff size={18} color={theme.colors.passwordIcon} />}
+                  <Pressable
+                    style={styles.eyeButton}
+                    disabled={isSaving}
+                    onPress={() => setShowPassword(!showPassword)}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? (
+                      <Visibility size={18} color={theme.colors.passwordIcon} />
+                    ) : (
+                      <VisibilityOff size={18} color={theme.colors.passwordIcon} />
+                    )}
                   </Pressable>
                 </View>
-                {errors.password && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.password}</Text>}
+                {errors.password && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.password}
+                  </Text>
+                )}
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
@@ -466,16 +660,41 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                     accessibilityLabel="Confirme sua senha"
                     placeholder="Repita a senha..."
                     value={confirmPassword}
-                    onChangeText={value => { setConfirmPassword(value); clearFieldError('confirmPassword'); }}
+                    onChangeText={value => {
+                      setConfirmPassword(value);
+                      clearFieldError('confirmPassword');
+                    }}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
-                  <Pressable style={styles.eyeButton} disabled={isSaving} onPress={() => setShowConfirmPassword(!showConfirmPassword)} accessibilityRole="button" accessibilityLabel={showConfirmPassword ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'}>
-                    {showConfirmPassword ? <Visibility size={18} color={theme.colors.passwordIcon} /> : <VisibilityOff size={18} color={theme.colors.passwordIcon} />}
+                  <Pressable
+                    style={styles.eyeButton}
+                    disabled={isSaving}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      showConfirmPassword
+                        ? 'Ocultar confirmação da senha'
+                        : 'Mostrar confirmação da senha'
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <Visibility size={18} color={theme.colors.passwordIcon} />
+                    ) : (
+                      <VisibilityOff size={18} color={theme.colors.passwordIcon} />
+                    )}
                   </Pressable>
                 </View>
-                {errors.confirmPassword && <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.confirmPassword}</Text>}
+                {errors.confirmPassword && (
+                  <Text
+                    style={styles.fieldError}
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {errors.confirmPassword}
+                  </Text>
+                )}
               </View>
             </View>
 
@@ -493,10 +712,22 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {message ? <Toast message={message} type={isSuccess ? 'success' : 'error'} onClose={closeToast} /> : null}
+      {message ? (
+        <Toast message={message} type={isSuccess ? 'success' : 'error'} onClose={closeToast} />
+      ) : null}
 
-      <Modal visible={showAccessTypes && !isProfessor} transparent animationType="fade" onRequestClose={() => setShowAccessTypes(false)}>
-        <Pressable style={styles.overlay} onPress={() => setShowAccessTypes(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de perfil">
+      <Modal
+        visible={showAccessTypes && !isProfessor}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAccessTypes(false)}
+      >
+        <Pressable
+          style={styles.overlay}
+          onPress={() => setShowAccessTypes(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar seleção de perfil"
+        >
           <View style={styles.options} accessibilityViewIsModal>
             <Text style={[styles.label, isTablet && styles.tabletLabel]}>Tipo de acesso</Text>
             {availableAccessTypes.map(accessType => (
@@ -506,10 +737,16 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                 accessibilityRole="radio"
                 accessibilityLabel={accessType.label}
                 accessibilityState={{ checked: selectedRole === accessType.value }}
-                onPress={() => { setRole(accessType.value); clearFieldError('role'); setShowAccessTypes(false); }}
+                onPress={() => {
+                  setRole(accessType.value);
+                  clearFieldError('role');
+                  setShowAccessTypes(false);
+                }}
               >
                 <Text style={styles.optionText}>{accessType.label}</Text>
-                {selectedRole === accessType.value && <Check size={18} color={theme.colors.primary} />}
+                {selectedRole === accessType.value && (
+                  <Check size={18} color={theme.colors.primary} />
+                )}
               </Pressable>
             ))}
           </View>
