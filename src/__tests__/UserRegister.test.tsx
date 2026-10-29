@@ -188,7 +188,7 @@ describe('Validações dos campos', () => {
   });
 
   it.each([
-    ['2013-01-05', 'Informe a data de nascimento no formato DD/MM/AAAA.'],
+    ['05/01/20', 'Informe a data de nascimento no formato DD/MM/AAAA.'],
     ['31/02/2013', 'Informe uma data de nascimento válida.'],
     ['01/01/2999', 'A data de nascimento não pode ser futura.'],
   ])('Impede o cadastro com a data %s', async (value, message) => {
@@ -312,5 +312,31 @@ describe('Foto e envio do cadastro', () => {
     await act(async () => { complete({ id: 'novo-usuario' }); });
     await submission;
     expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+  });
+});
+
+describe('Máscara de data de nascimento', () => {
+  it.each([
+    ['05012013', '05/01/2013'],
+    ['a05b01c2013', '05/01/2013'],
+    ['05-01.2013', '05/01/2013'],
+    ['050120131234', '05/01/2013'],
+    ['05/01/2013', '05/01/2013'],
+  ])('Formata a entrada %s como %s', async (input, expected) => {
+    await renderWithTheme(<UserRegister />);
+    await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), input);
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue(expected);
+  });
+
+  it('Insere as barras durante a digitação e permite apagar a data', async () => {
+    await renderWithTheme(<UserRegister />);
+    const input = screen.getByLabelText('Data de nascimento');
+    for (const [value, expected] of [
+      ['0', '0'], ['05', '05'], ['050', '05/0'], ['05/01', '05/01'],
+      ['05/012', '05/01/2'], ['05/01/201', '05/01/201'], ['05/01/20', '05/01/20'], ['', ''],
+    ]) {
+      await fireEvent.changeText(input, value);
+      expect(input).toHaveDisplayValue(expected);
+    }
   });
 });

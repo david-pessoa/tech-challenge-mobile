@@ -116,6 +116,17 @@ export default function UserRegister() {
     };
   }, [photo]);
 
+  function handleBirthDateChange(value: string) {
+    const formattedDate = value
+      .replace(/\D/g, '')
+      .slice(0, 8)
+      .replace(/^(\d{2})(\d)/, '$1/$2')
+      .replace(/^(\d{2}\/\d{2})(\d)/, '$1/$2');
+
+    setBirthDate(formattedDate);
+    clearFieldError('birthDate');
+  }
+
   function clearFieldError(field: FormField) {
     setErrors(current => ({ ...current, [field]: undefined }));
   }
@@ -451,11 +462,8 @@ export default function UserRegister() {
                   accessibilityLabel="Data de nascimento"
                   placeholder="DD/MM/AAAA"
                   value={birthDate}
-                  onChangeText={value => {
-                    setBirthDate(value);
-                    clearFieldError('birthDate');
-                  }}
-                  keyboardType="numbers-and-punctuation"
+                  onChangeText={handleBirthDateChange}
+                  keyboardType="number-pad"
                 />
                 {errors.birthDate && (
                   <Text
