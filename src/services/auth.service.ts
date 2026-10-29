@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 import { api } from './api';
 
 /**
@@ -30,24 +31,25 @@ export function getBackendErrorMessage(error: unknown): string {
 }
 
 /**
- * Faz login. O back-end grava o token no cookie HttpOnly "session" e
- * devolve só os dados públicos do usuário. Em caso de erro lança um Error
- * com a mensagem já tratada.
+ * Faz login mobile e persiste o JWT no armazenamento seguro do dispositivo.
+ * Em caso de erro lança um Error com a mensagem já tratada.
  */
 export async function login(matricula: string, password: string) {
   try {
-    const response = await api.post('/auth/login', {
+    const response = await api.post('/auth/login/mobile', {
       matricula,
       senha: password,
     });
+
+    const token = response.data?.token;
+    if (typeof token !== 'string' || !token) {
+      throw new Error('A resposta de login não contém um token válido.');
+    }
+
+    await SecureStore.setItemAsync('authToken', token);
     return response.data;
   } catch (error) {
     console.error('Erro de login:', error);
     throw new Error(getBackendErrorMessage(error));
   }
-}
-
-/** Logout: o back-end remove o cookie de sessão (POST /api/auth/logout). */
-export async function logout() {
-  await api.post('/auth/logout');
 }

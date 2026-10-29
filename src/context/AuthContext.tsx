@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { login as loginRequest } from '../services/auth.service';
 import { getMe } from '../services/user.service';
-import { login as loginRequest, logout as logoutRequest } from '../services/auth.service';
 import type { User } from '../types/User';
+import * as SecureStore from 'expo-secure-store';
 
 /**
  * Tudo que as telas podem ler/chamar através do contexto de autenticação.
@@ -44,11 +45,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userImageCacheKey, setUserImageCacheKey] = useState(0);
 
-  /**
-   * Carrega o usuário logado via GET /user/me. O cookie de sessão é enviado
-   * automaticamente; se não houver sessão (ou ela expirou), a API responde 401,
-   * o `user` fica undefined e as rotas protegidas redirecionam para /login.
-   */
+  /** Carrega o usuário logado via GET /user/me usando o JWT do SecureStore. */
   async function refreshUser(options?: { refreshImage?: boolean }) {
     setIsLoading(true);
     try {
@@ -64,7 +61,7 @@ export function UserProvider({ children }: UserProviderProps) {
     setIsLoading(false);
   }
 
-  /** Login: a API grava o cookie e em seguida carregamos o usuário. */
+  /** Login: persiste o JWT e em seguida carrega o usuário autenticado. */
   async function signIn(matricula: string, senha: string) {
     await loginRequest(matricula, senha);
     await refreshUser();
@@ -73,13 +70,15 @@ export function UserProvider({ children }: UserProviderProps) {
   /** Logout: a API remove o cookie. Mesmo se a chamada falhar, limpamos o estado local. */
   async function signOut() {
     try {
-      await logoutRequest();
+      await SecureStore.deleteItemAsync('authToken');
+    } catch (error) {
+      console.error('Erro ao realizar o logout:', error);
     } finally {
       setUser(undefined);
     }
   }
 
-  // Ao abrir o app, tenta restaurar a sessão a partir do cookie
+  // Ao abrir o app, tenta restaurar a sessão a partir do JWT persistido
   useEffect(() => {
     refreshUser();
   }, []);
