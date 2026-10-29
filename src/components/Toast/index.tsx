@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './styles';
-import { Close } from '@material-symbols-svg/react-native';
+import { Close } from '@material-symbols-svg/react-native/icons/close';
 
 type ToastProps = {
   message: string;

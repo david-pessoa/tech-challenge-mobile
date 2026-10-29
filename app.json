@@ -21,6 +21,7 @@
       "expo-router",
       "expo-font",
       "expo-splash-screen",
+      "@react-native-community/datetimepicker",
       "expo-secure-store"
     ],
     "experiments": {

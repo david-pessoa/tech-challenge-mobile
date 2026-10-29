@@ -1,8 +1,14 @@
 import { useUser } from '../context/AuthContext';
 import { Stack } from 'expo-router';
+import { ActivityIndicator } from 'react-native';
+import { theme } from '../styles/Theme';
 
 export default function Routes() {
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
+
+  if (isLoading) {
+    return <ActivityIndicator style={{ flex: 1 }} color={theme.colors.primary} accessibilityLabel="Carregando sessão" />;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -20,6 +26,8 @@ export default function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={Boolean(user && ['ADMIN', 'PROFESSOR'].includes(user.role))}>
         <Stack.Screen name="user-register" />
+        <Stack.Screen name="user-edit/[userId]" />
+        <Stack.Screen name="user-list" />
       </Stack.Protected>
     </Stack>
   );

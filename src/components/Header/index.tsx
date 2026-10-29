@@ -19,7 +19,7 @@ import {
   UserName,
 } from './styles';
 
-import { Logout } from '@material-symbols-svg/react-native';
+import { Logout } from '@material-symbols-svg/react-native/icons/logout';
 import { useWindowDimensions } from 'react-native';
 
 const roleBackgrounds = {
