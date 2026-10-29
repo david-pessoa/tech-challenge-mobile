@@ -259,7 +259,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       setIsSuccess(true);
       setShowPassword(false);
       setShowConfirmPassword(false);
-      setMessage(isEditing ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+      router.replace({ pathname: '/user-list', params: { result: isEditing ? 'updated' : 'created' } });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar o usuário.' : 'Não foi possível cadastrar o usuário.';
       if (/(matr[ií]cula.*(cadastrad|existe)|(cadastrad|existe).*matr[ií]cula)/i.test(errorMessage)) {

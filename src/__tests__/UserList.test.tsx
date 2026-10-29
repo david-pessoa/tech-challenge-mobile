@@ -1,5 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import UserList from '../screens/UserList';
+import { useLocalSearchParams } from 'expo-router';
+
+const mockSetParams = jest.fn();
 import { useUser } from '../context/AuthContext';
 import { getAllUsers } from '../services/user.service';
 
@@ -7,14 +10,21 @@ jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
 jest.mock('../services/user.service', () => ({ getAllUsers: jest.fn() }));
 jest.mock('../components/Header', () => () => null);
 jest.mock('../components/Footer', () => () => null);
-jest.mock('expo-router', () => ({ Link: ({ children }: { children: React.ReactNode }) => children }));
+jest.mock('expo-router', () => ({
+  Link: ({ children }: { children: React.ReactNode }) => children,
+  useLocalSearchParams: jest.fn(),
+  useRouter: () => ({ setParams: mockSetParams }),
+}));
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
 jest.mock('../styles/GlobalStyles', () => {
   const { View, ScrollView } = require('react-native');
   return { Screen: View, Scroll: ScrollView };
 });
 jest.mock('@material-symbols-svg/react-native', () => {
   const Icon = () => null;
-  return { Add: Icon, ArrowBack: Icon, ChevronLeft: Icon, ChevronRight: Icon, Delete: Icon, Edit: Icon, KeyboardArrowDown: Icon };
+  return { Add: Icon, ArrowBack: Icon, ChevronLeft: Icon, ChevronRight: Icon, Delete: Icon, Edit: Icon, KeyboardArrowDown: Icon, Close: Icon };
 }, { virtual: true });
 
 const users = Array.from({ length: 13 }, (_, index) => ({
@@ -24,6 +34,7 @@ const users = Array.from({ length: 13 }, (_, index) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useLocalSearchParams).mockReturnValue({});
   jest.mocked(useUser).mockReturnValue({
     user: { id: 'professor-1', nome: 'Professor', matricula: '123', role: 'PROFESSOR' },
     isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(),
@@ -70,4 +81,16 @@ it('Retorna ao início ao selecionar dez itens por página', async () => {
   expect(screen.getByLabelText('Quantidade de alunos por página')).toHaveAccessibilityValue({ text: '10' });
   expect(screen.getByText('Aluno 10')).toBeTruthy();
   expect(screen.queryByText('Aluno 11')).toBeNull();
+});
+
+it.each([
+  ['created', 'Usuário cadastrado com sucesso!'],
+  ['updated', 'Usuário atualizado com sucesso!'],
+])('Exibe confirmação na listagem após o resultado %s', async (result, message) => {
+  jest.mocked(useLocalSearchParams).mockReturnValue({ result });
+  await render(<UserList />);
+  await waitFor(() => expect(screen.getByText(message)).toBeTruthy());
+  expect(mockSetParams).toHaveBeenCalledWith({ result: undefined });
+  await fireEvent.press(screen.getByLabelText('Fechar notificação'));
+  expect(screen.queryByText(message)).toBeNull();
 });

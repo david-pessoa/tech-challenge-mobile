@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { Add, ArrowBack, ChevronLeft, ChevronRight, Delete, Edit, KeyboardArrowDown } from '@material-symbols-svg/react-native';
 import { createStyles } from './styles';
 import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
 import { useUser } from '../../context/AuthContext';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { getAllUsers } from '../../services/user.service';
@@ -198,6 +199,16 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
 
 export default function UserList() {
   const { user } = useUser();
+  const { result } = useLocalSearchParams<{ result?: string }>();
+  const { setParams } = useRouter();
+  const [successMessage, setSuccessMessage] = useState('');
+  const closeToast = useCallback(() => setSuccessMessage(''), []);
+
+  useEffect(() => {
+    if (result !== 'created' && result !== 'updated') return;
+    setSuccessMessage(result === 'updated' ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+    setParams({ result: undefined });
+  }, [result, setParams]);
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
 
@@ -231,6 +242,7 @@ export default function UserList() {
         </View>
         <Footer />
       </Scroll>
+      {successMessage ? <Toast message={successMessage} type="success" onClose={closeToast} /> : null}
     </Screen>
   );
 }

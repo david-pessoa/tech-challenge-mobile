@@ -250,7 +250,7 @@ describe('Foto e envio do cadastro', () => {
       expect(screen.getByLabelText(label)).toHaveDisplayValue('');
     }
     expect(screen.getByLabelText('Selecionar foto do usuário')).toBeTruthy();
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Permite cadastrar sem foto e sem data de nascimento', async () => {
@@ -259,7 +259,7 @@ describe('Foto e envio do cadastro', () => {
     await selectRole();
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(sentParts().some(part => part.fieldName === 'image' || part.fieldName === 'birthDate')).toBe(false);
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Impede enviar uma foto acima de 5 MB', async () => {
@@ -296,7 +296,7 @@ describe('Foto e envio do cadastro', () => {
     expect(screen.getByLabelText('Senha')).toHaveDisplayValue('Senha123@');
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(mockCreateUser).toHaveBeenCalledTimes(2);
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Bloqueia novos envios enquanto aguarda a resposta da API', async () => {
@@ -311,7 +311,7 @@ describe('Foto e envio do cadastro', () => {
     expect(mockCreateUser).toHaveBeenCalledTimes(1);
     await act(async () => { complete({ id: 'novo-usuario' }); });
     await submission;
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 });
 
@@ -397,10 +397,9 @@ describe('Salvamento da edição de usuários', () => {
       expect.objectContaining({ fieldName: 'birthDate', string: '2013-01-05' }),
     ]));
     expect(updatedParts().some(part => ['senha', 'image', 'removeImage'].includes(part.fieldName))).toBe(false);
-    expect(screen.getByText('Usuário atualizado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'updated' } });
     expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Almeida');
     expect(createUser).not.toHaveBeenCalled();
-    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('Mantém os dados e a foto na edição quando a matrícula já existe', async () => {
@@ -471,6 +470,6 @@ describe('Salvamento da edição de usuários', () => {
     expect(updateUser).toHaveBeenCalledTimes(1);
     await act(async () => { complete(selectedUser); });
     await submission;
-    expect(screen.getByText('Usuário atualizado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'updated' } });
   });
 });
