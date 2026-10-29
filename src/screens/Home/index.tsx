@@ -25,6 +25,7 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
+import { Redirect } from 'expo-router';
 
 export default function Home() {
   const { user } = useUser();
@@ -34,6 +35,7 @@ export default function Home() {
     <Screen edges={['top', 'right', 'bottom', 'left']}>
       <Scroll>
       <Header />
+      <Redirect href='/user-register'/>
       <Main $screenWidth={width}>
         <ProfileContainer $screenWidth={width}>
           <Title $screenWidth={width}>Perfil</Title>
