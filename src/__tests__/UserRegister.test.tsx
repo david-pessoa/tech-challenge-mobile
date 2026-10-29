@@ -74,7 +74,7 @@ const photo: ImagePicker.ImagePickerAsset = {
 function setSession(role: Role = 'ADMIN') {
   mockUseUser.mockReturnValue({
     user: { id: 'usuario-1', nome: 'Usuário', matricula: '123', role },
-    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(),
+    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
   });
 }
 
@@ -145,7 +145,7 @@ describe('Permissões do cadastro', () => {
   });
 
   it('Visitante sem sessão é redirecionado para o login', async () => {
-    mockUseUser.mockReturnValue({ user: undefined, isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn() });
+    mockUseUser.mockReturnValue({ user: undefined, isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn() });
     await renderWithTheme(<UserRegister />);
     expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/login');
     expect(mockCreateUser).not.toHaveBeenCalled();

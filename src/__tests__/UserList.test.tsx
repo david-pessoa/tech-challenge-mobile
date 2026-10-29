@@ -37,7 +37,7 @@ beforeEach(() => {
   jest.mocked(useLocalSearchParams).mockReturnValue({});
   jest.mocked(useUser).mockReturnValue({
     user: { id: 'professor-1', nome: 'Professor', matricula: '123', role: 'PROFESSOR' },
-    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(),
+    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
   });
   jest.mocked(getAllUsers).mockImplementation(async params => {
     const page = params?.p ?? 1;

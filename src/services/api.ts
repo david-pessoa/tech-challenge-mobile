@@ -1,34 +1,26 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+
+export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 /**
- * O access/refresh token fica em um cookie HttpOnly definido pelo backend.
- * Portanto, o frontend não precisa (e não deve) ler o token.
+ * Instância do axios usada por todos os serviços.
+ *
+ * O back-end guarda o JWT num cookie HttpOnly chamado "session" (definido no
+ * login e removido no logout). O app não lê nem guarda o token: com
+ * `withCredentials: true`, o sistema (Android/iOS/navegador) armazena o cookie
+ * e o envia automaticamente em toda requisição para a API.
  */
-
-export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL
-
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   withCredentials: true,
 });
 
-// Login temporario
-api.interceptors.request.use(config => {
-  if (!__DEV__ || Platform.OS !== 'web' || typeof window === 'undefined') {
-    return config;
-  }
+api.interceptors.request.use(async config => {
+  const token = await SecureStore.getItemAsync('authToken');
 
-  if (config.url?.startsWith('/auth/')) return config;
-
-  try {
-    const token = window.localStorage.getItem('token')?.trim();
-
-    if (token && !config.headers.has('Authorization')) {
-      config.headers.set('Authorization', `Bearer ${token}`);
-    }
-  } catch {
-    return config;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;

@@ -15,7 +15,7 @@ function setSession(user: ReturnType<typeof useUser>['user'], isLoading: boolean
     user,
     isLoading,
     userImageCacheKey: 0,
-    refreshUser: jest.fn(),
+    refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
   });
 }
 
