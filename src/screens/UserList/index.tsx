@@ -127,7 +127,9 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
               />
             </View>
             <View style={[styles.column, styles.nameColumn]}>
-              <Text style={styles.cellText}>{listedUser.nome}</Text>
+              <Text style={[styles.cellText, { maxWidth: '100%' }]} numberOfLines={1} ellipsizeMode="tail" accessibilityLabel={listedUser.nome}>
+                {Array.from(listedUser.nome).length > 10 ? `${Array.from(listedUser.nome).slice(0, 10).join('')}...` : listedUser.nome}
+              </Text>
             </View>
             <View style={[styles.column, styles.dateColumn]}>
               <Text style={styles.cellText}>{formatBirthDate(listedUser.birthDate)}</Text>
@@ -141,7 +143,7 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
                   <Edit width={iconSize} height={iconSize} fill="#A15E6D" />
                 </Pressable>
               </Link>
-              {user?.role === 'ADMIN' && (
+              {user?.role === 'ADMIN' && listedUser.id !== user.id && (
                 <Pressable accessibilityRole="button" accessibilityLabel={`Excluir ${listedUser.nome}`} style={styles.editButton} onPress={() => onDelete(listedUser)}>
                   <Delete width={iconSize} height={iconSize} fill="#E64B63" />
                 </Pressable>
@@ -217,7 +219,7 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
 }
 
 export default function UserList() {
-  const { user, signOut } = useUser();
+  const { user } = useUser();
   const { result } = useLocalSearchParams<{ result?: string }>();
   const { setParams } = useRouter();
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
@@ -235,22 +237,18 @@ export default function UserList() {
   const styles = createStyles(width);
 
   function requestDelete(selectedUser: UserListItem) {
-    if (user?.role !== 'ADMIN' || isDeleting) return;
+    if (user?.role !== 'ADMIN' || selectedUser.id === user.id || isDeleting) return;
     setNotification(undefined);
     setPendingDelete(selectedUser);
   }
 
   async function confirmDelete() {
-    if (user?.role !== 'ADMIN' || !pendingDelete || isDeleting) return;
+    if (user?.role !== 'ADMIN' || !pendingDelete || pendingDelete.id === user.id || isDeleting) return;
     const selectedUser = pendingDelete;
     setIsDeleting(true);
     try {
       await deleteUser(selectedUser.id);
       setPendingDelete(undefined);
-      if (selectedUser.id === user.id) {
-        await signOut();
-        return;
-      }
       setReloadKeys(current => ({ ...current, [selectedUser.role]: (current[selectedUser.role] ?? 0) + 1 }));
       setNotification({ message: 'Usuário excluído com sucesso!', type: 'success' });
     } catch (error) {
@@ -296,7 +294,6 @@ export default function UserList() {
           <View style={styles.deleteDialog} accessibilityViewIsModal>
             <Text style={styles.optionsTitle}>Excluir usuário</Text>
             <Text style={styles.deleteMessage}>Deseja excluir {pendingDelete?.nome}? Esta ação não pode ser desfeita.</Text>
-            {pendingDelete?.id === user?.id && <Text style={styles.deleteMessage}>Ao excluir sua própria conta, você será desconectado.</Text>}
             <View style={styles.deleteActions}>
               <Pressable style={[styles.dialogButton, styles.cancelDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Cancelar exclusão" disabled={isDeleting} onPress={() => setPendingDelete(undefined)}>
                 <Text style={styles.cancelDeleteText}>Cancelar</Text>

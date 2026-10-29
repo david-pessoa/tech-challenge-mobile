@@ -178,12 +178,24 @@ describe('Exclusão de usuários', () => {
     await submission;
   });
 
-  it('Encerra a sessão quando o administrador confirma a exclusão da própria conta', async () => {
+  it('Oculta a exclusão da própria conta e mantém a de outros administradores', async () => {
+    currentUsers.push({ ...adminUser, id: 'admin-2', nome: 'Outro admin' });
     await openAdminList();
-    await fireEvent.press(screen.getByLabelText('Excluir Administrador'));
-    expect(screen.getByText('Ao excluir sua própria conta, você será desconectado.')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
-    expect(deleteUser).toHaveBeenCalledWith('admin-1');
-    expect(mockSignOut).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('Editar Administrador')).toBeTruthy();
+    expect(screen.queryByLabelText('Excluir Administrador')).toBeNull();
+    expect(screen.getByLabelText('Excluir Outro admin')).toBeTruthy();
+    expect(deleteUser).not.toHaveBeenCalled();
   });
+});
+
+it.each([
+  ['Ana Santos', 'Ana Santos'],
+  ['Ana Santosa', 'Ana Santos...'],
+  ['Maria Aparecida Silva', 'Maria Apar...'],
+])('Limita o nome %s sem alterar os nomes completos das ações', async (nome, displayedName) => {
+  currentUsers = [{ ...users[0], nome }];
+  await render(<UserList />);
+  await waitFor(() => expect(screen.getByText(displayedName)).toBeTruthy());
+  expect(screen.getByLabelText(`Editar ${nome}`)).toBeTruthy();
+  expect(screen.getByLabelText(`Foto de ${nome}`)).toBeTruthy();
 });
