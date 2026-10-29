@@ -1,13 +1,11 @@
 import Header from '@/components/Header';
-import {
-  ArrowBack,
-  Cancel,
-  Check,
-  Download,
-  KeyboardArrowDown,
-  Visibility,
-  VisibilityOff,
-} from '@material-symbols-svg/react-native';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
+import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
+import { Check } from '@material-symbols-svg/react-native/icons/check';
+import { Download } from '@material-symbols-svg/react-native/icons/download';
+import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
+import { Visibility } from '@material-symbols-svg/react-native/icons/visibility';
+import { VisibilityOff } from '@material-symbols-svg/react-native/icons/visibility-off';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';

@@ -1,10 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import BirthDateCalendar from '../components/BirthDateCalendar/index.web';
 
-jest.mock('@material-symbols-svg/react-native', () => {
-  const Icon = () => null;
-  return { CalendarMonth: Icon, ChevronLeft: Icon, ChevronRight: Icon };
-}, { virtual: true });
 
 it('Seleciona o ano e confirma uma data válida em fevereiro bissexto', async () => {
   const onChange = jest.fn();

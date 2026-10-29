@@ -23,10 +23,6 @@ jest.mock('../styles/GlobalStyles', () => {
   const { View, ScrollView } = require('react-native');
   return { Screen: View, Scroll: ScrollView };
 });
-jest.mock('@material-symbols-svg/react-native', () => {
-  const Icon = () => null;
-  return { Add: Icon, ArrowBack: Icon, ChevronLeft: Icon, ChevronRight: Icon, Delete: Icon, Edit: Icon, KeyboardArrowDown: Icon, Close: Icon };
-}, { virtual: true });
 
 const users = Array.from({ length: 13 }, (_, index) => ({
   id: String(index + 1), nome: `Aluno ${index + 1}`, matricula: String(index + 1),

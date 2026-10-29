@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Keyboard, Modal, Platform, Pressable, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { CalendarMonth } from '@material-symbols-svg/react-native';
+import { CalendarMonth } from '@material-symbols-svg/react-native/icons/calendar-month';
 import { theme } from '../../styles/Theme';
 import { formatBirthDate, parseBirthDate } from './date';
 import type { BirthDateCalendarProps } from './types';

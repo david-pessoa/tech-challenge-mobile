@@ -41,26 +41,6 @@ jest.mock('@react-native-community/datetimepicker', () => {
   return { __esModule: true, default: (props: object) => <View {...props} testID="birth-date-picker" /> };
 });
 
-jest.mock(
-  '@material-symbols-svg/react-native',
-  () => {
-    const MockIcon = () => null;
-
-    return {
-      CalendarMonth: MockIcon,
-      Close: MockIcon,
-      Cancel: MockIcon,
-      ArrowBack: MockIcon,
-      Check: MockIcon,
-      KeyboardArrowDown: MockIcon,
-      Visibility: MockIcon,
-      VisibilityOff: MockIcon,
-      Download: MockIcon,
-      Logout: MockIcon
-    };
-  },
-  { virtual: true },
-);
 
 
 const mockUseUser = jest.mocked(useUser);

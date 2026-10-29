@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { CalendarMonth, ChevronLeft, ChevronRight } from '@material-symbols-svg/react-native';
+import { CalendarMonth } from '@material-symbols-svg/react-native/icons/calendar-month';
+import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
+import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-right';
 import { theme } from '../../styles/Theme';
 import { formatBirthDate, parseBirthDate } from './date';
 import type { BirthDateCalendarProps } from './types';

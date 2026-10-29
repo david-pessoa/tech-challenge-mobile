@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { Add, ArrowBack, ChevronLeft, ChevronRight, Delete, Edit, KeyboardArrowDown } from '@material-symbols-svg/react-native';
+import { Add } from '@material-symbols-svg/react-native/icons/add';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
+import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
+import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-right';
+import { Delete } from '@material-symbols-svg/react-native/icons/delete';
+import { Edit } from '@material-symbols-svg/react-native/icons/edit';
+import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
 import { createStyles } from './styles';
 import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
