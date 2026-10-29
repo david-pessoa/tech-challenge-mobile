@@ -1,13 +1,14 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import UserList from '../screens/UserList';
 import { useLocalSearchParams } from 'expo-router';
 
 const mockSetParams = jest.fn();
 import { useUser } from '../context/AuthContext';
-import { getAllUsers } from '../services/user.service';
+import { deleteUser, getAllUsers } from '../services/user.service';
+import type { UserListItem } from '../types/UserList';
 
 jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
-jest.mock('../services/user.service', () => ({ getAllUsers: jest.fn() }));
+jest.mock('../services/user.service', () => ({ getAllUsers: jest.fn(), deleteUser: jest.fn() }));
 jest.mock('../components/Header', () => () => null);
 jest.mock('../components/Footer', () => () => null);
 jest.mock('expo-router', () => ({
@@ -32,8 +33,17 @@ const users = Array.from({ length: 13 }, (_, index) => ({
   role: 'ALUNO' as const, birthDate: null, image: null,
 }));
 
+const adminUser: UserListItem = { id: 'admin-1', nome: 'Administrador', matricula: '999', role: 'ADMIN', birthDate: null, image: null };
+let currentUsers: UserListItem[];
+const mockSignOut = jest.fn();
+
 beforeEach(() => {
   jest.clearAllMocks();
+  currentUsers = [...users, adminUser];
+  jest.mocked(deleteUser).mockImplementation(async id => {
+    currentUsers = currentUsers.filter(user => user.id !== id);
+    return { message: 'Usuário deletado com sucesso' };
+  });
   jest.mocked(useLocalSearchParams).mockReturnValue({});
   jest.mocked(useUser).mockReturnValue({
     user: { id: 'professor-1', nome: 'Professor', matricula: '123', role: 'PROFESSOR' },
@@ -42,9 +52,10 @@ beforeEach(() => {
   jest.mocked(getAllUsers).mockImplementation(async params => {
     const page = params?.p ?? 1;
     const length = params?.l ?? 10;
+    const filteredUsers = currentUsers.filter(user => user.role === params?.role);
     return {
-      users: users.slice((page - 1) * length, page * length),
-      pagination: { currentPage: page, totalPages: Math.ceil(users.length / length), pageLength: length, totalItems: users.length },
+      users: filteredUsers.slice((page - 1) * length, page * length),
+      pagination: { currentPage: page, totalPages: Math.ceil(filteredUsers.length / length), pageLength: length, totalItems: filteredUsers.length },
     };
   });
 });
@@ -93,4 +104,90 @@ it.each([
   expect(mockSetParams).toHaveBeenCalledWith({ result: undefined });
   await fireEvent.press(screen.getByLabelText('Fechar notificação'));
   expect(screen.queryByText(message)).toBeNull();
+});
+
+async function openAdminList() {
+  jest.mocked(useUser).mockReturnValue({
+    user: { id: adminUser.id, nome: adminUser.nome, matricula: adminUser.matricula, role: adminUser.role },
+    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: mockSignOut,
+  });
+  await render(<UserList />);
+  await waitFor(() => expect(screen.getByText('Aluno 1')).toBeTruthy());
+}
+
+describe('Exclusão de usuários', () => {
+  it('Professor não tem acesso ao botão de excluir', async () => {
+    await render(<UserList />);
+    await waitFor(() => expect(screen.getByText('Aluno 1')).toBeTruthy());
+    expect(screen.queryByLabelText('Excluir Aluno 1')).toBeNull();
+    expect(screen.queryByLabelText('Confirmar exclusão')).toBeNull();
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('Pede confirmação e mantém o usuário quando a exclusão é cancelada', async () => {
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Excluir Aluno 1'));
+    expect(screen.getByText('Deseja excluir Aluno 1? Esta ação não pode ser desfeita.')).toBeTruthy();
+    expect(deleteUser).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Cancelar exclusão'));
+    expect(screen.getByText('Aluno 1')).toBeTruthy();
+    expect(screen.queryByLabelText('Confirmar exclusão')).toBeNull();
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('Exclui o usuário confirmado, atualiza o total e mostra o toast', async () => {
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Excluir Aluno 1'));
+    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    await waitFor(() => expect(screen.getByText('1–5 de 12')).toBeTruthy());
+    expect(deleteUser).toHaveBeenCalledWith('1');
+    expect(screen.queryByText('Aluno 1')).toBeNull();
+    expect(screen.getByText('Usuário excluído com sucesso!')).toBeTruthy();
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
+
+  it('Mantém o usuário na tabela e mostra o erro quando a API recusa a exclusão', async () => {
+    jest.mocked(deleteUser).mockRejectedValueOnce(new Error('Não foi possível excluir o usuário.'));
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Excluir Aluno 1'));
+    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    expect(screen.getByText('Não foi possível excluir o usuário.')).toBeTruthy();
+    expect(screen.getByText('Aluno 1')).toBeTruthy();
+    expect(screen.getByText('1–5 de 13')).toBeTruthy();
+  });
+
+  it('Retorna à página anterior ao excluir o último registro da última página', async () => {
+    currentUsers = users.slice(0, 6);
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Próxima página de alunos'));
+    await waitFor(() => expect(screen.getByText('6–6 de 6')).toBeTruthy());
+    await fireEvent.press(screen.getByLabelText('Excluir Aluno 6'));
+    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    await waitFor(() => expect(screen.getByText('1–5 de 5')).toBeTruthy());
+    expect(screen.getByLabelText('Próxima página de alunos')).toBeDisabled();
+    expect(screen.queryByText('Aluno 6')).toBeNull();
+  });
+
+  it('Bloqueia novos cliques enquanto aguarda a exclusão', async () => {
+    let complete!: (value: unknown) => void;
+    jest.mocked(deleteUser).mockReturnValueOnce(new Promise(resolve => { complete = resolve; }));
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Excluir Aluno 1'));
+    const submission = fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    await waitFor(() => expect(screen.getByLabelText('Confirmar exclusão')).toBeDisabled());
+    expect(screen.getByLabelText('Cancelar exclusão')).toBeDisabled();
+    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    await act(async () => { complete({ message: 'Usuário deletado com sucesso' }); });
+    await submission;
+  });
+
+  it('Encerra a sessão quando o administrador confirma a exclusão da própria conta', async () => {
+    await openAdminList();
+    await fireEvent.press(screen.getByLabelText('Excluir Administrador'));
+    expect(screen.getByText('Ao excluir sua própria conta, você será desconectado.')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Confirmar exclusão'));
+    expect(deleteUser).toHaveBeenCalledWith('admin-1');
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
+  });
 });

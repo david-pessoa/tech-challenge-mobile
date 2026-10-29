@@ -9,7 +9,7 @@ import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
 import { useUser } from '../../context/AuthContext';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
-import { getAllUsers } from '../../services/user.service';
+import { deleteUser, getAllUsers } from '../../services/user.service';
 import type { Role } from '../../types/Roles';
 import type { UserListItem } from '../../types/UserList';
 import { buildApiImageUrl } from '../../utils/functions';
@@ -21,7 +21,14 @@ function formatBirthDate(date: string | null) {
   return `${day}/${month}/${year}`;
 }
 
-function UserListSection({ title, role }: { title: string; role: Role }) {
+type UserListSectionProps = {
+  title: string;
+  role: Role;
+  reloadKey: number;
+  onDelete: (selectedUser: UserListItem) => void;
+};
+
+function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionProps) {
   const { user } = useUser();
   const { width } = useWindowDimensions();
   const iconSize = width >= 600 ? 20 : 14;
@@ -45,6 +52,10 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
       try {
         const response = await getAllUsers({ role, p: page, l: pageLength });
         if (active) {
+          if (page > Math.max(1, response.pagination.totalPages)) {
+            setPage(Math.max(1, response.pagination.totalPages));
+            return;
+          }
           setUsers(response.users);
           setTotalPages(response.pagination.totalPages);
           setTotalItems(response.pagination.totalItems);
@@ -62,7 +73,7 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
     return () => {
       active = false;
     };
-  }, [role, retryCount, page, pageLength]);
+  }, [role, retryCount, page, pageLength, reloadKey]);
 
   return (
     <View style={styles.section}>
@@ -125,7 +136,9 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
                 </Pressable>
               </Link>
               {user?.role === 'ADMIN' && (
-                <Delete width={iconSize} height={iconSize} fill="#E64B63" accessibilityLabel={`Excluir ${listedUser.nome}`} />
+                <Pressable accessibilityRole="button" accessibilityLabel={`Excluir ${listedUser.nome}`} style={styles.editButton} onPress={() => onDelete(listedUser)}>
+                  <Delete width={iconSize} height={iconSize} fill="#E64B63" />
+                </Pressable>
               )}
             </View>
           </View>
@@ -198,19 +211,49 @@ function UserListSection({ title, role }: { title: string; role: Role }) {
 }
 
 export default function UserList() {
-  const { user } = useUser();
+  const { user, signOut } = useUser();
   const { result } = useLocalSearchParams<{ result?: string }>();
   const { setParams } = useRouter();
-  const [successMessage, setSuccessMessage] = useState('');
-  const closeToast = useCallback(() => setSuccessMessage(''), []);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const [pendingDelete, setPendingDelete] = useState<UserListItem>();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [reloadKeys, setReloadKeys] = useState<Partial<Record<Role, number>>>({});
+  const closeToast = useCallback(() => setNotification(undefined), []);
 
   useEffect(() => {
     if (result !== 'created' && result !== 'updated') return;
-    setSuccessMessage(result === 'updated' ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+    setNotification({ message: result === 'updated' ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!', type: 'success' });
     setParams({ result: undefined });
   }, [result, setParams]);
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
+
+  function requestDelete(selectedUser: UserListItem) {
+    if (user?.role !== 'ADMIN' || isDeleting) return;
+    setNotification(undefined);
+    setPendingDelete(selectedUser);
+  }
+
+  async function confirmDelete() {
+    if (user?.role !== 'ADMIN' || !pendingDelete || isDeleting) return;
+    const selectedUser = pendingDelete;
+    setIsDeleting(true);
+    try {
+      await deleteUser(selectedUser.id);
+      setPendingDelete(undefined);
+      if (selectedUser.id === user.id) {
+        await signOut();
+        return;
+      }
+      setReloadKeys(current => ({ ...current, [selectedUser.role]: (current[selectedUser.role] ?? 0) + 1 }));
+      setNotification({ message: 'Usuário excluído com sucesso!', type: 'success' });
+    } catch (error) {
+      setPendingDelete(undefined);
+      setNotification({ message: error instanceof Error ? error.message : 'Não foi possível excluir o usuário.', type: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
@@ -234,15 +277,32 @@ export default function UserList() {
           </View>
           {user?.role === 'ADMIN' && (
             <>
-              <UserListSection title="Administradores" role="ADMIN" />
-              <UserListSection title="Professores" role="PROFESSOR" />
+              <UserListSection title="Administradores" role="ADMIN" reloadKey={reloadKeys.ADMIN ?? 0} onDelete={requestDelete} />
+              <UserListSection title="Professores" role="PROFESSOR" reloadKey={reloadKeys.PROFESSOR ?? 0} onDelete={requestDelete} />
             </>
           )}
-          <UserListSection title="Alunos" role="ALUNO" />
+          <UserListSection title="Alunos" role="ALUNO" reloadKey={reloadKeys.ALUNO ?? 0} onDelete={requestDelete} />
         </View>
         <Footer />
       </Scroll>
-      {successMessage ? <Toast message={successMessage} type="success" onClose={closeToast} /> : null}
+      <Modal visible={Boolean(pendingDelete && user?.role === 'ADMIN')} transparent animationType="fade" onRequestClose={() => { if (!isDeleting) setPendingDelete(undefined); }}>
+        <View style={styles.optionsOverlay}>
+          <View style={styles.deleteDialog} accessibilityViewIsModal>
+            <Text style={styles.optionsTitle}>Excluir usuário</Text>
+            <Text style={styles.deleteMessage}>Deseja excluir {pendingDelete?.nome}? Esta ação não pode ser desfeita.</Text>
+            {pendingDelete?.id === user?.id && <Text style={styles.deleteMessage}>Ao excluir sua própria conta, você será desconectado.</Text>}
+            <View style={styles.deleteActions}>
+              <Pressable style={[styles.dialogButton, styles.cancelDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Cancelar exclusão" disabled={isDeleting} onPress={() => setPendingDelete(undefined)}>
+                <Text style={styles.cancelDeleteText}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={[styles.dialogButton, styles.confirmDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Confirmar exclusão" accessibilityState={{ disabled: isDeleting, busy: isDeleting }} disabled={isDeleting} onPress={confirmDelete}>
+                {isDeleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.confirmDeleteText}>Excluir</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
     </Screen>
   );
 }

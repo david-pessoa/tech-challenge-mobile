@@ -42,6 +42,14 @@ export function createStyles(width: number) {
     optionsTitle: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 16, color: theme.colors.text, marginBottom: 8 },
     pageLengthOption: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12 },
     selectedOption: { backgroundColor: '#FFFBEB' },
+    deleteDialog: { width: '100%', maxWidth: 360, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, gap: 12 },
+    deleteMessage: { fontFamily: theme.typography.fontFamily.regular, fontSize: 14, lineHeight: 22, color: theme.colors.text },
+    deleteActions: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 12, marginTop: 8 },
+    dialogButton: { minHeight: 44, minWidth: 100, justifyContent: 'center', alignItems: 'center', borderRadius: 24, paddingHorizontal: 16 },
+    cancelDeleteButton: { borderWidth: 1, borderColor: theme.colors.primary },
+    confirmDeleteButton: { backgroundColor: '#E64B63' },
+    cancelDeleteText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 14, color: theme.colors.primary },
+    confirmDeleteText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 14, color: '#FFFFFF' },
     disabled: { opacity: 0.35 },
   });
 }
