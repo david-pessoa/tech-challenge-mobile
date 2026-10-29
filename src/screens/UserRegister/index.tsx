@@ -28,6 +28,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
+import BirthDateCalendar from '../../components/BirthDateCalendar';
 import { useUser } from '../../context/AuthContext';
 import { createUser } from '../../services/user.service';
 import { theme } from '../../styles/Theme';
@@ -449,22 +450,21 @@ export default function UserRegister() {
                 <Text style={[styles.label, isTablet && styles.tabletLabel]}>
                   Data de nascimento
                 </Text>
-                <TextInput
-                  editable={!isSaving}
-                  style={[
-                    styles.input,
-                    isTablet && styles.tabletInput,
-                    focusedField === 'birthDate' && styles.inputFocused,
-                  ]}
-                  onFocus={() => setFocusedField('birthDate')}
-                  onBlur={() => setFocusedField(undefined)}
-                  placeholderTextColor={theme.colors.fieldPlaceholder}
-                  accessibilityLabel="Data de nascimento"
-                  placeholder="DD/MM/AAAA"
-                  value={birthDate}
-                  onChangeText={handleBirthDateChange}
-                  keyboardType="number-pad"
-                />
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'birthDate' && styles.inputFocused]}>
+                  <TextInput
+                    editable={!isSaving}
+                    style={[styles.passwordInput, isTablet && styles.tabletInput]}
+                    onFocus={() => setFocusedField('birthDate')}
+                    onBlur={() => setFocusedField(undefined)}
+                    placeholderTextColor={theme.colors.fieldPlaceholder}
+                    accessibilityLabel="Data de nascimento"
+                    placeholder="DD/MM/AAAA"
+                    value={birthDate}
+                    onChangeText={handleBirthDateChange}
+                    keyboardType="number-pad"
+                  />
+                  <BirthDateCalendar value={birthDate} onChange={handleBirthDateChange} disabled={isSaving} />
+                </View>
                 {errors.birthDate && (
                   <Text
                     style={styles.fieldError}
