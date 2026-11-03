@@ -1,4 +1,4 @@
-import { useNavigation, usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useUser } from '../../context/AuthContext';
 import { buildApiImageUrl } from '../../utils/functions';
 
@@ -29,7 +29,7 @@ const roleBackgrounds = {
 };
 
 export default function Header() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const pathname = usePathname();
   const { user, userImageCacheKey, refreshUser, signOut } = useUser();
   const { width } = useWindowDimensions();
@@ -48,14 +48,12 @@ export default function Header() {
       console.error('Erro ao fazer logout:', error);
     }
 
-    //@ts-ignore
-    navigation.navigate('/login');
+    router.replace('/login');
   }
 
   function handleLogoButtonPress() {
     if (pathname !== '/home')
-      //@ts-ignore
-      navigation.navigate('/home');
+      router.replace('/home');
   }
 
   return (
