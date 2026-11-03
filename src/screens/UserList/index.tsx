@@ -1,0 +1,311 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Add } from '@material-symbols-svg/react-native/icons/add';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
+import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
+import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-right';
+import { Delete } from '@material-symbols-svg/react-native/icons/delete';
+import { Edit } from '@material-symbols-svg/react-native/icons/edit';
+import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
+import { createStyles } from './styles';
+import { theme } from '../../styles/Theme';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
+import { useUser } from '../../context/AuthContext';
+import { Screen, Scroll } from '../../styles/GlobalStyles';
+import { deleteUser, getAllUsers } from '../../services/user.service';
+import type { Role } from '../../types/Roles';
+import type { UserListItem } from '../../types/UserList';
+import { buildApiImageUrl } from '../../utils/functions';
+import defaultUserImage from '../../../assets/images/user-default-image.png';
+
+function formatBirthDate(date: string | null) {
+  if (!date) return '--';
+  const [year, month, day] = date.slice(0, 10).split('-');
+  return `${day}/${month}/${year}`;
+}
+
+type UserListSectionProps = {
+  title: string;
+  role: Role;
+  reloadKey: number;
+  onDelete: (selectedUser: UserListItem) => void;
+};
+
+function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionProps) {
+  const { user } = useUser();
+  const { width } = useWindowDimensions();
+  const iconSize = width >= 600 ? 20 : 14;
+  const styles = createStyles(width);
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [pageLength, setPageLength] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+  const [showPageLengths, setShowPageLengths] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadUsers() {
+      setIsLoading(true);
+      setError('');
+      try {
+        const response = await getAllUsers({ role, p: page, l: pageLength });
+        if (active) {
+          if (page > Math.max(1, response.pagination.totalPages)) {
+            setPage(Math.max(1, response.pagination.totalPages));
+            return;
+          }
+          setUsers(response.users);
+          setTotalPages(response.pagination.totalPages);
+          setTotalItems(response.pagination.totalItems);
+        }
+      } catch (error) {
+        if (active) {
+          setError(error instanceof Error ? error.message : 'Não foi possível carregar os usuários.');
+        }
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    }
+
+    loadUsers();
+    return () => {
+      active = false;
+    };
+  }, [role, retryCount, page, pageLength, reloadKey]);
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
+      <View style={styles.tableHeader}>
+        <View style={[styles.column, styles.photoColumn]}>
+          <Text style={styles.headerText}>Foto</Text>
+        </View>
+        <View style={[styles.column, styles.nameColumn]}>
+          <Text style={styles.headerText}>Nome completo</Text>
+        </View>
+        <View style={[styles.column, styles.dateColumn]}>
+          <Text style={styles.headerText}>Data de nascimento</Text>
+        </View>
+        <View style={styles.column}>
+          <Text style={styles.headerText}>Matrícula</Text>
+        </View>
+        <View style={[styles.column, styles.actionsColumn]}>
+          <Text style={styles.headerText}>Ações</Text>
+        </View>
+      </View>
+      {isLoading ? (
+        <View style={styles.status}>
+          <ActivityIndicator color={theme.colors.primary} accessibilityLabel={`Carregando ${title.toLowerCase()}`} />
+        </View>
+      ) : error ? (
+        <View style={styles.status}>
+          <Text style={[styles.statusText, styles.errorText]} accessibilityRole="alert">{error}</Text>
+          <Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => setRetryCount(value => value + 1)}>
+            <Text style={styles.retryText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      ) : users.length === 0 ? (
+        <View style={styles.status}>
+          <Text style={styles.statusText}>Nenhum usuário encontrado.</Text>
+        </View>
+      ) : (
+        users.map(listedUser => (
+          <View key={listedUser.id} style={styles.row}>
+            <View style={[styles.column, styles.photoColumn]}>
+              <Image
+                source={listedUser.image ? { uri: buildApiImageUrl(listedUser.image) } : defaultUserImage}
+                style={styles.photo}
+                accessibilityLabel={`Foto de ${listedUser.nome}`}
+              />
+            </View>
+            <View style={[styles.column, styles.nameColumn]}>
+              <Text style={[styles.cellText, { maxWidth: '100%' }]} numberOfLines={1} ellipsizeMode="tail" accessibilityLabel={listedUser.nome}>
+                {Array.from(listedUser.nome).length > 10 ? `${Array.from(listedUser.nome).slice(0, 10).join('')}...` : listedUser.nome}
+              </Text>
+            </View>
+            <View style={[styles.column, styles.dateColumn]}>
+              <Text style={styles.cellText}>{formatBirthDate(listedUser.birthDate)}</Text>
+            </View>
+            <View style={styles.column}>
+              <Text style={styles.cellText}>{listedUser.matricula}</Text>
+            </View>
+            <View style={[styles.column, styles.actionsColumn, styles.actionIcons]}>
+              <Link href={{ pathname: '/user-edit/[userId]', params: { userId: listedUser.id } }} asChild>
+                <Pressable accessibilityRole="link" accessibilityLabel={`Editar ${listedUser.nome}`} style={styles.editButton}>
+                  <Edit width={iconSize} height={iconSize} fill="#A15E6D" />
+                </Pressable>
+              </Link>
+              {user?.role === 'ADMIN' && listedUser.id !== user.id && (
+                <Pressable accessibilityRole="button" accessibilityLabel={`Excluir ${listedUser.nome}`} style={styles.editButton} onPress={() => onDelete(listedUser)}>
+                  <Delete width={iconSize} height={iconSize} fill="#E64B63" />
+                </Pressable>
+              )}
+            </View>
+          </View>
+        ))
+      )}
+      {!isLoading && !error && (
+        <View style={styles.pagination}>
+          <View style={styles.pageLengthControl}>
+            <Text style={styles.pageLabel}>Mostrar:</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Quantidade de ${title.toLowerCase()} por página`}
+              accessibilityValue={{ text: String(pageLength) }}
+              accessibilityState={{ expanded: showPageLengths }}
+              style={styles.pageLengthButton}
+              onPress={() => setShowPageLengths(true)}
+            >
+              <Text style={styles.pageText}>{pageLength}</Text>
+              <KeyboardArrowDown width={20} height={20} fill="#596A86" />
+            </Pressable>
+          </View>
+          <Text style={styles.pageText} accessibilityLiveRegion="polite">
+            {users.length ? (page - 1) * pageLength + 1 : 0}–{users.length ? (page - 1) * pageLength + users.length : 0} de {totalItems}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Página anterior de ${title.toLowerCase()}`}
+            style={[styles.pageButton, page <= 1 && styles.disabled]}
+            disabled={page <= 1}
+            onPress={() => setPage(currentPage => Math.max(1, currentPage - 1))}
+          >
+            <ChevronLeft width={24} height={24} fill="#596A86" />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Próxima página de ${title.toLowerCase()}`}
+            style={[styles.pageButton, page >= totalPages && styles.disabled]}
+            disabled={page >= totalPages}
+            onPress={() => setPage(currentPage => Math.min(totalPages, currentPage + 1))}
+          >
+            <ChevronRight width={24} height={24} fill="#596A86" />
+          </Pressable>
+        </View>
+      )}
+      <Modal visible={showPageLengths} transparent animationType="fade" onRequestClose={() => setShowPageLengths(false)}>
+        <Pressable style={styles.optionsOverlay} onPress={() => setShowPageLengths(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de quantidade">
+          <View style={styles.pageLengthOptions} accessibilityViewIsModal>
+            <Text style={styles.optionsTitle}>Itens por página</Text>
+            {[5, 10, 20].map(quantity => (
+              <Pressable
+                key={quantity}
+                accessibilityRole="radio"
+                accessibilityLabel={`Mostrar ${quantity} itens`}
+                accessibilityState={{ checked: pageLength === quantity }}
+                style={[styles.pageLengthOption, pageLength === quantity && styles.selectedOption]}
+                onPress={() => {
+                  setPageLength(quantity);
+                  setPage(1);
+                  setShowPageLengths(false);
+                }}
+              >
+                <Text style={styles.pageText}>{quantity}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+export default function UserList() {
+  const { user } = useUser();
+  const { result } = useLocalSearchParams<{ result?: string }>();
+  const { setParams } = useRouter();
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const [pendingDelete, setPendingDelete] = useState<UserListItem>();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [reloadKeys, setReloadKeys] = useState<Partial<Record<Role, number>>>({});
+  const closeToast = useCallback(() => setNotification(undefined), []);
+
+  useEffect(() => {
+    if (result !== 'created' && result !== 'updated') return;
+    setNotification({ message: result === 'updated' ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!', type: 'success' });
+    setParams({ result: undefined });
+  }, [result, setParams]);
+  const { width } = useWindowDimensions();
+  const styles = createStyles(width);
+
+  function requestDelete(selectedUser: UserListItem) {
+    if (user?.role !== 'ADMIN' || selectedUser.id === user.id || isDeleting) return;
+    setNotification(undefined);
+    setPendingDelete(selectedUser);
+  }
+
+  async function confirmDelete() {
+    if (user?.role !== 'ADMIN' || !pendingDelete || pendingDelete.id === user.id || isDeleting) return;
+    const selectedUser = pendingDelete;
+    setIsDeleting(true);
+    try {
+      await deleteUser(selectedUser.id);
+      setPendingDelete(undefined);
+      setReloadKeys(current => ({ ...current, [selectedUser.role]: (current[selectedUser.role] ?? 0) + 1 }));
+      setNotification({ message: 'Usuário excluído com sucesso!', type: 'success' });
+    } catch (error) {
+      setPendingDelete(undefined);
+      setNotification({ message: error instanceof Error ? error.message : 'Não foi possível excluir o usuário.', type: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
+      <Scroll contentContainerStyle={styles.content}>
+        <Header />
+        <View style={styles.main}>
+          <Text style={styles.title} accessibilityRole="header">Lista completa</Text>
+          <View style={styles.navigation}>
+            <Link href="/home" asChild>
+              <Pressable style={styles.link} accessibilityRole="link">
+                <ArrowBack width={22} height={22} fill={theme.colors.backIcon} />
+                <Text style={styles.linkText}>Voltar à tela de início</Text>
+              </Pressable>
+            </Link>
+            <Link href="/user-register" asChild>
+              <Pressable style={styles.link} accessibilityRole="link">
+                <Add width={24} height={24} fill="#EE798A" />
+                <Text style={styles.linkText}>Novo Usuário</Text>
+              </Pressable>
+            </Link>
+          </View>
+          {user?.role === 'ADMIN' && (
+            <>
+              <UserListSection title="Administradores" role="ADMIN" reloadKey={reloadKeys.ADMIN ?? 0} onDelete={requestDelete} />
+              <UserListSection title="Professores" role="PROFESSOR" reloadKey={reloadKeys.PROFESSOR ?? 0} onDelete={requestDelete} />
+            </>
+          )}
+          <UserListSection title="Alunos" role="ALUNO" reloadKey={reloadKeys.ALUNO ?? 0} onDelete={requestDelete} />
+        </View>
+        <Footer />
+      </Scroll>
+      <Modal visible={Boolean(pendingDelete && user?.role === 'ADMIN')} transparent animationType="fade" onRequestClose={() => { if (!isDeleting) setPendingDelete(undefined); }}>
+        <View style={styles.optionsOverlay}>
+          <View style={styles.deleteDialog} accessibilityViewIsModal>
+            <Text style={styles.optionsTitle}>Excluir usuário</Text>
+            <Text style={styles.deleteMessage}>Deseja excluir {pendingDelete?.nome}? Esta ação não pode ser desfeita.</Text>
+            <View style={styles.deleteActions}>
+              <Pressable style={[styles.dialogButton, styles.cancelDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Cancelar exclusão" disabled={isDeleting} onPress={() => setPendingDelete(undefined)}>
+                <Text style={styles.cancelDeleteText}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={[styles.dialogButton, styles.confirmDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Confirmar exclusão" accessibilityState={{ disabled: isDeleting, busy: isDeleting }} disabled={isDeleting} onPress={confirmDelete}>
+                {isDeleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.confirmDeleteText}>Excluir</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
+    </Screen>
+  );
+}

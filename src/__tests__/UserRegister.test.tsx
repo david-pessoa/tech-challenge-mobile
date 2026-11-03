@@ -1,12 +1,12 @@
 import { theme } from '@/styles/Theme';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { createUser, getUserById, updateUser } from '../services/user.service';
 import { Redirect } from 'expo-router';
 import { ReactElement } from 'react';
 import { ThemeProvider } from 'styled-components/native';
 import { useUser } from '../context/AuthContext';
 import UserRegister from '../screens/UserRegister';
-import { createUser } from '../services/user.service';
 import type { Role } from '../types/Roles';
 
 const mockReplace = jest.fn();
@@ -20,7 +20,7 @@ afterAll(() => {
 });
 
 jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
-jest.mock('../services/user.service', () => ({ createUser: jest.fn() }));
+jest.mock('../services/user.service', () => ({ createUser: jest.fn(), getUserById: jest.fn(), updateUser: jest.fn() }));
 jest.mock('expo-router', () => ({
   Redirect: jest.fn(() => null),
   useRouter: () => ({ replace: mockReplace }),
@@ -45,27 +45,6 @@ jest.mock('@react-native-community/datetimepicker', () => {
     default: (props: object) => <View {...props} testID="birth-date-picker" />,
   };
 });
-
-jest.mock(
-  '@material-symbols-svg/react-native',
-  () => {
-    const MockIcon = () => null;
-
-    return {
-      CalendarMonth: MockIcon,
-      Close: MockIcon,
-      Cancel: MockIcon,
-      ArrowBack: MockIcon,
-      Check: MockIcon,
-      KeyboardArrowDown: MockIcon,
-      Visibility: MockIcon,
-      VisibilityOff: MockIcon,
-      Download: MockIcon,
-      Logout: MockIcon,
-    };
-  },
-  { virtual: true }
-);
 
 const mockUseUser = jest.mocked(useUser);
 const mockCreateUser = jest.mocked(createUser);
@@ -294,7 +273,7 @@ describe('Foto e envio do cadastro', () => {
       expect(screen.getByLabelText(label)).toHaveDisplayValue('');
     }
     expect(screen.getByLabelText('Selecionar foto do usuário')).toBeTruthy();
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Permite cadastrar sem foto e sem data de nascimento', async () => {
@@ -302,10 +281,8 @@ describe('Foto e envio do cadastro', () => {
     await fillForm();
     await selectRole();
     await fireEvent.press(screen.getByLabelText('Enviar'));
-    expect(
-      sentParts().some(part => part.fieldName === 'image' || part.fieldName === 'birthDate')
-    ).toBe(false);
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(sentParts().some(part => part.fieldName === 'image' || part.fieldName === 'birthDate')).toBe(false);
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Impede enviar uma foto acima de 5 MB', async () => {
@@ -342,7 +319,7 @@ describe('Foto e envio do cadastro', () => {
     expect(screen.getByLabelText('Senha')).toHaveDisplayValue('Senha123@');
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(mockCreateUser).toHaveBeenCalledTimes(2);
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
 
   it('Bloqueia novos envios enquanto aguarda a resposta da API', async () => {
@@ -363,7 +340,166 @@ describe('Foto e envio do cadastro', () => {
       complete({ id: 'novo-usuario' });
     });
     await submission;
-    expect(screen.getByText('Usuário cadastrado com sucesso!')).toBeTruthy();
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
+  });
+});
+
+describe('Carregamento da edição de usuários', () => {
+  const selectedUser = {
+    id: 'aluno-2', nome: 'Serena Ramos', matricula: '935374',
+    role: 'ALUNO' as const, birthDate: '2013-01-05', image: '/api/user/aluno-2/image',
+  };
+
+  it('Preenche os dados do usuário selecionado e mantém as senhas vazias', async () => {
+    jest.mocked(getUserById).mockResolvedValue(selectedUser);
+    await renderWithTheme(<UserRegister userId="aluno-2" />);
+    await waitFor(() => expect(screen.getByText('Editar Usuário')).toBeTruthy());
+    expect(getUserById).toHaveBeenCalledWith('aluno-2');
+    expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Ramos');
+    expect(screen.getByLabelText('Matrícula')).toHaveDisplayValue('935374');
+    expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
+    expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: 'Aluno' });
+    expect(screen.getByLabelText('Senha')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Confirme sua senha')).toHaveDisplayValue('');
+    expect(screen.getByLabelText('Trocar foto do usuário')).toBeTruthy();
+    expect(screen.getByLabelText('Salvar')).not.toBeDisabled();
+    expect(createUser).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Cancelar'));
+    expect(mockReplace).toHaveBeenCalledWith('/user-list');
+  });
+
+  it('Professor não consegue abrir a edição de outro professor', async () => {
+    setSession('PROFESSOR');
+    jest.mocked(getUserById).mockResolvedValue({ ...selectedUser, role: 'PROFESSOR' });
+    await renderWithTheme(<UserRegister userId="professor-2" />);
+    await waitFor(() => expect(screen.getByText('Você só pode editar usuários alunos.')).toBeTruthy());
+    expect(screen.queryByLabelText('Nome completo')).toBeNull();
+    expect(createUser).not.toHaveBeenCalled();
+  });
+
+  it('Permite tentar novamente quando o carregamento falha', async () => {
+    jest.mocked(getUserById)
+      .mockRejectedValueOnce(new Error('Não foi possível carregar o usuário.'))
+      .mockResolvedValueOnce(selectedUser);
+    await renderWithTheme(<UserRegister userId="aluno-2" />);
+    await waitFor(() => expect(screen.getByText('Não foi possível carregar o usuário.')).toBeTruthy());
+    await fireEvent.press(screen.getByText('Tentar novamente'));
+    await waitFor(() => expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Ramos'));
+    expect(getUserById).toHaveBeenCalledTimes(2);
+  });
+});
+
+it('Volta para a listagem ao cancelar um novo cadastro', async () => {
+  await renderWithTheme(<UserRegister />);
+  await fireEvent.press(screen.getByLabelText('Cancelar'));
+  expect(mockReplace).toHaveBeenCalledWith('/user-list');
+  expect(createUser).not.toHaveBeenCalled();
+});
+
+describe('Salvamento da edição de usuários', () => {
+  const selectedUser = {
+    id: 'aluno-2', nome: 'Serena Ramos', matricula: '935374',
+    role: 'ALUNO' as const, birthDate: '2013-01-05', image: '/api/user/aluno-2/image',
+  };
+
+  async function openEdit() {
+    jest.mocked(getUserById).mockResolvedValue(selectedUser);
+    await renderWithTheme(<UserRegister userId="aluno-2" />);
+    await waitFor(() => expect(screen.getByLabelText('Salvar')).toBeTruthy());
+  }
+
+  function updatedParts() {
+    const form = jest.mocked(updateUser).mock.calls[0][1] as unknown as {
+      getParts(): { fieldName: string; string?: string; uri?: string }[];
+    };
+    return form.getParts();
+  }
+
+  it('Atualiza o usuário sem alterar a senha ou reenviar a foto existente e exibe confirmação', async () => {
+    jest.mocked(updateUser).mockResolvedValue(selectedUser);
+    await openEdit();
+    await fireEvent.changeText(screen.getByLabelText('Nome completo'), 'Serena Almeida');
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(updateUser).toHaveBeenCalledWith('aluno-2', expect.any(FormData));
+    expect(updatedParts()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ fieldName: 'nome', string: 'Serena Almeida' }),
+      expect.objectContaining({ fieldName: 'birthDate', string: '2013-01-05' }),
+    ]));
+    expect(updatedParts().some(part => ['senha', 'image', 'removeImage'].includes(part.fieldName))).toBe(false);
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'updated' } });
+    expect(screen.getByLabelText('Nome completo')).toHaveDisplayValue('Serena Almeida');
+    expect(createUser).not.toHaveBeenCalled();
+  });
+
+  it('Mantém os dados e a foto na edição quando a matrícula já existe', async () => {
+    jest.mocked(updateUser).mockRejectedValue(new Error('Já existe um usuário cadastrado com essa matrícula'));
+    await openEdit();
+    await fireEvent.changeText(screen.getByLabelText('Matrícula'), '111111');
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(screen.getAllByText('Já existe um usuário cadastrado com essa matrícula')).toHaveLength(2);
+    expect(screen.getByLabelText('Matrícula')).toHaveDisplayValue('111111');
+    expect(screen.getByLabelText('Trocar foto do usuário')).toBeTruthy();
+    expect(screen.getByLabelText('Salvar')).not.toBeDisabled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('Valida nome e matrícula obrigatórios na edição', async () => {
+    await openEdit();
+    await fireEvent.changeText(screen.getByLabelText('Nome completo'), '');
+    await fireEvent.changeText(screen.getByLabelText('Matrícula'), '');
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(screen.getByText('O nome completo é obrigatório.')).toBeTruthy();
+    expect(screen.getByText('A matrícula é obrigatória.')).toBeTruthy();
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it('Valida a nova senha ao sair do campo e envia somente quando confirmada', async () => {
+    jest.mocked(updateUser).mockResolvedValue(selectedUser);
+    await openEdit();
+    await fireEvent.changeText(screen.getByLabelText('Senha'), 'NovaSenha123@');
+    await fireEvent.changeText(screen.getByLabelText('Confirme sua senha'), 'OutraSenha');
+    await fireEvent(screen.getByLabelText('Confirme sua senha'), 'blur');
+    expect(screen.getByText('As senhas não coincidem.')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(updateUser).not.toHaveBeenCalled();
+    await fireEvent.changeText(screen.getByLabelText('Confirme sua senha'), 'NovaSenha123@');
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(updatedParts()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ fieldName: 'senha', string: 'NovaSenha123@' }),
+    ]));
+    expect(screen.getByLabelText('Senha')).toHaveDisplayValue('');
+  });
+
+  it('Valida a data de nascimento na edição', async () => {
+    await openEdit();
+    await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), '31/02/2013');
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(screen.getByText('Informe uma data de nascimento válida.')).toBeTruthy();
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it('Envia a remoção da foto existente ao salvar', async () => {
+    jest.mocked(updateUser).mockResolvedValue({ ...selectedUser, image: null });
+    await openEdit();
+    await fireEvent.press(screen.getByLabelText('Remover foto do usuário'));
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(updatedParts()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ fieldName: 'removeImage', string: 'true' }),
+    ]));
+    expect(screen.getByLabelText('Selecionar foto do usuário')).toBeTruthy();
+  });
+
+  it('Bloqueia novos envios enquanto salva a edição', async () => {
+    let complete!: (value: unknown) => void;
+    jest.mocked(updateUser).mockReturnValueOnce(new Promise(resolve => { complete = resolve; }));
+    await openEdit();
+    const submission = fireEvent.press(screen.getByLabelText('Salvar'));
+    await waitFor(() => expect(screen.getByLabelText('Salvar')).toBeDisabled());
+    await fireEvent.press(screen.getByLabelText('Salvar'));
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    await act(async () => { complete(selectedUser); });
+    await submission;
+    expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'updated' } });
   });
 });
 

@@ -40,7 +40,10 @@
     "preset": "jest-expo",
     "setupFilesAfterEnv": [
       "@testing-library/react-native"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^@material-symbols-svg/react-native/icons/[^/]+$": "<rootDir>/src/__mocks__/MaterialSymbols.tsx"
+    }
   },
   "scripts": {
     "start": "expo start",

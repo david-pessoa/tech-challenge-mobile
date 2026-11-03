@@ -2,7 +2,7 @@ import { UserProvider } from '../context/AuthContext';
 import { ThemeProvider } from 'styled-components/native';
 import { theme } from '@/styles/Theme';
 import Index from './index';
-import Routes from './routes'
+import Routes from '../navigation/routes'
 import { AppContainer } from '../styles/GlobalStyles';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 

@@ -1,13 +1,11 @@
 import Header from '@/components/Header';
-import {
-  ArrowBack,
-  Cancel,
-  Check,
-  Download,
-  KeyboardArrowDown,
-  Visibility,
-  VisibilityOff,
-} from '@material-symbols-svg/react-native';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
+import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
+import { Check } from '@material-symbols-svg/react-native/icons/check';
+import { Download } from '@material-symbols-svg/react-native/icons/download';
+import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
+import { Visibility } from '@material-symbols-svg/react-native/icons/visibility';
+import { VisibilityOff } from '@material-symbols-svg/react-native/icons/visibility-off';
 import * as ImagePicker from 'expo-image-picker';
 import { Redirect, useRouter } from 'expo-router';
 import { ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
@@ -30,7 +28,8 @@ import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
 import BirthDateCalendar from '../../components/BirthDateCalendar';
 import { useUser } from '../../context/AuthContext';
-import { createUser } from '../../services/user.service';
+import { createUser, getUserById, updateUser } from '../../services/user.service';
+import { buildApiImageUrl } from '../../utils/functions';
 import { theme } from '../../styles/Theme';
 import type { Role } from '../../types/Roles';
 import { styles } from './styles';
@@ -50,7 +49,12 @@ type FormField =
   | 'confirmPassword'
   | 'photo';
 
-export default function UserRegister() {
+export default function UserRegister({ userId }: { userId?: string } = {}) {
+  const isEditing = Boolean(userId);
+  const [isLoadingUser, setIsLoadingUser] = useState(Boolean(userId));
+  const [userLoadError, setUserLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [existingPhoto, setExistingPhoto] = useState<string>();
   const { user, isLoading } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -81,6 +85,46 @@ export default function UserRegister() {
     ? accessTypes.filter(accessType => accessType.value === 'ALUNO')
     : accessTypes;
 
+
+  const photoUri = photo?.uri ?? existingPhoto;
+  const submitLabel = isEditing ? 'Salvar' : 'Enviar';
+  const backLabel = isEditing ? 'Voltar à lista de usuários' : 'Voltar à tela de início';
+
+  useEffect(() => {
+    if (!userId || isLoading || !canRegister) return;
+    let active = true;
+
+    async function loadUser() {
+      setIsLoadingUser(true);
+      setUserLoadError('');
+      try {
+        const selectedUser = await getUserById(userId!);
+        if (!active) return;
+        if (isProfessor && selectedUser.role !== 'ALUNO') {
+          setUserLoadError('Você só pode editar usuários alunos.');
+          return;
+        }
+        setName(selectedUser.nome);
+        setRegistration(selectedUser.matricula);
+        setRole(selectedUser.role);
+        const date = selectedUser.birthDate?.slice(0, 10).split('-');
+        setBirthDate(date ? `${date[2]}/${date[1]}/${date[0]}` : '');
+        setExistingPhoto(selectedUser.image ? buildApiImageUrl(selectedUser.image) : undefined);
+        setPhoto(undefined);
+        setPassword('');
+        setConfirmPassword('');
+        setErrors({});
+      } catch (error) {
+        if (active) setUserLoadError(error instanceof Error ? error.message : 'Não foi possível carregar o usuário.');
+      } finally {
+        if (active) setIsLoadingUser(false);
+      }
+    }
+
+    loadUser();
+    return () => { active = false; };
+  }, [userId, isLoading, canRegister, isProfessor, loadAttempt]);
+
   useEffect(() => {
     if (Platform.OS !== 'web' || !photoPickerRef.current) return;
 
@@ -109,7 +153,7 @@ export default function UserRegister() {
       element.removeEventListener('dragover', preventDropNavigation);
       element.removeEventListener('drop', handleDrop);
     };
-  }, [isLoading, canRegister, isSaving]);
+  }, [isLoading, isLoadingUser, userLoadError, canRegister, isSaving]);
 
   useEffect(() => {
     return () => {
@@ -134,6 +178,10 @@ export default function UserRegister() {
 
   function validatePasswords(field: 'password' | 'confirmPassword') {
     setFocusedField(undefined);
+    if (isEditing && !password && !confirmPassword) {
+      setErrors(current => ({ ...current, password: undefined, confirmPassword: undefined }));
+      return;
+    }
     setErrors(current => ({
       ...current,
       password: !password.trim() ? 'A senha é obrigatória.' : undefined,
@@ -169,7 +217,7 @@ export default function UserRegister() {
   }
 
   async function handleSubmit() {
-    if (isLoading || !canRegister || isSaving) return;
+    if (isLoading || !canRegister || isSaving || isLoadingUser || userLoadError) return;
     setMessage('');
     setIsSuccess(false);
 
@@ -177,11 +225,13 @@ export default function UserRegister() {
     if (!name.trim()) validationErrors.name = 'O nome completo é obrigatório.';
     if (!registration.trim()) validationErrors.registration = 'A matrícula é obrigatória.';
     if (!selectedRole) validationErrors.role = 'Selecione o tipo de acesso.';
-    if (!password.trim()) validationErrors.password = 'A senha é obrigatória.';
-    if (!confirmPassword) {
-      validationErrors.confirmPassword = 'Confirme sua senha.';
-    } else if (password !== confirmPassword) {
-      validationErrors.confirmPassword = 'As senhas não coincidem.';
+    if (!isEditing || password || confirmPassword) {
+      if (!password.trim()) validationErrors.password = 'A senha é obrigatória.';
+      if (!confirmPassword) {
+        validationErrors.confirmPassword = 'Confirme sua senha.';
+      } else if (password !== confirmPassword) {
+        validationErrors.confirmPassword = 'As senhas não coincidem.';
+      }
     }
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0 || !selectedRole) return;
@@ -190,7 +240,7 @@ export default function UserRegister() {
     data.append('nome', name.trim());
     data.append('matricula', registration.trim());
     data.append('role', selectedRole);
-    data.append('senha', password);
+    if (password) data.append('senha', password);
 
     if (birthDate.trim()) {
       const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(birthDate.trim());
@@ -242,22 +292,27 @@ export default function UserRegister() {
         }
       }
 
-      await createUser(data);
+      if (userId) {
+        if (!photo && !existingPhoto) data.append('removeImage', 'true');
+        const updatedUser = await updateUser(userId, data);
+        setExistingPhoto(updatedUser.image ? buildApiImageUrl(updatedUser.image, Date.now()) : undefined);
+      } else {
+        await createUser(data);
+        setName('');
+        setBirthDate('');
+        setRole(undefined);
+        setRegistration('');
+      }
       setPhoto(undefined);
-      setName('');
-      setBirthDate('');
-      setRole(undefined);
-      setRegistration('');
       setPassword('');
       setConfirmPassword('');
       setIsSuccess(true);
       setShowPassword(false);
       setShowConfirmPassword(false);
-      setMessage('Usuário cadastrado com sucesso!');
+      router.replace({ pathname: '/user-list', params: { result: isEditing ? 'updated' : 'created' } });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Não foi possível cadastrar o usuário.';
-      if (/matr[ií]cula.*(cadastrad|existe)/i.test(errorMessage)) {
+      const errorMessage = error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar o usuário.' : 'Não foi possível cadastrar o usuário.';
+      if (/(matr[ií]cula.*(cadastrad|existe)|(cadastrad|existe).*matr[ií]cula)/i.test(errorMessage)) {
         setErrors({ registration: errorMessage });
       }
       setMessage(errorMessage);
@@ -278,13 +333,30 @@ export default function UserRegister() {
   if (!user) return <Redirect href="/login" />;
   if (!canRegister) return <Redirect href="/home" />;
 
-  const profileLabel = isProfessor ? 'Professor' : 'Admin';
-  const selectedRoleLabel =
-    accessTypes.find(accessType => accessType.value === selectedRole)?.label ??
-    'Selecione o tipo de acesso...';
+  if (isEditing && isLoadingUser) {
+    return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando usuário" />;
+  }
+  if (isEditing && userLoadError) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <Header />
+        <View style={styles.form}>
+          <Text style={styles.fieldError} accessibilityRole="alert">{userLoadError}</Text>
+          <Pressable style={styles.backButton} onPress={() => setLoadAttempt(value => value + 1)} accessibilityRole="button">
+            <Text style={styles.backText}>Tentar novamente</Text>
+          </Pressable>
+          <Pressable style={styles.backButton} onPress={() => router.replace('/user-list')} accessibilityRole="button">
+            <Text style={styles.backText}>Voltar à lista de usuários</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  const selectedRoleLabel = accessTypes.find(accessType => accessType.value === selectedRole)?.label ?? 'Selecione o tipo de acesso...';
 
   function goHome() {
-    router.replace('/home');
+    router.replace(isEditing ? '/user-list' : '/home');
   }
 
   return (
@@ -301,28 +373,13 @@ export default function UserRegister() {
           <Header />
 
           <View style={[styles.form, isTablet && styles.tabletForm]}>
-            <Pressable
-              onPress={goHome}
-              disabled={isSaving}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Voltar à tela de início"
-            >
+            <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel={backLabel}>
               <ArrowBack size={18} color={theme.colors.backIcon} />
-              <Text style={styles.backText}>Voltar à tela de início</Text>
+              <Text style={styles.backText}>{backLabel}</Text>
             </Pressable>
             <View style={[styles.titleRow, isTablet && styles.tabletTitleRow]}>
-              <Text
-                style={[styles.title, isTablet && styles.tabletTitle]}
-                accessibilityRole="header"
-              >
-                Novo Usuário
-              </Text>
-              <Image
-                source={require('../../../assets/images/red-doodle.png')}
-                style={styles.decoration}
-                resizeMode="contain"
-              />
+              <Text style={[styles.title, isTablet && styles.tabletTitle]} accessibilityRole="header">{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</Text>
+              <Image source={require('../../../assets/images/red-doodle.png')} style={styles.decoration} resizeMode="contain" />
             </View>
 
             <View style={[styles.photoNameRow, isTablet && styles.tabletPhotoNameRow]}>
@@ -338,9 +395,7 @@ export default function UserRegister() {
                     onPress={selectPhoto}
                     disabled={isSaving}
                     accessibilityRole="button"
-                    accessibilityLabel={
-                      photo ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'
-                    }
+                    accessibilityLabel={photoUri ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
                   >
                     <Svg
                       width={photoSize}
@@ -359,12 +414,8 @@ export default function UserRegister() {
                         strokeDasharray="17 17.165"
                       />
                     </Svg>
-                    {photo ? (
-                      <Image
-                        source={{ uri: photo.uri }}
-                        style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]}
-                        resizeMode="cover"
-                      />
+                    {photoUri ? (
+                      <Image source={{ uri: photoUri }} style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]} resizeMode="cover" />
                     ) : (
                       <>
                         <Download
@@ -379,13 +430,10 @@ export default function UserRegister() {
                       </>
                     )}
                   </Pressable>
-                  {photo && (
+                  {photoUri && (
                     <Pressable
                       style={styles.removePhotoButton}
-                      onPress={() => {
-                        setPhoto(undefined);
-                        clearFieldError('photo');
-                      }}
+                      onPress={() => { setPhoto(undefined); setExistingPhoto(undefined); clearFieldError('photo'); }}
                       disabled={isSaving}
                       accessibilityRole="button"
                       accessibilityLabel="Remover foto do usuário"
@@ -554,16 +602,8 @@ export default function UserRegister() {
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
-                  Senha <Text style={styles.required}>*</Text>
-                </Text>
-                <View
-                  style={[
-                    styles.passwordField,
-                    isTablet && styles.tabletControl,
-                    focusedField === 'password' && styles.inputFocused,
-                  ]}
-                >
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Senha {!isEditing && <Text style={styles.required}>*</Text>}</Text>
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'password' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
                     style={[styles.passwordInput, isTablet && styles.tabletInput]}
@@ -571,7 +611,7 @@ export default function UserRegister() {
                     onBlur={() => validatePasswords('password')}
                     placeholderTextColor={theme.colors.fieldPlaceholder}
                     accessibilityLabel="Senha"
-                    placeholder="Digite a senha..."
+                    placeholder={isEditing ? 'Digite uma nova senha...' : 'Digite a senha...'}
                     value={password}
                     onChangeText={value => {
                       setPassword(value);
@@ -607,16 +647,8 @@ export default function UserRegister() {
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
-                  Confirme sua senha <Text style={styles.required}>*</Text>
-                </Text>
-                <View
-                  style={[
-                    styles.passwordField,
-                    isTablet && styles.tabletControl,
-                    focusedField === 'confirmPassword' && styles.inputFocused,
-                  ]}
-                >
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Confirme sua senha {!isEditing && <Text style={styles.required}>*</Text>}</Text>
+                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'confirmPassword' && styles.inputFocused]}>
                   <TextInput
                     editable={!isSaving}
                     style={[styles.passwordInput, isTablet && styles.tabletInput]}
@@ -665,28 +697,11 @@ export default function UserRegister() {
             </View>
 
             <View style={[styles.actions, isTablet && styles.tabletActions]}>
-              <Pressable
-                style={[styles.button, styles.cancelButton, isSaving && styles.disabled]}
-                onPress={goHome}
-                disabled={isSaving}
-                accessibilityRole="button"
-                accessibilityLabel="Cancelar"
-              >
+              <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={() => router.replace('/user-list')} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
               </Pressable>
-              <Pressable
-                style={[styles.button, styles.submitButton, isSaving && styles.disabled]}
-                onPress={handleSubmit}
-                disabled={isSaving}
-                accessibilityRole="button"
-                accessibilityLabel="Enviar"
-                accessibilityState={{ disabled: isSaving, busy: isSaving }}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={[styles.buttonText, styles.submitText]}>Enviar</Text>
-                )}
+              <Pressable style={[styles.button, styles.submitButton, isSaving && styles.disabled]} onPress={handleSubmit} disabled={isSaving} accessibilityRole="button" accessibilityLabel={submitLabel} accessibilityState={{ disabled: isSaving, busy: isSaving }}>
+                {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.buttonText, styles.submitText]}>{submitLabel}</Text>}
               </Pressable>
             </View>
           </View>
