@@ -33,7 +33,7 @@ export const ResultsList = styled.ScrollView<ResponsiveProps>`
   box-sizing: border-box;
   z-index: 900;
   margin-top: 5px;
-  height: 240px;
+  max-height: 240px;
   flex-grow: 0;
   background-color: #fef4d0;
   border-bottom-left-radius: 20px;

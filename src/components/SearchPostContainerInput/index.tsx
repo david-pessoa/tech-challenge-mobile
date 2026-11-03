@@ -14,6 +14,7 @@ import {
   ListItemTitle,
   ResultsList,
 } from './styles';
+import { searchPost } from '@/services/post.service';
 
 export default function SearchPostContainerInput() {
   const [searchedPostsList, setSearchedPostsList] = useState<Post[]>([]);
@@ -30,81 +31,7 @@ export default function SearchPostContainerInput() {
       return;
     }
     try {
-      // const relatedPosts = await searchPost(searchedText);
-      const relatedPosts = [
-        {
-          postId: '1',
-          titulo: 'Teste1',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '2',
-          titulo: 'Teste2',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '3',
-          titulo: 'Teste3',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '4',
-          titulo: 'Teste4',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '5',
-          titulo: 'Teste5',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '6',
-          titulo: 'Teste6',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '7',
-          titulo: 'Teste7',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-        {
-          postId: '8',
-          titulo: 'Teste8',
-          descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-          materia: 'Matemática',
-          autor: 'Victor Hugo',
-          createdAt: new Date('2026-01-01'),
-          editedAt: new Date('2026-01-01'),
-        },
-      ];
+      const relatedPosts = await searchPost(searchedText);
       setSearchedPostsList(relatedPosts.slice(0, 10));
     } catch (error) {
       setSearchedPostsList([]);

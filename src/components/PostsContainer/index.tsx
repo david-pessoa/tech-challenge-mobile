@@ -20,6 +20,7 @@ import {
   ParagraphMarginBottom,
   Title,
 } from './styles';
+import { getAllPosts } from '@/services/post.service';
 
 export default function PostsContainer() {
   const { user } = useUser();
@@ -31,137 +32,7 @@ export default function PostsContainer() {
   useEffect(() => {
     async function returnAllPosts() {
       try {
-        // const postsList = await getAllPosts();
-        const postsList: Post[] = [
-          {
-            postId: '1',
-            titulo: 'Teste1',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: true,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '2',
-            titulo: 'Teste2',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: true,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '3',
-            titulo: 'Teste3',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: true,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '4',
-            titulo: 'Teste4',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: true,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '5',
-            titulo: 'Teste5',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: false,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '6',
-            titulo: 'Teste6',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: false,
-            criadoPor: {
-              nome: 'Roberta',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'outro',
-            },
-          },
-          {
-            postId: '7',
-            titulo: 'Teste7',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: false,
-            criadoPor: {
-              nome: 'Camila',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c',
-            },
-          },
-          {
-            postId: '8',
-            titulo: 'Teste8',
-            descricao: 'Lorem Ipsum dolor sit amet arroz com feijão',
-            materia: 'Matemática',
-            autor: 'Victor Hugo',
-            createdAt: new Date('2026-01-01'),
-            editedAt: new Date('2026-01-01'),
-            foiVisto: false,
-            criadoPor: {
-              nome: 'Camila',
-              tipoUsuario: 'PROFESSOR',
-              image: null,
-              userId: 'c2b58a4e-c4cf-4e20-978c-c1f2793ee18c',
-            },
-          },
-        ];
+        const postsList = await getAllPosts();
         setPosts(postsList);
       } catch (error) {
         setPosts([]);
@@ -195,7 +66,7 @@ export default function PostsContainer() {
               Você já visualizou todas as aulas!
             </CenteredParagraph>
           ) : (
-            <Carousel newPosts={newPosts} isAdmin={false} />
+            <Carousel newPosts={newPosts} />
           )}
         </Container>
         <Container $screenWidth={width}>
@@ -268,7 +139,7 @@ export default function PostsContainer() {
               Você já visualizou todas as aulas!
             </CenteredParagraph>
           ) : (
-            <Carousel newPosts={newPosts} isAdmin={false} />
+            <Carousel newPosts={newPosts} />
           )}
         </Container>
         <Container $screenWidth={width}>
