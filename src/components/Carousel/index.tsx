@@ -18,20 +18,17 @@ export default function Carousel({ newPosts }: CarouselProps) {
 
   return (
     <SwiperFlatList
-      autoplay
-      autoplayDelay={2}
-      autoplayLoop
-      index={2}
-      showPagination
+      index={0}
       data={newPosts}
       renderItem={({ item }) => (
         <View
           style={{
             width: width > 900 ? 200 : width < 600 ? 127 : 158,
+            marginRight: 12,
           }}
         >
           <Pressable onPress={() => goToPost(item.id)}>
-            <CarouselCard dado={item}/>
+            <CarouselCard dado={item} />
           </Pressable>
         </View>
       )}

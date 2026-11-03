@@ -10,7 +10,10 @@ export const Card = styled.View<ResponsiveProps>`
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 0px;
   background: #fff6d740;
-  /* box-shadow: 2px 2px 4px 0px #0000001a; */
+  shadow-color: #000;
+  shadow-opacity: 0.8;
+  shadow-radius: 2;
+  elevation: 1;
 `;
 
 type BackgroundProps = {
@@ -32,13 +35,6 @@ export const IconContainer = styled.View<BackgroundProps>`
 type ColorProps = {
   $color: string;
 } & ResponsiveProps;
-
-export const Icon = styled.Text<ColorProps>`
-  font-size: 56px;
-  color: ${({ $color }) => $color};
-  height: 40px;
-  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
-`;
 
 export const MateriaTitle = styled.Text<ColorProps>`
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 22 : 15)}px;
