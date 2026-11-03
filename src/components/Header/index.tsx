@@ -1,13 +1,12 @@
 import { useNavigation, usePathname } from 'expo-router';
 import { useUser } from '../../context/AuthContext';
-import { logout } from '../../services/auth.service';
 import { buildApiImageUrl } from '../../utils/functions';
 
-import userImage from '../../../assets/images/user-default-image.png';
-import Logo from '../../../assets/public/Logo.png';
 import HeaderAdmin from '../../../assets/images/HeaderAdmin.png';
 import HeaderStudent from '../../../assets/images/HeaderStudent.png';
 import HeaderTeach from '../../../assets/images/HeaderTeach.png';
+import userImage from '../../../assets/images/user-default-image.png';
+import Logo from '../../../assets/public/Logo.png';
 import {
   Background,
   Circle,
@@ -32,7 +31,7 @@ const roleBackgrounds = {
 export default function Header() {
   const navigation = useNavigation();
   const pathname = usePathname();
-  const { user, userImageCacheKey, refreshUser } = useUser();
+  const { user, userImageCacheKey, refreshUser, signOut } = useUser();
   const { width } = useWindowDimensions();
 
   const roleName = {
@@ -42,8 +41,13 @@ export default function Header() {
   };
 
   async function handleLogout() {
-    await logout();
-    await refreshUser();
+    try {
+      await signOut();
+      await refreshUser();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+
     //@ts-ignore
     navigation.navigate('/login');
   }
@@ -72,7 +76,7 @@ export default function Header() {
             />
             <UserName $screenWidth={width}>{user.nome}</UserName>
             <LogoutButton onPress={handleLogout}>
-              <Logout width={width >= 600? 28 : 20} height={width >= 600? 28 : 20} />
+              <Logout width={width >= 600 ? 28 : 20} height={width >= 600 ? 28 : 20} />
             </LogoutButton>
           </LogoutContainer>
         </Nav>

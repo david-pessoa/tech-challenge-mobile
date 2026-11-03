@@ -97,19 +97,29 @@ No arquivo `.env`, informe o endereço do back-end:
 EXPO_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-O aplicativo acrescenta `/api` ao endereço automaticamente. Para testar em um celular físico, substitua `localhost` pelo IP do computador e mantenha os dois na mesma rede.
+O aplicativo acrescenta `/api` ao endereço automaticamente. Para testar em um aparelho físico ou emulador, substitua `localhost` pelo IP do computador.
+Depois, insira no arquivo `.env` do projeto do back-end a URL do projeto front-end. [Veja aqui como fazer isso](https://github.com/david-pessoa/tech-challenge-backend#variáveis-de-ambiente).
 
-Inicie o aplicativo:
+> [!IMPORTANT]
+> Ambos os dispositivos que estão rodando o back-end e o front-end em react native precisam estar na mesma rede local para que a integração funcione.
+
+
+### Inicie o aplicativo
 
 ```bash
-npx expo start
+npm run start
 ```
 
-Pressione **w** para abrir no navegador ou **a** para abrir no emulador Android configurado. Para utilizar o QR code no celular, use uma versão do Expo compatível com o projeto.
+Pressione **`w`** para abrir no navegador ou **`a`** para abrir no emulador Android configurado. Para utilizar o QR code no celular, use uma versão do Expo compatível com o projeto.
 
 ### Back-end
 
-Na pasta do back-end, após configurar o `.env`, execute:
+Para rodar a aplicação no modo desenvolvimento, rode apenas
+```bash
+npm run dev
+```
+
+Na pasta do back-end, após configurar o `.env`, execute o seguinte comando para rodar com Docker no modo produção:
 
 ```bash
 docker compose up -d --build
