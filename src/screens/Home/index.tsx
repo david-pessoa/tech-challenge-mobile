@@ -25,6 +25,7 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
+import { Redirect } from 'expo-router';
 
 export default function Home() {
   const { user } = useUser();

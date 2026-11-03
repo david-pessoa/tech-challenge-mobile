@@ -1,13 +1,13 @@
+import { theme } from '@/styles/Theme';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { Redirect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import UserRegister from '../screens/UserRegister';
-import { useUser } from '../context/AuthContext';
 import { createUser, getUserById, updateUser } from '../services/user.service';
-import type { Role } from '../types/Roles';
+import { Redirect } from 'expo-router';
 import { ReactElement } from 'react';
 import { ThemeProvider } from 'styled-components/native';
-import { theme } from '@/styles/Theme';
+import { useUser } from '../context/AuthContext';
+import UserRegister from '../screens/UserRegister';
+import type { Role } from '../types/Roles';
 
 const mockReplace = jest.fn();
 const originalFormData = globalThis.FormData;
@@ -15,7 +15,9 @@ const originalFormData = globalThis.FormData;
 beforeAll(() => {
   globalThis.FormData = jest.requireActual('react-native/Libraries/Network/FormData').default;
 });
-afterAll(() => { globalThis.FormData = originalFormData; });
+afterAll(() => {
+  globalThis.FormData = originalFormData;
+});
 
 jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
 jest.mock('../services/user.service', () => ({ createUser: jest.fn(), getUserById: jest.fn(), updateUser: jest.fn() }));
@@ -38,23 +40,32 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn() }));
 jest.mock('@react-native-community/datetimepicker', () => {
   const { View } = require('react-native');
-  return { __esModule: true, default: (props: object) => <View {...props} testID="birth-date-picker" /> };
+  return {
+    __esModule: true,
+    default: (props: object) => <View {...props} testID="birth-date-picker" />,
+  };
 });
-
-
 
 const mockUseUser = jest.mocked(useUser);
 const mockCreateUser = jest.mocked(createUser);
 const mockPickPhoto = jest.mocked(ImagePicker.launchImageLibraryAsync);
 const photo: ImagePicker.ImagePickerAsset = {
-  uri: 'file:///foto.png', width: 200, height: 200,
-  fileName: 'foto.png', mimeType: 'image/png', fileSize: 1024,
+  uri: 'file:///foto.png',
+  width: 200,
+  height: 200,
+  fileName: 'foto.png',
+  mimeType: 'image/png',
+  fileSize: 1024,
 };
 
 function setSession(role: Role = 'ADMIN') {
   mockUseUser.mockReturnValue({
     user: { id: 'usuario-1', nome: 'Usuário', matricula: '123', role },
-    isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn(),
+    isLoading: false,
+    userImageCacheKey: 0,
+    refreshUser: jest.fn(),
+    signIn: jest.fn(),
+    signOut: jest.fn(),
   });
 }
 
@@ -77,17 +88,19 @@ async function selectPhoto(asset = photo) {
 
 function sentParts() {
   const form = mockCreateUser.mock.calls[0][0] as unknown as {
-    getParts(): { fieldName: string; string?: string; uri?: string; type?: string; name?: string }[];
+    getParts(): {
+      fieldName: string;
+      string?: string;
+      uri?: string;
+      type?: string;
+      name?: string;
+    }[];
   };
   return form.getParts();
 }
 
 function renderWithTheme(component: ReactElement) {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 }
 
 beforeEach(() => {
@@ -97,11 +110,14 @@ beforeEach(() => {
 });
 
 describe('Permissões do cadastro', () => {
-  it.each(['Aluno', 'Professor', 'Administrador'])('Administrador consegue selecionar o perfil %s', async label => {
-    await renderWithTheme(<UserRegister />);
-    await selectRole(label);
-    expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: label });
-  });
+  it.each(['Aluno', 'Professor', 'Administrador'])(
+    'Administrador consegue selecionar o perfil %s',
+    async label => {
+      await renderWithTheme(<UserRegister />);
+      await selectRole(label);
+      expect(screen.getByLabelText('Tipo de acesso')).toHaveAccessibilityValue({ text: label });
+    }
+  );
 
   it('Professor tem apenas o perfil de aluno e envia o cadastro com essa permissão', async () => {
     setSession('PROFESSOR');
@@ -113,7 +129,9 @@ describe('Permissões do cadastro', () => {
     expect(screen.queryByRole('radio', { name: 'Administrador' })).toBeNull();
     await fillForm();
     await fireEvent.press(screen.getByLabelText('Enviar'));
-    expect(sentParts()).toEqual(expect.arrayContaining([expect.objectContaining({ fieldName: 'role', string: 'ALUNO' })]));
+    expect(sentParts()).toEqual(
+      expect.arrayContaining([expect.objectContaining({ fieldName: 'role', string: 'ALUNO' })])
+    );
   });
 
   it('Aluno é redirecionado para a home sem acessar o formulário', async () => {
@@ -125,7 +143,14 @@ describe('Permissões do cadastro', () => {
   });
 
   it('Visitante sem sessão é redirecionado para o login', async () => {
-    mockUseUser.mockReturnValue({ user: undefined, isLoading: false, userImageCacheKey: 0, refreshUser: jest.fn(), signIn: jest.fn(), signOut: jest.fn() });
+    mockUseUser.mockReturnValue({
+      user: undefined,
+      isLoading: false,
+      userImageCacheKey: 0,
+      refreshUser: jest.fn(),
+      signIn: jest.fn(),
+      signOut: jest.fn(),
+    });
     await renderWithTheme(<UserRegister />);
     expect(jest.mocked(Redirect).mock.calls[0][0].href).toBe('/login');
     expect(mockCreateUser).not.toHaveBeenCalled();
@@ -192,7 +217,11 @@ describe('Validações dos campos', () => {
     await selectRole();
     await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), '29/02/2012');
     await fireEvent.press(screen.getByLabelText('Enviar'));
-    expect(sentParts()).toEqual(expect.arrayContaining([expect.objectContaining({ fieldName: 'birthDate', string: '2012-02-29' })]));
+    expect(sentParts()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fieldName: 'birthDate', string: '2012-02-29' }),
+      ])
+    );
   });
 });
 
@@ -215,7 +244,9 @@ describe('Foto e envio do cadastro', () => {
     await fillForm();
     await selectRole();
     await fireEvent.press(screen.getByLabelText('Enviar'));
-    expect(sentParts()).toEqual(expect.arrayContaining([expect.objectContaining({ fieldName: 'image', uri: photo.uri })]));
+    expect(sentParts()).toEqual(
+      expect.arrayContaining([expect.objectContaining({ fieldName: 'image', uri: photo.uri })])
+    );
   });
 
   it('Envia a foto e limpa os campos e a imagem depois do cadastro bem-sucedido', async () => {
@@ -225,12 +256,19 @@ describe('Foto e envio do cadastro', () => {
     await selectPhoto();
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(mockCreateUser).toHaveBeenCalledTimes(1);
-    expect(sentParts()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ fieldName: 'nome', string: 'Serena Ramos' }),
-      expect.objectContaining({ fieldName: 'matricula', string: '935374' }),
-      expect.objectContaining({ fieldName: 'role', string: 'PROFESSOR' }),
-      expect.objectContaining({ fieldName: 'image', uri: photo.uri, name: 'foto.png', type: 'image/png' }),
-    ]));
+    expect(sentParts()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fieldName: 'nome', string: 'Serena Ramos' }),
+        expect.objectContaining({ fieldName: 'matricula', string: '935374' }),
+        expect.objectContaining({ fieldName: 'role', string: 'PROFESSOR' }),
+        expect.objectContaining({
+          fieldName: 'image',
+          uri: photo.uri,
+          name: 'foto.png',
+          type: 'image/png',
+        }),
+      ])
+    );
     for (const label of ['Nome completo', 'Matrícula', 'Senha', 'Confirme sua senha']) {
       expect(screen.getByLabelText(label)).toHaveDisplayValue('');
     }
@@ -286,7 +324,11 @@ describe('Foto e envio do cadastro', () => {
 
   it('Bloqueia novos envios enquanto aguarda a resposta da API', async () => {
     let complete!: (value: unknown) => void;
-    mockCreateUser.mockReturnValueOnce(new Promise(resolve => { complete = resolve; }));
+    mockCreateUser.mockReturnValueOnce(
+      new Promise(resolve => {
+        complete = resolve;
+      })
+    );
     await renderWithTheme(<UserRegister />);
     await fillForm();
     await selectRole();
@@ -294,7 +336,9 @@ describe('Foto e envio do cadastro', () => {
     await waitFor(() => expect(screen.getByLabelText('Enviar')).toBeDisabled());
     await fireEvent.press(screen.getByLabelText('Enviar'));
     expect(mockCreateUser).toHaveBeenCalledTimes(1);
-    await act(async () => { complete({ id: 'novo-usuario' }); });
+    await act(async () => {
+      complete({ id: 'novo-usuario' });
+    });
     await submission;
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/user-list', params: { result: 'created' } });
   });
@@ -476,8 +520,14 @@ describe('Máscara de data de nascimento', () => {
     await renderWithTheme(<UserRegister />);
     const input = screen.getByLabelText('Data de nascimento');
     for (const [value, expected] of [
-      ['0', '0'], ['05', '05'], ['050', '05/0'], ['05/01', '05/01'],
-      ['05/012', '05/01/2'], ['05/01/201', '05/01/201'], ['05/01/20', '05/01/20'], ['', ''],
+      ['0', '0'],
+      ['05', '05'],
+      ['050', '05/0'],
+      ['05/01', '05/01'],
+      ['05/012', '05/01/2'],
+      ['05/01/201', '05/01/201'],
+      ['05/01/20', '05/01/20'],
+      ['', ''],
     ]) {
       await fireEvent.changeText(input, value);
       expect(input).toHaveDisplayValue(expected);
@@ -489,7 +539,12 @@ describe('Calendário de nascimento', () => {
   it('Preenche a data selecionada no calendário com o formato DD/MM/AAAA', async () => {
     await renderWithTheme(<UserRegister />);
     await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
-    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2013, 0, 5));
+    await fireEvent(
+      screen.getByTestId('birth-date-picker'),
+      'valueChange',
+      {},
+      new Date(2013, 0, 5)
+    );
     await fireEvent.press(screen.getByLabelText('Confirmar data de nascimento'));
     expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
     expect(screen.queryByTestId('birth-date-picker')).toBeNull();
@@ -500,7 +555,12 @@ describe('Calendário de nascimento', () => {
     await fireEvent.changeText(screen.getByLabelText('Data de nascimento'), '05012013');
     await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
     expect(screen.getByTestId('birth-date-picker').props.value).toEqual(new Date(2013, 0, 5));
-    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2014, 0, 5));
+    await fireEvent(
+      screen.getByTestId('birth-date-picker'),
+      'valueChange',
+      {},
+      new Date(2014, 0, 5)
+    );
     await fireEvent.press(screen.getByLabelText('Cancelar seleção da data'));
     expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
   });
@@ -512,7 +572,12 @@ it('Confirma e fecha o calendário diretamente no Android', async () => {
   try {
     await renderWithTheme(<UserRegister />);
     await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
-    await fireEvent(screen.getByTestId('birth-date-picker'), 'valueChange', {}, new Date(2013, 0, 5));
+    await fireEvent(
+      screen.getByTestId('birth-date-picker'),
+      'valueChange',
+      {},
+      new Date(2013, 0, 5)
+    );
     expect(screen.getByLabelText('Data de nascimento')).toHaveDisplayValue('05/01/2013');
     expect(screen.queryByTestId('birth-date-picker')).toBeNull();
     await fireEvent.press(screen.getByLabelText('Selecionar data de nascimento no calendário'));
