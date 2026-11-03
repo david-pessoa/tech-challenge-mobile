@@ -74,7 +74,7 @@ export default function PostsContainer() {
           <ParagraphMarginBottom $screenWidth={width}>
             Você já finalizou estas atividades
           </ParagraphMarginBottom>
-          <PostsTable dados={isLoading ? [] : viewedPosts} />
+          <PostsTable type='VIEWED' dados={isLoading ? [] : viewedPosts} />
         </Container>
       </ContentContainer>
     );
@@ -98,7 +98,7 @@ export default function PostsContainer() {
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
           ) : (
-            <PostsTable dados={myPosts} />
+            <PostsTable type='MY_POSTS' dados={myPosts} />
           )}
         </Container>
         <Container $screenWidth={width}>
@@ -109,7 +109,7 @@ export default function PostsContainer() {
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
           ) : (
-            <PostsTable dados={otherPosts} />
+            <PostsTable type='VIEWED' dados={otherPosts} />
           )}
         </Container>
       </ContentContainer>
@@ -147,7 +147,7 @@ export default function PostsContainer() {
           <ParagraphMarginBottom $screenWidth={width}>
             Todas as aulas postadas
           </ParagraphMarginBottom>
-          <PostsTable dados={isLoading ? [] : posts} />
+          <PostsTable type='ALL_POSTS' dados={isLoading ? [] : posts} />
         </Container>
       </ContentContainer>
     );
