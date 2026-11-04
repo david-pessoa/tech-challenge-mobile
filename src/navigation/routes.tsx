@@ -28,6 +28,7 @@ export default function Routes() {
         <Stack.Screen name="user-register" />
         <Stack.Screen name="user-edit/[userId]" />
         <Stack.Screen name="user-list" />
+        <Stack.Screen name="post-create" />
       </Stack.Protected>
     </Stack>
   );
