@@ -6,6 +6,7 @@ import { Delete, Edit } from '@material-symbols-svg/react-native';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import MateriaIcon from './MateriaIcon';
 import { createStyles } from './styles';
 
 type PostsTableProps = {
@@ -91,16 +92,22 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
       ) : (
         dados.map(post => (
           <View key={post.postId} style={styles.row}>
-            <View style={[styles.column, styles.photoColumn]}>{/* ícone da matéria */}</View>
+            <View style={[styles.column, styles.photoColumn]}>
+              <MateriaIcon subject={post?.subject?.nome ?? 'Geral'} />
+            </View>
             <View style={[styles.column, styles.nameColumn]}>
-              <Text
-                style={[styles.cellTextBold, { maxWidth: '100%' }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                accessibilityLabel={post.titulo}
-              >
-                {post.titulo}
-              </Text>
+              <Link href={{ pathname: '/post/[postId]', params: { postId: post.postId } }} asChild>
+                <Pressable accessibilityRole="link">
+                  <Text
+                    style={[styles.cellTextBold, { maxWidth: '100%' }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    accessibilityLabel={post.titulo}
+                  >
+                    {post.titulo}
+                  </Text>
+                </Pressable>
+              </Link>
             </View>
             <View style={styles.column}>
               <Text
