@@ -65,12 +65,12 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
           <Text style={styles.headerText}>Descrição</Text>
         </View>
         {width > 600 && (
-          <View style={styles.column}>
+          <View style={[styles.column, styles.dateColumn]}>
             <Text style={styles.headerText}>Data de Criação</Text>
           </View>
         )}
         {width > 600 && (
-          <View style={styles.column}>
+          <View style={[styles.column, styles.dateColumn]}>
             <Text style={styles.headerText}>Data de Modificação</Text>
           </View>
         )}
@@ -87,7 +87,15 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
       </View>
       {dados.length === 0 ? (
         <View style={styles.status}>
-          <Text style={styles.statusText}>Você ainda não finalizou nenhuma atividade.</Text>
+          <Text style={styles.statusText}>
+            {user?.role === 'ALUNO'
+              ? 'Você ainda não finalizou nenhuma atividade.'
+              : user?.role === 'ADMIN'
+                ? 'Não há aulas para visulizar'
+                : type === 'MY_POSTS'
+                  ? 'Você ainda não publicou nenhuma aula'
+                  : 'Nenhum outro professor publicou aulas'}
+          </Text>
         </View>
       ) : (
         dados.map(post => (
@@ -109,7 +117,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
                 </Pressable>
               </Link>
             </View>
-            <View style={styles.column}>
+            <View style={[styles.column, styles.dateColumn]}>
               <Text
                 style={styles.cellText}
                 numberOfLines={3}

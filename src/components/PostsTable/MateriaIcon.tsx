@@ -5,7 +5,7 @@ import styled from 'styled-components/native';
 
 export const MateriaContainer = styled.View<ResponsiveProps>`
   align-items: center;
-  max-width: 50px;
+  width: 50px;
 `;
 
 type ColorProps = {
@@ -35,6 +35,7 @@ export const MateriaTitle = styled.Text<FontColorProps>`
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 12 : $screenWidth > 600 ? 10 : 8)}px;
   color: ${({ $color }) => $color};
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
+  text-align: center;
 `;
 
 type MateriaIconContainerProps = {
@@ -50,7 +51,7 @@ export default function MateriaIconContainer({ subject }: MateriaIconContainerPr
   return (
     <MateriaContainer $screenWidth={width}>
       <IconContainer $screenWidth={width} $backgroundColor={backgroundColor} $color={fontColor}>
-        <Icon size={width > 900 ? 32 : width > 600 ? 20 : 15} />
+        <Icon color={fontColor} size={width > 900 ? 32 : width > 600 ? 20 : 15} />
       </IconContainer>
       <MateriaTitle $color={fontColor} $screenWidth={width}>
         {subject}

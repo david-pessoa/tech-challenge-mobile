@@ -70,7 +70,7 @@ export function createStyles(width: number) {
       justifyContent: 'center',
       paddingHorizontal: 2,
     },
-    photoColumn: { flex: 0.75 },
+    photoColumn: { flex: 0 },
     nameColumn: { flex: 1.4 },
     dateColumn: { flex: 1.35 },
     actionsColumn: { flex: 0.8 },
