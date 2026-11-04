@@ -63,12 +63,16 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
         <View style={[styles.column, styles.dateColumn]}>
           <Text style={styles.headerText}>Descrição</Text>
         </View>
-        <View style={styles.column}>
-          <Text style={styles.headerText}>Data de Criação</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={styles.headerText}>Data de Modificação</Text>
-        </View>
+        {width > 600 && (
+          <View style={styles.column}>
+            <Text style={styles.headerText}>Data de Criação</Text>
+          </View>
+        )}
+        {width > 600 && (
+          <View style={styles.column}>
+            <Text style={styles.headerText}>Data de Modificação</Text>
+          </View>
+        )}
         {type !== 'MY_POSTS' && (
           <View style={styles.column}>
             <Text style={styles.headerText}>Professor</Text>
@@ -90,7 +94,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
             <View style={[styles.column, styles.photoColumn]}>{/* ícone da matéria */}</View>
             <View style={[styles.column, styles.nameColumn]}>
               <Text
-                style={[styles.cellText, { maxWidth: '100%' }]}
+                style={[styles.cellTextBold, { maxWidth: '100%' }]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
                 accessibilityLabel={post.titulo}
@@ -99,14 +103,25 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
               </Text>
             </View>
             <View style={styles.column}>
-              <Text style={styles.cellText}>{post.descricao}</Text>
+              <Text
+                style={styles.cellText}
+                numberOfLines={3}
+                ellipsizeMode="tail"
+                accessibilityLabel={post.descricao}
+              >
+                {post.descricao}
+              </Text>
             </View>
-            <View style={[styles.column, styles.dateColumn]}>
-              <Text style={styles.cellText}>{formatarData(post.dataCriacao)}</Text>
-            </View>
-            <View style={[styles.column, styles.dateColumn]}>
-              <Text style={styles.cellText}>{formatarData(post.dataModificacao)}</Text>
-            </View>
+            {width > 600 && (
+              <View style={[styles.column, styles.dateColumn]}>
+                <Text style={styles.cellText}>{formatarData(post.dataCriacao)}</Text>
+              </View>
+            )}
+            {width > 600 && (
+              <View style={[styles.column, styles.dateColumn]}>
+                <Text style={styles.cellText}>{formatarData(post.dataModificacao)}</Text>
+              </View>
+            )}
             {type !== 'MY_POSTS' && (
               <View style={styles.column}>
                 <Text style={styles.cellText}>{post.criadoPor?.nome}</Text>
