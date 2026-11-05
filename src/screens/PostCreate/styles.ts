@@ -43,6 +43,7 @@ export function createStyles(width: number) {
     contentInput: { minHeight: tablet ? 240 : 180, borderRadius: 28, paddingTop: 20 },
     actions: { flexDirection: 'row', justifyContent: tablet ? 'flex-end' : 'center', marginTop: 40 },
     submitButton: { minWidth: 128, minHeight: 44, borderRadius: 24, paddingHorizontal: 28, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary },
+    disabled: { opacity: 0.55 },
     submitText: { fontFamily: theme.typography.fontFamily.regular, fontSize: 16, color: '#FFFFFF' },
     optionsOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(50, 67, 77, 0.3)' },
     options: { width: '100%', maxWidth: 360, maxHeight: '80%', padding: 20, gap: 12, borderRadius: 20, backgroundColor: '#FFFFFF' },

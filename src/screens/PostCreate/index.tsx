@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Rect } from 'react-native-svg';
-import { Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
 import { Download } from '@material-symbols-svg/react-native/icons/download';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
@@ -9,6 +9,9 @@ import { materias } from '../../types/Materias';
 import { theme } from '../../styles/Theme';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
+import { useUser } from '../../context/AuthContext';
+import { createPost } from '../../services/post.service';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { createStyles } from './styles';
 import redDoodle from '../../../assets/images/red-doodle.png';
@@ -26,8 +29,56 @@ export default function PostCreate() {
   const [subject, setSubject] = useState('');
   const [showSubjects, setShowSubjects] = useState(false);
   const [content, setContent] = useState('');
+  const { user } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const closeToast = useCallback(() => setNotification(undefined), []);
+
+  async function handleSubmit() {
+    if (savingRef.current || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
+    if (!title.trim() || !description.trim() || !subject || !content.trim()) {
+      setNotification({ message: 'Preencha título, descrição, matéria e conteúdo.', type: 'error' });
+      return;
+    }
+    savingRef.current = true;
+    setIsSaving(true);
+    setShowSubjects(false);
+    setNotification(undefined);
+    try {
+      const data = new FormData();
+      data.append('titulo', title.trim());
+      data.append('descricao', description.trim());
+      data.append('subjectName', subject);
+      data.append('conteudo', content.trim());
+      if (photo) {
+        const type = photo.mimeType ?? 'image/jpeg';
+        const fileName = photo.fileName ?? (type === 'image/png' ? 'foto.png' : 'foto.jpg');
+        if (Platform.OS === 'web') {
+          const file = photo.file ?? (await (await fetch(photo.uri)).blob());
+          data.append('image', file, fileName);
+        } else {
+          data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
+        }
+      }
+      await createPost(data);
+      setTitle('');
+      setDescription('');
+      setSubject('');
+      setContent('');
+      setPhoto(undefined);
+      setPhotoError('');
+      setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
+    } catch (error) {
+      setNotification({ message: error instanceof Error ? error.message : 'Não foi possível criar a aula.', type: 'error' });
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
+  }
 
   function updatePhoto(asset: ImagePicker.ImagePickerAsset) {
+    if (savingRef.current) return;
     if (asset.mimeType && !asset.mimeType.startsWith('image/')) {
       setPhotoError('Selecione um arquivo de imagem.');
       return;
@@ -41,6 +92,7 @@ export default function PostCreate() {
   }
 
   async function selectPhoto() {
+    if (savingRef.current) return;
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
       if (!result.canceled && result.assets[0]) updatePhoto(result.assets[0]);
@@ -57,6 +109,7 @@ export default function PostCreate() {
     }
     function handleDrop(event: DragEvent) {
       event.preventDefault();
+      if (savingRef.current) return;
       const file = event.dataTransfer?.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')) {
@@ -101,6 +154,7 @@ export default function PostCreate() {
                     setPhotoBounds({ width, height });
                   }}
                   onPress={selectPhoto}
+                  disabled={isSaving}
                   accessibilityRole="button"
                   accessibilityLabel={photo ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
                 >
@@ -129,7 +183,7 @@ export default function PostCreate() {
                   )}
                 </Pressable>
                 {photo && (
-                  <Pressable style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); }}>
+                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); }}>
                     <View style={styles.removePhotoIcon}>
                       <Cancel width={24} height={24} fill={theme.colors.primary} />
                     </View>
@@ -141,6 +195,7 @@ export default function PostCreate() {
             <View style={styles.field}>
               <Text style={styles.label}>Título</Text>
               <TextInput
+                editable={!isSaving}
                 style={[styles.input, focusedField === 'title' && styles.inputFocused]}
                 accessibilityLabel="Título"
                 placeholder="Digite o título..."
@@ -154,6 +209,7 @@ export default function PostCreate() {
             <View style={styles.field}>
               <Text style={styles.label}>Descrição</Text>
               <TextInput
+                editable={!isSaving}
                 style={[styles.input, focusedField === 'description' && styles.inputFocused]}
                 accessibilityLabel="Descrição"
                 placeholder="Digite a descrição..."
@@ -172,6 +228,7 @@ export default function PostCreate() {
                 accessibilityLabel="Matéria"
                 accessibilityValue={{ text: subject || 'Escolha a matéria' }}
                 accessibilityState={{ expanded: showSubjects }}
+                disabled={isSaving}
                 onPress={() => setShowSubjects(true)}
               >
                 <Text style={[styles.selectText, !subject && styles.placeholder]}>{subject || 'Escolha a matéria'}</Text>
@@ -181,6 +238,7 @@ export default function PostCreate() {
             <View style={styles.field}>
               <Text style={styles.label}>Conteúdo</Text>
               <TextInput
+                editable={!isSaving}
                 style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused]}
                 accessibilityLabel="Conteúdo"
                 placeholder="Digite o conteúdo..."
@@ -195,8 +253,8 @@ export default function PostCreate() {
             </View>
           </View>
           <View style={styles.actions}>
-            <Pressable style={styles.submitButton} accessibilityRole="button" accessibilityLabel="Enviar aula" disabled>
-              <Text style={styles.submitText}>Enviar</Text>
+            <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel="Enviar aula" accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
+              {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Enviar</Text>}
             </Pressable>
           </View>
         </View>
@@ -226,6 +284,7 @@ export default function PostCreate() {
           </View>
         </Pressable>
       </Modal>
+      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
     </Screen>
   );
 }
