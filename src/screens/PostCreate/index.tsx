@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import Svg, { Rect } from 'react-native-svg';
+import { Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
+import { Download } from '@material-symbols-svg/react-native/icons/download';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
 import { materias } from '../../types/Materias';
 import { theme } from '../../styles/Theme';
@@ -13,11 +17,69 @@ export default function PostCreate() {
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
   const [focusedField, setFocusedField] = useState<string>();
+  const photoPickerRef = useRef<ComponentRef<typeof Pressable>>(null);
+  const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
+  const [photoError, setPhotoError] = useState('');
+  const [photoBounds, setPhotoBounds] = useState({ width: 0, height: 0 });
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
   const [showSubjects, setShowSubjects] = useState(false);
   const [content, setContent] = useState('');
+
+  function updatePhoto(asset: ImagePicker.ImagePickerAsset) {
+    if (asset.mimeType && !asset.mimeType.startsWith('image/')) {
+      setPhotoError('Selecione um arquivo de imagem.');
+      return;
+    }
+    if ((asset.fileSize ?? asset.file?.size ?? 0) > 5 * 1024 * 1024) {
+      setPhotoError('A foto deve ter no máximo 5 MB.');
+      return;
+    }
+    setPhoto(asset);
+    setPhotoError('');
+  }
+
+  async function selectPhoto() {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+      if (!result.canceled && result.assets[0]) updatePhoto(result.assets[0]);
+    } catch {
+      setPhotoError('Não foi possível selecionar a foto. Tente novamente.');
+    }
+  }
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !photoPickerRef.current) return;
+    const element = photoPickerRef.current as unknown as HTMLElement;
+    function preventNavigation(event: DragEvent) {
+      event.preventDefault();
+    }
+    function handleDrop(event: DragEvent) {
+      event.preventDefault();
+      const file = event.dataTransfer?.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        setPhotoError('Selecione um arquivo de imagem.');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('A foto deve ter no máximo 5 MB.');
+        return;
+      }
+      updatePhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type, fileSize: file.size });
+    }
+    element.addEventListener('dragover', preventNavigation);
+    element.addEventListener('drop', handleDrop);
+    return () => {
+      element.removeEventListener('dragover', preventNavigation);
+      element.removeEventListener('drop', handleDrop);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
+  }, [photo]);
 
   return (
     <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
@@ -29,6 +91,51 @@ export default function PostCreate() {
             <Image source={redDoodle} style={styles.decoration} resizeMode="contain" accessible={false} />
           </View>
           <View style={styles.form}>
+            <View style={styles.field}>
+              <View style={styles.photoContainer}>
+                <Pressable
+                  ref={photoPickerRef}
+                  style={styles.photoPicker}
+                  onLayout={event => {
+                    const { width, height } = event.nativeEvent.layout;
+                    setPhotoBounds({ width, height });
+                  }}
+                  onPress={selectPhoto}
+                  accessibilityRole="button"
+                  accessibilityLabel={photo ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
+                >
+                  {photo ? (
+                    <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" accessibilityLabel="Prévia da foto da aula" />
+                  ) : (
+                    <>
+                      <Download width={20} height={20} fill="#DC9A9A" />
+                      <Text style={styles.photoHint}>{Platform.OS === 'web' ? 'Clique para carregar ou\narraste e solte.' : 'Toque para selecionar\numa foto.'}</Text>
+                    </>
+                  )}
+                  {photoBounds.width > 0 && (
+                    <Svg width={photoBounds.width} height={photoBounds.height} style={styles.photoBorder} pointerEvents="none">
+                      <Rect
+                        x={0.5}
+                        y={0.5}
+                        width={photoBounds.width - 1}
+                        height={photoBounds.height - 1}
+                        rx={15}
+                        fill="none"
+                        stroke="#D34359"
+                        strokeWidth={1}
+                        strokeDasharray="21 21"
+                      />
+                    </Svg>
+                  )}
+                </Pressable>
+                {photo && (
+                  <Pressable style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); }}>
+                    <Cancel width={28} height={28} fill={theme.colors.primary} />
+                  </Pressable>
+                )}
+              </View>
+              {photoError ? <Text style={styles.photoError} accessibilityRole="alert" accessibilityLiveRegion="polite">{photoError}</Text> : null}
+            </View>
             <View style={styles.field}>
               <Text style={styles.label}>Título</Text>
               <TextInput

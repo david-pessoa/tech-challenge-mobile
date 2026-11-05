@@ -13,6 +13,13 @@ export function createStyles(width: number) {
     decoration: { position: 'absolute', width: 44, height: 39, top: -16, right: -26 },
     form: { gap: tablet ? 32 : 36 },
     field: { gap: 8 },
+    photoContainer: { position: 'relative' },
+    photoPicker: { height: tablet ? 220 : 129, width: '100%', borderRadius: 15, backgroundColor: 'rgba(235, 220, 220, 0.24)', alignItems: 'center', justifyContent: 'center', gap: 15, overflow: 'hidden' },
+    photoBorder: { position: 'absolute', top: 0, left: 0 },
+    photoHint: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 12, lineHeight: 30, textAlign: 'center', color: '#7A3131' },
+    photoPreview: { width: '100%', height: '100%' },
+    removePhotoButton: { position: 'absolute', top: 8, right: 8, width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+    photoError: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, color: '#A52A36', paddingHorizontal: 12 },
     label: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 16, color: theme.colors.text },
     input: {
       ...Platform.select({ web: { outlineWidth: 0, outlineStyle: 'solid', outlineColor: 'transparent' } }),
