@@ -193,7 +193,7 @@ export default function PostCreate() {
               {photoError ? <Text style={styles.photoError} accessibilityRole="alert" accessibilityLiveRegion="polite">{photoError}</Text> : null}
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>Título</Text>
+              <Text style={styles.label}>Título <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
                 style={[styles.input, focusedField === 'title' && styles.inputFocused]}
@@ -207,7 +207,7 @@ export default function PostCreate() {
               />
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>Descrição</Text>
+              <Text style={styles.label}>Descrição <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
                 style={[styles.input, focusedField === 'description' && styles.inputFocused]}
@@ -221,7 +221,7 @@ export default function PostCreate() {
               />
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>Matéria</Text>
+              <Text style={styles.label}>Matéria <Text style={styles.required}>*</Text></Text>
               <Pressable
                 style={[styles.input, styles.select, showSubjects && styles.inputFocused]}
                 accessibilityRole="button"
@@ -236,7 +236,7 @@ export default function PostCreate() {
               </Pressable>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>Conteúdo</Text>
+              <Text style={styles.label}>Conteúdo <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
                 style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused]}
