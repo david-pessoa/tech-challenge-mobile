@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
 import Svg, { Rect } from 'react-native-svg';
 import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
@@ -17,6 +19,7 @@ import { createStyles } from './styles';
 import redDoodle from '../../../assets/images/red-doodle.png';
 
 export default function PostCreate() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
   const [focusedField, setFocusedField] = useState<string>();
@@ -139,6 +142,16 @@ export default function PostCreate() {
       <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Header />
         <View style={styles.main}>
+          <Pressable
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar à tela de início"
+            disabled={isSaving}
+            onPress={() => router.replace('/home')}
+          >
+            <ArrowBack width={24} height={24} fill="#FFD600" />
+            <Text style={styles.backText}>Voltar à tela de início</Text>
+          </Pressable>
           <View style={styles.titleRow}>
             <Text style={styles.title} accessibilityRole="header">Nova aula</Text>
             <Image source={redDoodle} style={styles.decoration} resizeMode="contain" accessible={false} />
@@ -253,6 +266,15 @@ export default function PostCreate() {
             </View>
           </View>
           <View style={styles.actions}>
+            <Pressable
+              style={[styles.cancelButton, isSaving && styles.disabled]}
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar criação da aula"
+              disabled={isSaving}
+              onPress={() => router.replace('/home')}
+            >
+              <Text style={styles.cancelText}>Cancelar</Text>
+            </Pressable>
             <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel="Enviar aula" accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
               {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Enviar</Text>}
             </Pressable>
