@@ -18,7 +18,8 @@ export function createStyles(width: number) {
     photoBorder: { position: 'absolute', top: 0, left: 0 },
     photoHint: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 12, lineHeight: 30, textAlign: 'center', color: '#7A3131' },
     photoPreview: { width: '100%', height: '100%' },
-    removePhotoButton: { position: 'absolute', top: 8, right: 8, width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+    removePhotoButton: { position: 'absolute', top: -16, left: -16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+    removePhotoIcon: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#F9CBD3', alignItems: 'center', justifyContent: 'center' },
     photoError: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, color: '#A52A36', paddingHorizontal: 12 },
     label: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 16, color: theme.colors.text },
     input: {

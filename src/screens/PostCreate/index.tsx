@@ -130,7 +130,9 @@ export default function PostCreate() {
                 </Pressable>
                 {photo && (
                   <Pressable style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); }}>
-                    <Cancel width={28} height={28} fill={theme.colors.primary} />
+                    <View style={styles.removePhotoIcon}>
+                      <Cancel width={24} height={24} fill={theme.colors.primary} />
+                    </View>
                   </Pressable>
                 )}
               </View>
