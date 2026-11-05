@@ -287,7 +287,7 @@ export default function PostCreate() {
           <View style={styles.options} accessibilityViewIsModal>
             <Text style={styles.label}>Escolha a matéria</Text>
             <ScrollView>
-              {Object.keys(materias).map(option => (
+              {Object.keys(materias).sort((a, b) => a === b ? 0 : a === 'Geral' ? -1 : b === 'Geral' ? 1 : a.localeCompare(b, 'pt-BR')).map(option => (
                 <Pressable
                   key={option}
                   style={[styles.option, subject === option && styles.selectedOption]}
