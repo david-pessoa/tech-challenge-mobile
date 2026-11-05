@@ -23,6 +23,8 @@ export function createStyles(width: number) {
     removePhotoButton: { position: 'absolute', top: -16, left: -16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
     removePhotoIcon: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#F9CBD3', alignItems: 'center', justifyContent: 'center' },
     photoError: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, color: '#A52A36', paddingHorizontal: 12 },
+    fieldError: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, lineHeight: 18, color: '#A52A36', paddingHorizontal: 12 },
+    inputError: { borderColor: '#A52A36' },
     required: { color: '#C62828' },
     label: { fontFamily: theme.typography.fontFamily.semiBold, fontSize: 16, color: theme.colors.text },
     input: {

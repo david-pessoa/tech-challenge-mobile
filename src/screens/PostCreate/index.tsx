@@ -18,6 +18,15 @@ import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { createStyles } from './styles';
 import redDoodle from '../../../assets/images/red-doodle.png';
 
+type PostField = 'title' | 'description' | 'subject' | 'content';
+
+const requiredMessages: Record<PostField, string> = {
+  title: 'O título é obrigatório.',
+  description: 'A descrição é obrigatória.',
+  subject: 'Selecione a matéria.',
+  content: 'O conteúdo é obrigatório.',
+};
+
 export default function PostCreate() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -32,18 +41,31 @@ export default function PostCreate() {
   const [subject, setSubject] = useState('');
   const [showSubjects, setShowSubjects] = useState(false);
   const [content, setContent] = useState('');
+  const [errors, setErrors] = useState<Partial<Record<PostField, string>>>({});
   const { user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
   const closeToast = useCallback(() => setNotification(undefined), []);
 
+  function validateField(field: PostField, value: string) {
+    setErrors(current => ({ ...current, [field]: value.trim() ? undefined : requiredMessages[field] }));
+  }
+
+  function clearFieldError(field: PostField, value: string) {
+    if (value.trim()) setErrors(current => ({ ...current, [field]: undefined }));
+  }
+
   async function handleSubmit() {
     if (savingRef.current || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
-    if (!title.trim() || !description.trim() || !subject || !content.trim()) {
-      setNotification({ message: 'Preencha título, descrição, matéria e conteúdo.', type: 'error' });
-      return;
+    const values = { title, description, subject, content };
+    const validationErrors: Partial<Record<PostField, string>> = {};
+    for (const field of Object.keys(values) as PostField[]) {
+      if (!values[field].trim()) validationErrors[field] = requiredMessages[field];
     }
+    setErrors(validationErrors);
+    setNotification(undefined);
+    if (Object.keys(validationErrors).length) return;
     savingRef.current = true;
     setIsSaving(true);
     setShowSubjects(false);
@@ -69,6 +91,7 @@ export default function PostCreate() {
       setDescription('');
       setSubject('');
       setContent('');
+      setErrors({});
       setPhoto(undefined);
       setPhotoError('');
       setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
@@ -209,36 +232,41 @@ export default function PostCreate() {
               <Text style={styles.label}>Título <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
-                style={[styles.input, focusedField === 'title' && styles.inputFocused]}
+                style={[styles.input, focusedField === 'title' && styles.inputFocused, errors.title && styles.inputError]}
                 accessibilityLabel="Título"
                 placeholder="Digite o título..."
                 placeholderTextColor={theme.colors.fieldPlaceholder}
                 onFocus={() => setFocusedField('title')}
-                onBlur={() => setFocusedField(undefined)}
+                onBlur={() => { setFocusedField(undefined); validateField('title', title); }}
+                aria-invalid={Boolean(errors.title)}
                 value={title}
-                onChangeText={setTitle}
+                onChangeText={value => { setTitle(value); clearFieldError('title', value); }}
               />
+              {errors.title ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.title}</Text> : null}
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>Descrição <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
-                style={[styles.input, focusedField === 'description' && styles.inputFocused]}
+                style={[styles.input, focusedField === 'description' && styles.inputFocused, errors.description && styles.inputError]}
                 accessibilityLabel="Descrição"
                 placeholder="Digite a descrição..."
                 placeholderTextColor={theme.colors.fieldPlaceholder}
                 onFocus={() => setFocusedField('description')}
-                onBlur={() => setFocusedField(undefined)}
+                onBlur={() => { setFocusedField(undefined); validateField('description', description); }}
+                aria-invalid={Boolean(errors.description)}
                 value={description}
-                onChangeText={setDescription}
+                onChangeText={value => { setDescription(value); clearFieldError('description', value); }}
               />
+              {errors.description ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.description}</Text> : null}
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>Matéria <Text style={styles.required}>*</Text></Text>
               <Pressable
-                style={[styles.input, styles.select, showSubjects && styles.inputFocused]}
+                style={[styles.input, styles.select, showSubjects && styles.inputFocused, errors.subject && styles.inputError]}
                 accessibilityRole="button"
                 accessibilityLabel="Matéria"
+                aria-invalid={Boolean(errors.subject)}
                 accessibilityValue={{ text: subject || 'Escolha a matéria' }}
                 accessibilityState={{ expanded: showSubjects }}
                 disabled={isSaving}
@@ -247,22 +275,25 @@ export default function PostCreate() {
                 <Text style={[styles.selectText, !subject && styles.placeholder]}>{subject || 'Escolha a matéria'}</Text>
                 <KeyboardArrowDown width={24} height={24} fill={theme.colors.fieldPlaceholder} />
               </Pressable>
+              {errors.subject ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.subject}</Text> : null}
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>Conteúdo <Text style={styles.required}>*</Text></Text>
               <TextInput
                 editable={!isSaving}
-                style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused]}
+                style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused, errors.content && styles.inputError]}
                 accessibilityLabel="Conteúdo"
                 placeholder="Digite o conteúdo..."
                 placeholderTextColor={theme.colors.fieldPlaceholder}
                 onFocus={() => setFocusedField('content')}
-                onBlur={() => setFocusedField(undefined)}
+                onBlur={() => { setFocusedField(undefined); validateField('content', content); }}
+                aria-invalid={Boolean(errors.content)}
                 value={content}
-                onChangeText={setContent}
+                onChangeText={value => { setContent(value); clearFieldError('content', value); }}
                 multiline
                 textAlignVertical="top"
               />
+              {errors.content ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.content}</Text> : null}
             </View>
           </View>
           <View style={styles.actions}>
@@ -296,6 +327,7 @@ export default function PostCreate() {
                   accessibilityState={{ checked: subject === option }}
                   onPress={() => {
                     setSubject(option);
+                    clearFieldError('subject', option);
                     setShowSubjects(false);
                   }}
                 >
