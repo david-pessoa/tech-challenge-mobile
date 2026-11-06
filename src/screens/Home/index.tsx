@@ -26,6 +26,7 @@ import {
 } from './styles';
 import SearchPostContainerInput from '@/components/SearchPostContainerInput';
 import PostsContainer from '@/components/PostsContainer';
+import UserListPreview from '@/components/UserListPreview';
 
 export default function Home() {
   const { user, userImageCacheKey } = useUser();
@@ -69,6 +70,7 @@ export default function Home() {
             </TopContainer>
             <PostsContainer />
           </MainContentContainer>
+          <UserListPreview />
         </Main>
         <Footer />
       </Scroll>

@@ -170,7 +170,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
         ))
       )}
       <Modal
-        visible={Boolean(pendingDelete && user?.role === 'ADMIN')}
+        visible={Boolean(pendingDelete)}
         transparent
         animationType="fade"
         onRequestClose={() => {
