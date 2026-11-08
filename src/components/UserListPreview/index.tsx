@@ -2,6 +2,7 @@ import { ArrowRightAlt, Delete, Edit } from '@material-symbols-svg/react-native'
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import Toast from '../Toast';
 import userImage from '../../../assets/images/user-default-image.png';
 import { useUser } from '../../context/AuthContext';
 import { deleteUser, getAllUsers } from '../../services/user.service';
@@ -61,6 +62,7 @@ export default function UserListPreview() {
     setIsDeleting(true);
     try {
       await deleteUser(selectedUser.id);
+      setAllUsersList(prev => prev.filter(deletedUser => deletedUser.id !== selectedUser.id));
       setPendingDelete(undefined);
       setNotification({ message: 'Aluno excluído com sucesso!', type: 'success' });
     } catch (error) {

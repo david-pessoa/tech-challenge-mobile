@@ -92,6 +92,7 @@ export const UserRole = styled.Text`
 export const ActionContainer = styled.View`
   gap: 10px;
   margin-right: 10px;
+  flex-direction: row;
 `;
 
 export const DeleteButton = styled.Pressable`

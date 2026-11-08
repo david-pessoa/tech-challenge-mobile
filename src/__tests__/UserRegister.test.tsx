@@ -347,7 +347,7 @@ describe('Foto e envio do cadastro', () => {
 describe('Carregamento da edição de usuários', () => {
   const selectedUser = {
     id: 'aluno-2', nome: 'Serena Ramos', matricula: '935374',
-    role: 'ALUNO' as const, birthDate: '2013-01-05', image: '/api/user/aluno-2/image',
+    role: 'ALUNO' as const, birthDate: new Date('2013-01-05'), image: '/api/user/aluno-2/image',
   };
 
   it('Preenche os dados do usuário selecionado e mantém as senhas vazias', async () => {
@@ -399,7 +399,7 @@ it('Volta para a listagem ao cancelar um novo cadastro', async () => {
 describe('Salvamento da edição de usuários', () => {
   const selectedUser = {
     id: 'aluno-2', nome: 'Serena Ramos', matricula: '935374',
-    role: 'ALUNO' as const, birthDate: '2013-01-05', image: '/api/user/aluno-2/image',
+    role: 'ALUNO' as const, birthDate: new Date('2013-01-05'), image: '/api/user/aluno-2/image',
   };
 
   async function openEdit() {

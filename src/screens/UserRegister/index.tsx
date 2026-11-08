@@ -24,14 +24,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
+import BirthDateCalendar from '../../components/BirthDateCalendar';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
-import BirthDateCalendar from '../../components/BirthDateCalendar';
 import { useUser } from '../../context/AuthContext';
 import { createUser, getUserById, updateUser } from '../../services/user.service';
-import { buildApiImageUrl } from '../../utils/functions';
 import { theme } from '../../styles/Theme';
 import type { Role } from '../../types/Roles';
+import { buildApiImageUrl } from '../../utils/functions';
 import { styles } from './styles';
 
 const accessTypes: { label: string; value: Role }[] = [
@@ -85,7 +85,6 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     ? accessTypes.filter(accessType => accessType.value === 'ALUNO')
     : accessTypes;
 
-
   const photoUri = photo?.uri ?? existingPhoto;
   const submitLabel = isEditing ? 'Salvar' : 'Enviar';
   const backLabel = isEditing ? 'Voltar à lista de usuários' : 'Voltar à tela de início';
@@ -107,7 +106,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         setName(selectedUser.nome);
         setRegistration(selectedUser.matricula);
         setRole(selectedUser.role);
-        const date = selectedUser.birthDate?.slice(0, 10).split('-');
+        const date = selectedUser.birthDate?.toISOString().slice(0, 10).split('-');
         setBirthDate(date ? `${date[2]}/${date[1]}/${date[0]}` : '');
         setExistingPhoto(selectedUser.image ? buildApiImageUrl(selectedUser.image) : undefined);
         setPhoto(undefined);
@@ -115,14 +114,19 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         setConfirmPassword('');
         setErrors({});
       } catch (error) {
-        if (active) setUserLoadError(error instanceof Error ? error.message : 'Não foi possível carregar o usuário.');
+        if (active)
+          setUserLoadError(
+            error instanceof Error ? error.message : 'Não foi possível carregar o usuário.'
+          );
       } finally {
         if (active) setIsLoadingUser(false);
       }
     }
 
     loadUser();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [userId, isLoading, canRegister, isProfessor, loadAttempt]);
 
   useEffect(() => {
@@ -295,7 +299,9 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       if (userId) {
         if (!photo && !existingPhoto) data.append('removeImage', 'true');
         const updatedUser = await updateUser(userId, data);
-        setExistingPhoto(updatedUser.image ? buildApiImageUrl(updatedUser.image, Date.now()) : undefined);
+        setExistingPhoto(
+          updatedUser.image ? buildApiImageUrl(updatedUser.image, Date.now()) : undefined
+        );
       } else {
         await createUser(data);
         setName('');
@@ -309,10 +315,20 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       setIsSuccess(true);
       setShowPassword(false);
       setShowConfirmPassword(false);
-      router.replace({ pathname: '/user-list', params: { result: isEditing ? 'updated' : 'created' } });
+      router.replace({
+        pathname: '/user-list',
+        params: { result: isEditing ? 'updated' : 'created' },
+      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar o usuário.' : 'Não foi possível cadastrar o usuário.';
-      if (/(matr[ií]cula.*(cadastrad|existe)|(cadastrad|existe).*matr[ií]cula)/i.test(errorMessage)) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : isEditing
+            ? 'Não foi possível atualizar o usuário.'
+            : 'Não foi possível cadastrar o usuário.';
+      if (
+        /(matr[ií]cula.*(cadastrad|existe)|(cadastrad|existe).*matr[ií]cula)/i.test(errorMessage)
+      ) {
         setErrors({ registration: errorMessage });
       }
       setMessage(errorMessage);
@@ -334,18 +350,34 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
   if (!canRegister) return <Redirect href="/home" />;
 
   if (isEditing && isLoadingUser) {
-    return <ActivityIndicator style={styles.loading} color={theme.colors.primary} accessibilityLabel="Carregando usuário" />;
+    return (
+      <ActivityIndicator
+        style={styles.loading}
+        color={theme.colors.primary}
+        accessibilityLabel="Carregando usuário"
+      />
+    );
   }
   if (isEditing && userLoadError) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <Header />
         <View style={styles.form}>
-          <Text style={styles.fieldError} accessibilityRole="alert">{userLoadError}</Text>
-          <Pressable style={styles.backButton} onPress={() => setLoadAttempt(value => value + 1)} accessibilityRole="button">
+          <Text style={styles.fieldError} accessibilityRole="alert">
+            {userLoadError}
+          </Text>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => setLoadAttempt(value => value + 1)}
+            accessibilityRole="button"
+          >
             <Text style={styles.backText}>Tentar novamente</Text>
           </Pressable>
-          <Pressable style={styles.backButton} onPress={() => router.replace('/user-list')} accessibilityRole="button">
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.replace('/user-list')}
+            accessibilityRole="button"
+          >
             <Text style={styles.backText}>Voltar à lista de usuários</Text>
           </Pressable>
         </View>
@@ -353,7 +385,9 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
     );
   }
 
-  const selectedRoleLabel = accessTypes.find(accessType => accessType.value === selectedRole)?.label ?? 'Selecione o tipo de acesso...';
+  const selectedRoleLabel =
+    accessTypes.find(accessType => accessType.value === selectedRole)?.label ??
+    'Selecione o tipo de acesso...';
 
   function goHome() {
     router.replace(isEditing ? '/user-list' : '/home');
@@ -373,13 +407,28 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
           <Header />
 
           <View style={[styles.form, isTablet && styles.tabletForm]}>
-            <Pressable onPress={goHome} disabled={isSaving} style={styles.backButton} accessibilityRole="button" accessibilityLabel={backLabel}>
+            <Pressable
+              onPress={goHome}
+              disabled={isSaving}
+              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel={backLabel}
+            >
               <ArrowBack size={18} color={theme.colors.backIcon} />
               <Text style={styles.backText}>{backLabel}</Text>
             </Pressable>
             <View style={[styles.titleRow, isTablet && styles.tabletTitleRow]}>
-              <Text style={[styles.title, isTablet && styles.tabletTitle]} accessibilityRole="header">{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</Text>
-              <Image source={require('../../../assets/images/red-doodle.png')} style={styles.decoration} resizeMode="contain" />
+              <Text
+                style={[styles.title, isTablet && styles.tabletTitle]}
+                accessibilityRole="header"
+              >
+                {isEditing ? 'Editar Usuário' : 'Novo Usuário'}
+              </Text>
+              <Image
+                source={require('../../../assets/images/red-doodle.png')}
+                style={styles.decoration}
+                resizeMode="contain"
+              />
             </View>
 
             <View style={[styles.photoNameRow, isTablet && styles.tabletPhotoNameRow]}>
@@ -395,7 +444,9 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                     onPress={selectPhoto}
                     disabled={isSaving}
                     accessibilityRole="button"
-                    accessibilityLabel={photoUri ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'}
+                    accessibilityLabel={
+                      photoUri ? 'Trocar foto do usuário' : 'Selecionar foto do usuário'
+                    }
                   >
                     <Svg
                       width={photoSize}
@@ -415,7 +466,11 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                       />
                     </Svg>
                     {photoUri ? (
-                      <Image source={{ uri: photoUri }} style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]} resizeMode="cover" />
+                      <Image
+                        source={{ uri: photoUri }}
+                        style={[styles.photoPreview, isTablet && styles.tabletPhotoPreview]}
+                        resizeMode="cover"
+                      />
                     ) : (
                       <>
                         <Download
@@ -433,7 +488,11 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                   {photoUri && (
                     <Pressable
                       style={styles.removePhotoButton}
-                      onPress={() => { setPhoto(undefined); setExistingPhoto(undefined); clearFieldError('photo'); }}
+                      onPress={() => {
+                        setPhoto(undefined);
+                        setExistingPhoto(undefined);
+                        clearFieldError('photo');
+                      }}
                       disabled={isSaving}
                       accessibilityRole="button"
                       accessibilityLabel="Remover foto do usuário"
@@ -498,7 +557,13 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                 <Text style={[styles.label, isTablet && styles.tabletLabel]}>
                   Data de nascimento
                 </Text>
-                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'birthDate' && styles.inputFocused]}>
+                <View
+                  style={[
+                    styles.passwordField,
+                    isTablet && styles.tabletControl,
+                    focusedField === 'birthDate' && styles.inputFocused,
+                  ]}
+                >
                   <TextInput
                     editable={!isSaving}
                     style={[styles.passwordInput, isTablet && styles.tabletInput]}
@@ -511,7 +576,11 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
                     onChangeText={handleBirthDateChange}
                     keyboardType="number-pad"
                   />
-                  <BirthDateCalendar value={birthDate} onChange={handleBirthDateChange} disabled={isSaving} />
+                  <BirthDateCalendar
+                    value={birthDate}
+                    onChange={handleBirthDateChange}
+                    disabled={isSaving}
+                  />
                 </View>
                 {errors.birthDate && (
                   <Text
@@ -602,8 +671,16 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Senha {!isEditing && <Text style={styles.required}>*</Text>}</Text>
-                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'password' && styles.inputFocused]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Senha {!isEditing && <Text style={styles.required}>*</Text>}
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    isTablet && styles.tabletControl,
+                    focusedField === 'password' && styles.inputFocused,
+                  ]}
+                >
                   <TextInput
                     editable={!isSaving}
                     style={[styles.passwordInput, isTablet && styles.tabletInput]}
@@ -647,8 +724,16 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
               </View>
 
               <View style={[styles.field, isTablet && styles.tabletField]}>
-                <Text style={[styles.label, isTablet && styles.tabletLabel]}>Confirme sua senha {!isEditing && <Text style={styles.required}>*</Text>}</Text>
-                <View style={[styles.passwordField, isTablet && styles.tabletControl, focusedField === 'confirmPassword' && styles.inputFocused]}>
+                <Text style={[styles.label, isTablet && styles.tabletLabel]}>
+                  Confirme sua senha {!isEditing && <Text style={styles.required}>*</Text>}
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    isTablet && styles.tabletControl,
+                    focusedField === 'confirmPassword' && styles.inputFocused,
+                  ]}
+                >
                   <TextInput
                     editable={!isSaving}
                     style={[styles.passwordInput, isTablet && styles.tabletInput]}
@@ -697,11 +782,28 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
             </View>
 
             <View style={[styles.actions, isTablet && styles.tabletActions]}>
-              <Pressable style={[styles.button, styles.cancelButton, isSaving && styles.disabled]} onPress={() => router.replace('/user-list')} disabled={isSaving} accessibilityRole="button" accessibilityLabel="Cancelar">
+              <Pressable
+                style={[styles.button, styles.cancelButton, isSaving && styles.disabled]}
+                onPress={() => router.replace('/user-list')}
+                disabled={isSaving}
+                accessibilityRole="button"
+                accessibilityLabel="Cancelar"
+              >
                 <Text style={[styles.buttonText, styles.cancelText]}>Cancelar</Text>
               </Pressable>
-              <Pressable style={[styles.button, styles.submitButton, isSaving && styles.disabled]} onPress={handleSubmit} disabled={isSaving} accessibilityRole="button" accessibilityLabel={submitLabel} accessibilityState={{ disabled: isSaving, busy: isSaving }}>
-                {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.buttonText, styles.submitText]}>{submitLabel}</Text>}
+              <Pressable
+                style={[styles.button, styles.submitButton, isSaving && styles.disabled]}
+                onPress={handleSubmit}
+                disabled={isSaving}
+                accessibilityRole="button"
+                accessibilityLabel={submitLabel}
+                accessibilityState={{ disabled: isSaving, busy: isSaving }}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={[styles.buttonText, styles.submitText]}>{submitLabel}</Text>
+                )}
               </Pressable>
             </View>
           </View>
