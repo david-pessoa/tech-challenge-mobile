@@ -23,6 +23,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
     message: string;
     type: 'success' | 'error';
   }>();
+  const [pressedRow, setPressedRow] = useState('');
 
   const iconSize = width >= 600 ? 20 : 14;
   const styles = createStyles(width);
@@ -103,9 +104,20 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
             <View style={[styles.column, styles.photoColumn]}>
               <MateriaIcon subject={post?.subject?.nome ?? 'Geral'} />
             </View>
-            <View style={[styles.column, styles.nameColumn]}>
+            <View
+              style={[
+                styles.column,
+                styles.nameColumn,
+                { height: 50 },
+                pressedRow === post.postId && styles.pressedRow,
+              ]}
+            >
               <Link href={{ pathname: '/post/[postId]', params: { postId: post.postId } }} asChild>
-                <Pressable accessibilityRole="link">
+                <Pressable
+                  accessibilityRole="link"
+                  onPressIn={() => setPressedRow(post.postId)}
+                  onPressOut={() => setPressedRow('')}
+                >
                   <Text
                     style={[styles.cellTextBold, { maxWidth: '100%' }]}
                     numberOfLines={1}

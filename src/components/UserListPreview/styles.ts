@@ -32,7 +32,6 @@ export const UserListContainer = styled.View<ResponsiveProps>`
   border-style: solid;
   border-color: #f0d2c7;
   border-radius: 7px;
-  box-shadow: 0px 1px 4.9px 0px #0000005c;
   margin-top: 0;
   margin-right: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 'auto')};
   margin-bottom: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 58)}px;
@@ -53,16 +52,17 @@ export const UserList = styled.View`
 `;
 
 export const Item = styled.View`
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   height: 50px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #f0d2c7;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #f0d2c7;
 `;
 
 export const LastItem = styled(Item)`
-  border: none;
+  border-bottom-width: 0;
 `;
 
 export const UserProfilePhoto = styled.Image`
@@ -173,5 +173,8 @@ export function createStyles(width: number) {
       color: '#FFFFFF',
     },
     disabled: { opacity: 0.35 },
+    UserList: {
+      boxShadow: '0px 1px 4.9px 0px rgba(0,0,0, 0.36)'
+    }
   });
 }

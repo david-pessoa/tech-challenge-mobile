@@ -1,12 +1,12 @@
 import { ArrowRightAlt, Delete, Edit } from '@material-symbols-svg/react-native';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, useWindowDimensions, View, Text, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import userImage from '../../../assets/images/user-default-image.png';
 import { useUser } from '../../context/AuthContext';
 import { deleteUser, getAllUsers } from '../../services/user.service';
 import type { User } from '../../types/User';
 import { buildApiImageUrl, capitalize } from '../../utils/functions';
-import userImage from '../assets/user-default-image.png';
 import {
   AccessUserListButton,
   ActionContainer,
@@ -14,6 +14,7 @@ import {
   DeleteButton,
   EditButton,
   Item,
+  LastItem,
   SentenceText,
   UserList,
   UserListContainer,
@@ -75,50 +76,53 @@ export default function UserListPreview() {
 
   return (
     <>
-
       {loggedUser?.role !== 'ALUNO' && (
-        <UserListContainer $screenWidth={width}>
+        <UserListContainer $screenWidth={width} style={styles.UserList}>
           <UserListTitle $screenWidth={width}>Todos os Usuários</UserListTitle>
           <UserList>
-            {allUsersList.map(user => (
-              <Item key={user.id}>
-                <View>
-                  <UserProfilePhoto
-                    source={
-                      user?.image
-                        ? { uri: buildApiImageUrl(user.image, userImageCacheKey) }
-                        : userImage
-                    }
-                    alt={`Foto de perfil da ${user.nome}`}
-                  />
-                </View>
-                <UserNameRoleContainer>
-                  <UserName>{user.nome}</UserName>
-                  <UserRole>
-                    {user.role === 'ADMIN' ? 'Administrador' : capitalize(user.role)}
-                  </UserRole>
-                </UserNameRoleContainer>
-                <ActionContainer>
-                  <Link
-                    href={{ pathname: '/user-edit/[userId]', params: { userId: user.id } }}
-                    asChild
-                  >
-                    <EditButton accessibilityLabel={`Editar ${user.nome}`}>
-                      <Edit color="#a15e6d" size={24} />
-                    </EditButton>
-                  </Link>
+            {allUsersList.map((user, i) => {
+              const ItemComponent = allUsersList.length - 1 == i ? LastItem : Item;
 
-                  {loggedUser?.role === 'ADMIN' && user.id !== loggedUser?.id && (
-                    <DeleteButton
-                      onPress={() => requestDelete(user)}
-                      accessibilityLabel={`Deletar ${user.nome}`}
+              return (
+                <ItemComponent key={user.id}>
+                  <View>
+                    <UserProfilePhoto
+                      source={
+                        user?.image
+                          ? { uri: buildApiImageUrl(user.image, userImageCacheKey) }
+                          : userImage
+                      }
+                      alt={`Foto de perfil da ${user.nome}`}
+                    />
+                  </View>
+                  <UserNameRoleContainer>
+                    <UserName>{user.nome}</UserName>
+                    <UserRole>
+                      {user.role === 'ADMIN' ? 'Administrador' : capitalize(user.role)}
+                    </UserRole>
+                  </UserNameRoleContainer>
+                  <ActionContainer>
+                    <Link
+                      href={{ pathname: '/user-edit/[userId]', params: { userId: user.id } }}
+                      asChild
                     >
-                      <Delete color="#e64b63" size={24} />
-                    </DeleteButton>
-                  )}
-                </ActionContainer>
-              </Item>
-            ))}
+                      <EditButton accessibilityLabel={`Editar ${user.nome}`}>
+                        <Edit color="#a15e6d" size={24} />
+                      </EditButton>
+                    </Link>
+
+                    {loggedUser?.role === 'ADMIN' && user.id !== loggedUser?.id && (
+                      <DeleteButton
+                        onPress={() => requestDelete(user)}
+                        accessibilityLabel={`Deletar ${user.nome}`}
+                      >
+                        <Delete color="#e64b63" size={24} />
+                      </DeleteButton>
+                    )}
+                  </ActionContainer>
+                </ItemComponent>
+              );
+            })}
           </UserList>
           <Link href={{ pathname: '/user-list' }} asChild>
             <AccessUserListButton>

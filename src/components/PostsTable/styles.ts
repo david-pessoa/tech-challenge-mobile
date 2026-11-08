@@ -210,5 +210,8 @@ export function createStyles(width: number) {
       color: '#FFFFFF',
     },
     disabled: { opacity: 0.35 },
+    pressedRow: {
+      backgroundColor: '#e2b82f6b'
+    }
   });
 }
