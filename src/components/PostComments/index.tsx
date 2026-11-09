@@ -47,6 +47,11 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment>();
+  const [replyText, setReplyText] = useState('');
+  const [replyError, setReplyError] = useState('');
+  const [sendingReplyId, setSendingReplyId] = useState<string>();
+  const [successReplyId, setSuccessReplyId] = useState<string>();
+  const replyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const sendingRef = useRef(false);
   const mountedRef = useRef(false);
@@ -77,58 +82,62 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
     };
   }, [loadComments]);
 
-  async function handleSend() {
+  async function handleSend(parentComment?: Comment) {
     if (sendingRef.current || !user) return;
-    const content = text.trim();
+    const isReply = Boolean(parentComment);
+    const content = (isReply ? replyText : text).trim();
+    const setError = isReply ? setReplyError : setSendError;
     setSuccessMessage('');
+    setSuccessReplyId(undefined);
     if (!content) {
-      setSendError(replyTo ? 'Digite sua resposta.' : 'Digite sua pergunta.');
-      inputRef.current?.focus();
+      setError(isReply ? 'Digite sua resposta.' : 'Digite sua pergunta.');
+      (isReply ? replyInputRef : inputRef).current?.focus();
       return;
     }
     sendingRef.current = true;
     setIsSending(true);
-    setSendError('');
+    setSendingReplyId(parentComment?.id);
+    setError('');
     Keyboard.dismiss();
     try {
-      await createComment(postId, content, replyTo?.id);
+      await createComment(postId, content, parentComment?.id);
       if (!mountedRef.current) return;
-      setText('');
-      setSuccessMessage(replyTo ? 'Resposta enviada com sucesso!' : 'Pergunta enviada com sucesso!');
-      setReplyTo(undefined);
+      if (isReply) {
+        setReplyText('');
+        setReplyTo(undefined);
+      } else {
+        setText('');
+      }
+      setSuccessReplyId(parentComment?.id);
+      setSuccessMessage(isReply ? 'Resposta enviada com sucesso!' : 'Pergunta enviada com sucesso!');
       await loadComments();
     } catch (error) {
-      if (mountedRef.current) setSendError(error instanceof Error ? error.message : 'Não foi possível enviar. Tente novamente.');
+      if (mountedRef.current) setError(error instanceof Error ? error.message : 'Não foi possível enviar. Tente novamente.');
     } finally {
       sendingRef.current = false;
-      if (mountedRef.current) setIsSending(false);
+      if (mountedRef.current) {
+        setIsSending(false);
+        setSendingReplyId(undefined);
+      }
     }
   }
 
   function startReply(comment: Comment) {
     if (sendingRef.current) return;
     setReplyTo(comment);
-    setText('');
-    setSendError('');
+    setReplyText('');
+    setReplyError('');
     setSuccessMessage('');
-    inputRef.current?.focus();
+    setSuccessReplyId(undefined);
   }
 
   return (
     <View style={styles.section}>
-      {replyTo ? (
-        <View style={styles.replyNotice}>
-          <Text style={styles.replyNoticeText}>Respondendo a {replyTo.user.nome}</Text>
-          <Pressable accessibilityRole="button" disabled={isSending} style={styles.textButton} onPress={() => { setReplyTo(undefined); setSendError(''); }}>
-            <Text style={styles.actionText}>Cancelar resposta</Text>
-          </Pressable>
-        </View>
-      ) : null}
       <View style={[styles.composer, sendError ? styles.composerError : undefined]}>
         <TextInput
           ref={inputRef}
-          accessibilityLabel={replyTo ? 'Escreva sua resposta' : 'Faça uma pergunta'}
-          placeholder={replyTo ? 'Escreva sua resposta' : 'Faça uma pergunta'}
+          accessibilityLabel="Faça uma pergunta"
+          placeholder="Faça uma pergunta"
           placeholderTextColor="#603C24"
           value={text}
           onChangeText={value => { setText(value); setSendError(''); setSuccessMessage(''); }}
@@ -137,12 +146,12 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
           editable={!isSending && Boolean(user)}
           style={styles.input}
         />
-        <Pressable accessibilityRole="button" accessibilityLabel={replyTo ? 'Enviar resposta' : 'Enviar pergunta'} accessibilityState={{ busy: isSending }} disabled={isSending || !user} onPress={handleSend} style={[styles.sendButton, isSending || !user ? styles.disabled : undefined]}>
-          {isSending ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
+        <Pressable accessibilityRole="button" accessibilityLabel="Enviar pergunta" accessibilityState={{ busy: isSending && !sendingReplyId }} disabled={isSending || !user} onPress={() => handleSend()} style={[styles.sendButton, isSending || !user ? styles.disabled : undefined]}>
+          {isSending && !sendingReplyId ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
         </Pressable>
       </View>
       {sendError ? <Text accessibilityRole="alert" style={styles.error}>{sendError}</Text> : null}
-      {successMessage ? <Text accessibilityLiveRegion="polite" style={styles.success}>{successMessage}</Text> : null}
+      {successMessage && !successReplyId ? <Text accessibilityLiveRegion="polite" style={styles.success}>{successMessage}</Text> : null}
       <Text accessibilityRole="header" style={styles.heading}>Perguntas</Text>
       {isLoading ? <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando perguntas" /> : null}
       {loadError ? (
@@ -162,11 +171,39 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
                 <Text style={styles.name}>{comment.user.nome}</Text>
                 <Text style={styles.time}>{relativeTime(comment.dataCriacao)}</Text>
                 <Text style={styles.commentText}>{comment.conteudo}</Text>
-                {user?.id === authorId && !comment.childComment && !isLoading && !loadError ? (
+                {user?.id === authorId && !comment.childComment && replyTo?.id !== comment.id && !isLoading && !loadError ? (
                   <Pressable accessibilityRole="button" accessibilityLabel={`Responder a ${comment.user.nome}`} disabled={isSending} onPress={() => startReply(comment)} style={styles.textButton}>
                     <Text style={styles.actionText}>Responder</Text>
                   </Pressable>
                 ) : null}
+                {replyTo?.id === comment.id ? (
+                  <View style={styles.replyComposer}>
+                    <Text style={styles.replyNoticeText}>Respondendo a {comment.user.nome}</Text>
+                    <View style={[styles.composer, replyError ? styles.composerError : undefined]}>
+                      <TextInput
+                        ref={replyInputRef}
+                        autoFocus
+                        accessibilityLabel={`Resposta para ${comment.user.nome}`}
+                        placeholder="Escreva sua resposta"
+                        placeholderTextColor="#603C24"
+                        value={replyText}
+                        onChangeText={value => { setReplyText(value); setReplyError(''); }}
+                        multiline
+                        textAlignVertical="top"
+                        editable={!isSending}
+                        style={styles.input}
+                      />
+                      <Pressable accessibilityRole="button" accessibilityLabel={`Enviar resposta para ${comment.user.nome}`} accessibilityState={{ busy: sendingReplyId === comment.id }} disabled={isSending} onPress={() => handleSend(comment)} style={[styles.sendButton, isSending ? styles.disabled : undefined]}>
+                        {sendingReplyId === comment.id ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
+                      </Pressable>
+                    </View>
+                    {replyError ? <Text accessibilityRole="alert" style={styles.error}>{replyError}</Text> : null}
+                    <Pressable accessibilityRole="button" disabled={isSending} style={styles.textButton} onPress={() => { setReplyTo(undefined); setReplyText(''); setReplyError(''); }}>
+                      <Text style={styles.actionText}>Cancelar resposta</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+                {successMessage && successReplyId === comment.id ? <Text accessibilityLiveRegion="polite" style={styles.success}>{successMessage}</Text> : null}
               </View>
             </View>
             {comment.childComment ? (

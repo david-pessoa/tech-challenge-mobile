@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   connector: { position: 'absolute', left: -26, top: -20, width: 22, height: 34, borderLeftWidth: 1, borderBottomWidth: 1, borderBottomLeftRadius: 8, borderColor: '#DED1D1' },
   textButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   actionText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 13, color: '#8A4A32' },
-  replyNotice: { gap: 4, marginBottom: 8 },
+  replyComposer: { gap: 8, marginTop: 12 },
   replyNoticeText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 13, color: theme.colors.text },
   error: { fontFamily: theme.typography.fontFamily.regular, fontSize: 13, color: '#A52A36', marginTop: 8 },
   success: { fontFamily: theme.typography.fontFamily.regular, fontSize: 13, color: '#287C6D', marginTop: 8 },
