@@ -1,4 +1,4 @@
-import { Search } from '@material-symbols-svg/react-native';
+import { Search } from '@material-symbols-svg/react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
