@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Toast from '@/components/Toast';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { useUser } from '@/context/AuthContext';
@@ -26,6 +29,17 @@ import {
 } from './styles';
 
 export default function Home() {
+  const { postResult } = useLocalSearchParams<{ postResult?: string }>();
+  const { setParams } = useRouter();
+  const [showPostUpdated, setShowPostUpdated] = useState(false);
+  const closeToast = useCallback(() => setShowPostUpdated(false), []);
+
+  useEffect(() => {
+    if (postResult !== 'updated') return;
+    setShowPostUpdated(true);
+    setParams({ postResult: undefined });
+  }, [postResult, setParams]);
+
   const { user, userImageCacheKey } = useUser();
   const { width } = useWindowDimensions();
 
@@ -70,6 +84,7 @@ export default function Home() {
         </Main>
         <Footer />
       </Scroll>
+      {showPostUpdated ? <Toast message="Aula atualizada com sucesso!" type="success" onClose={closeToast} /> : null}
     </Screen>
   );
 }

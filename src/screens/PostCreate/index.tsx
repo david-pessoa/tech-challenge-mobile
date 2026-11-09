@@ -34,6 +34,7 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
   const [postLoadError, setPostLoadError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [existingPhoto, setExistingPhoto] = useState<string>();
+  const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
@@ -79,6 +80,7 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
         setContent(selectedPost.conteudo ?? '');
         setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image) : undefined);
         setPhoto(undefined);
+        setRemoveExistingPhoto(false);
         setPhotoError('');
         setPhotoLoadFailed(false);
         setErrors({});
@@ -153,7 +155,9 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
         }
       }
       if (postId) {
+        if (!photo && removeExistingPhoto) data.append('removeImage', 'true');
         await updatePost(postId, data);
+        setRemoveExistingPhoto(false);
         if (photo) setExistingPhoto(buildApiImageUrl(`/api/posts/${postId}/image`, Date.now()));
       } else {
         await createPost(data);
@@ -166,7 +170,11 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
       setPhoto(undefined);
       setPhotoError('');
       setPhotoLoadFailed(false);
-      setNotification({ message: isEditing ? 'Aula atualizada com sucesso!' : 'Aula criada com sucesso!', type: 'success' });
+      if (isEditing) {
+        router.replace({ pathname: '/home', params: { postResult: 'updated' } });
+      } else {
+        setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
+      }
     } catch (error) {
       setNotification({ message: error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar a aula.' : 'Não foi possível criar a aula.', type: 'error' });
     } finally {
@@ -314,8 +322,8 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
                     </Svg>
                   )}
                 </Pressable>
-                {photo && (
-                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); setPhotoLoadFailed(false); }}>
+                {photoUri && (
+                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setExistingPhoto(undefined); setRemoveExistingPhoto(isEditing); setPhotoError(''); setPhotoLoadFailed(false); }}>
                     <View style={styles.removePhotoIcon}>
                       <Cancel width={24} height={24} fill={theme.colors.primary} />
                     </View>
