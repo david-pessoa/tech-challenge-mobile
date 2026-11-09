@@ -2,12 +2,12 @@ import { ArrowRightAlt, Delete, Edit } from '@material-symbols-svg/react-native'
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
-import Toast from '../Toast';
 import userImage from '../../../assets/images/user-default-image.png';
 import { useUser } from '../../context/AuthContext';
 import { deleteUser, getAllUsers } from '../../services/user.service';
 import type { User } from '../../types/User';
 import { buildApiImageUrl, capitalize } from '../../utils/functions';
+import Toast from '../Toast';
 import {
   AccessUserListButton,
   ActionContainer,
@@ -76,6 +76,10 @@ export default function UserListPreview() {
     }
   }
 
+  function closeToast() {
+    setNotification(undefined);
+  }
+
   return (
     <>
       {loggedUser?.role !== 'ALUNO' && (
@@ -133,6 +137,9 @@ export default function UserListPreview() {
             </AccessUserListButton>
           </Link>
         </UserListContainer>
+      )}
+      {notification?.message && (
+        <Toast message={notification.message} type={notification.type} onClose={closeToast} />
       )}
       <Modal
         visible={Boolean(pendingDelete && loggedUser?.role === 'ADMIN')}
