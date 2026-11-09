@@ -27,7 +27,7 @@ export default function Carousel({ newPosts }: CarouselProps) {
             marginRight: 12,
           }}
         >
-          <Pressable onPress={() => goToPost(item.id)}>
+          <Pressable onPress={() => goToPost(item.postId)}>
             <CarouselCard dado={item} />
           </Pressable>
         </View>
