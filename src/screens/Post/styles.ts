@@ -7,6 +7,7 @@ export function createStyles(width: number) {
 
   return StyleSheet.create({
     screen: { backgroundColor: '#FFFFFF' },
+    keyboard: { flex: 1 },
     content: { flexGrow: 1 },
     main: {
       flexGrow: 1,

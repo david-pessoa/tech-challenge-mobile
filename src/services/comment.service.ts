@@ -5,11 +5,11 @@ import type { Comment } from '../types/Comment';
 
 export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
   try {
-    const response = await api.get(`/post/comment/list/${postId}`);
+    const response = await api.get<Comment[]>(`/post/comment/list/${postId}`);
     return response.data;
   } catch (error) {
     console.error(`Erro ao buscar comentários do post ${postId}:`, error);
-    return [];
+    throw new Error(getBackendErrorMessage(error));
   }
 }
 

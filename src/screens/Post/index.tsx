@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import PostComments from '../../components/PostComments';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { createStyles } from './styles';
 import cloud from '../../../assets/images/cloudIcon.png';
@@ -70,7 +71,8 @@ export default function Post({ postId }: Props) {
 
   return (
     <Screen edges={['top', 'right', 'bottom', 'left']} style={styles.screen}>
-      <Scroll contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Header />
         <View key={postId} style={styles.main}>
           <View style={styles.navigation}>
@@ -120,11 +122,13 @@ export default function Post({ postId }: Props) {
                 </View>
               </View>
               <Text style={styles.body}>{post.conteudo}</Text>
+              <PostComments key={post.postId} postId={post.postId} authorId={post.userId} authorName={author?.nome} />
             </>
           ) : null}
         </View>
         <Footer />
       </Scroll>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

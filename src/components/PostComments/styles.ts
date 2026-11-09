@@ -1,0 +1,30 @@
+import { Platform, StyleSheet } from 'react-native';
+import { theme } from '../../styles/Theme';
+
+export const styles = StyleSheet.create({
+  section: { marginTop: 48 },
+  composer: { minHeight: 130, padding: 16, borderRadius: 28, backgroundColor: '#FAF8F0', borderWidth: 1, borderColor: 'transparent', boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.13)' },
+  composerError: { borderColor: '#A52A36' },
+  input: { ...Platform.select({ web: { outlineStyle: 'solid', outlineWidth: 0, outlineColor: 'transparent' } }), minHeight: 62, fontFamily: theme.typography.fontFamily.semiBold, fontSize: 14, color: theme.colors.text, padding: 0, paddingBottom: 8 },
+  sendButton: { alignSelf: 'flex-end', minHeight: 44, minWidth: 112, paddingHorizontal: 24, paddingVertical: 8, borderRadius: 24, backgroundColor: theme.colors.secondary, alignItems: 'center', justifyContent: 'center' },
+  sendText: { fontFamily: theme.typography.fontFamily.regular, fontSize: 14, color: '#603C24' },
+  disabled: { opacity: 0.55 },
+  heading: { marginTop: 48, marginBottom: 28, fontFamily: theme.typography.fontFamily.semiBold, fontSize: 20, color: theme.colors.backLink },
+  list: { gap: 32 },
+  comment: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  avatar: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: 'rgba(255, 255, 255, 0.5)' },
+  commentBody: { flex: 1, minWidth: 0 },
+  name: { fontFamily: theme.typography.fontFamily.regular, fontSize: 15, color: theme.colors.text, marginBottom: 4 },
+  time: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, color: '#707B83', marginBottom: 2 },
+  commentText: { fontFamily: theme.typography.fontFamily.regular, fontSize: 13, lineHeight: 20, color: '#242424' },
+  reply: { marginTop: 12, marginLeft: 38, position: 'relative' },
+  connector: { position: 'absolute', left: -26, top: -20, width: 22, height: 34, borderLeftWidth: 1, borderBottomWidth: 1, borderBottomLeftRadius: 8, borderColor: '#DED1D1' },
+  textButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  actionText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 13, color: '#8A4A32' },
+  replyNotice: { gap: 4, marginBottom: 8 },
+  replyNoticeText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 13, color: theme.colors.text },
+  error: { fontFamily: theme.typography.fontFamily.regular, fontSize: 13, color: '#A52A36', marginTop: 8 },
+  success: { fontFamily: theme.typography.fontFamily.regular, fontSize: 13, color: '#287C6D', marginTop: 8 },
+  empty: { fontFamily: theme.typography.fontFamily.regular, fontSize: 14, lineHeight: 22, color: theme.colors.text },
+  loadStatus: { gap: 8, marginBottom: 16 },
+});

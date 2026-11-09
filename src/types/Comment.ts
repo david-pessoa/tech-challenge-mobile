@@ -5,7 +5,7 @@ export type Comment = {
     conteudo: string;
     dataCriacao: string;
     dataModificacao: string;
-    image?: string;
+    image?: string | null;
   } | null;
   user: {
     id: string;
@@ -14,5 +14,5 @@ export type Comment = {
   conteudo: string;
   dataCriacao: string;
   dataModificacao: string;
-  image?: string; 
+  image?: string | null;
 };
