@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, Image, Keyboard, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Keyboard, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { useUser } from '../../context/AuthContext';
-import { createComment, getCommentsByPostId } from '../../services/comment.service';
+import { Delete } from '@material-symbols-svg/react-native/icons/delete';
+import { Edit } from '@material-symbols-svg/react-native/icons/edit';
+import { createComment, deleteComment, getCommentsByPostId, updateComment } from '../../services/comment.service';
 import type { Comment } from '../../types/Comment';
 import { buildApiImageUrl } from '../../utils/functions';
 import { theme } from '../../styles/Theme';
@@ -11,6 +13,15 @@ type Props = {
   postId: string;
   authorId?: string | null;
   authorName?: string;
+};
+
+type CommentTarget = {
+  id: string;
+  content: string;
+  ownerId?: string | null;
+  name: string;
+  parentId?: string;
+  hasReply?: boolean;
 };
 
 const avatarColors = ['#D897F2', '#D478C1', '#9ECFC7', '#F3CE99', '#FFE89C'];
@@ -56,6 +67,14 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
   const sendingRef = useRef(false);
   const mountedRef = useRef(false);
   const requestRef = useRef(0);
+  const [editing, setEditing] = useState<CommentTarget>();
+  const [editText, setEditText] = useState('');
+  const [editError, setEditError] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<CommentTarget>();
+  const [deleteError, setDeleteError] = useState('');
+  const [mutation, setMutation] = useState<'saving' | 'deleting'>();
+  const mutationRef = useRef(false);
+  const isBusy = isSending || Boolean(mutation);
 
   const loadComments = useCallback(async () => {
     const request = ++requestRef.current;
@@ -92,7 +111,7 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
   }, [successMessage, successReplyId]);
 
   async function handleSend(parentComment?: Comment) {
-    if (sendingRef.current || !user) return;
+    if (sendingRef.current || mutationRef.current || !user) return;
     const isReply = Boolean(parentComment);
     const content = (isReply ? replyText : text).trim();
     const setError = isReply ? setReplyError : setSendError;
@@ -132,12 +151,142 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
   }
 
   function startReply(comment: Comment) {
-    if (sendingRef.current) return;
+    if (sendingRef.current || mutationRef.current) return;
+    setEditing(undefined);
+    setEditText('');
+    setEditError('');
     setReplyTo(comment);
     setReplyText('');
     setReplyError('');
     setSuccessMessage('');
     setSuccessReplyId(undefined);
+  }
+
+  function canEdit(target: CommentTarget) {
+    return Boolean(user && (user.role === 'ADMIN' || user.id === target.ownerId));
+  }
+
+  function canDelete(target: CommentTarget) {
+    return Boolean(user && (user.role === 'ADMIN' || user.id === authorId || user.id === target.ownerId));
+  }
+
+  function startEdit(target: CommentTarget) {
+    if (sendingRef.current || mutationRef.current || !canEdit(target)) return;
+    setEditing(target);
+    setEditText(target.content);
+    setEditError('');
+    setReplyTo(undefined);
+    setReplyText('');
+    setReplyError('');
+    setSuccessMessage('');
+  }
+
+  async function saveEdit() {
+    if (!editing || sendingRef.current || mutationRef.current || !canEdit(editing)) return;
+    const content = editText.trim();
+    if (!content) {
+      setEditError('O comentário não pode ficar vazio.');
+      return;
+    }
+    const target = editing;
+    mutationRef.current = true;
+    setMutation('saving');
+    setEditError('');
+    setSuccessMessage('');
+    Keyboard.dismiss();
+    try {
+      await updateComment(target.id, content);
+      if (!mountedRef.current) return;
+      const updatedAt = new Date().toISOString();
+      setComments(current => current.map(comment => {
+        if (comment.id === target.id) return { ...comment, conteudo: content, dataModificacao: updatedAt };
+        if (comment.childComment?.id === target.id) {
+          return { ...comment, childComment: { ...comment.childComment, conteudo: content, dataModificacao: updatedAt } };
+        }
+        return comment;
+      }));
+      setEditing(undefined);
+      setEditText('');
+      setSuccessReplyId(target.parentId ?? target.id);
+      setSuccessMessage('Comentário atualizado com sucesso!');
+      await loadComments();
+    } catch (error) {
+      if (mountedRef.current) setEditError(error instanceof Error ? error.message : 'Não foi possível salvar o comentário.');
+    } finally {
+      mutationRef.current = false;
+      if (mountedRef.current) setMutation(undefined);
+    }
+  }
+
+  function requestDelete(target: CommentTarget) {
+    if (sendingRef.current || mutationRef.current || !canDelete(target)) return;
+    Keyboard.dismiss();
+    setDeleteError('');
+    setPendingDelete(target);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete || sendingRef.current || mutationRef.current || !canDelete(pendingDelete)) return;
+    const target = pendingDelete;
+    mutationRef.current = true;
+    setMutation('deleting');
+    setDeleteError('');
+    setSuccessMessage('');
+    try {
+      await deleteComment(target.id);
+      if (!mountedRef.current) return;
+      setComments(current => current.filter(comment => comment.id !== target.id).map(comment =>
+        comment.childComment?.id === target.id ? { ...comment, childComment: null } : comment
+      ));
+      if (editing?.id === target.id || editing?.parentId === target.id) setEditing(undefined);
+      if (replyTo?.id === target.id) { setReplyTo(undefined); setReplyText(''); setReplyError(''); }
+      setPendingDelete(undefined);
+      setSuccessReplyId(target.parentId);
+      setSuccessMessage('Comentário excluído com sucesso!');
+      await loadComments();
+    } catch (error) {
+      if (mountedRef.current) setDeleteError(error instanceof Error ? error.message : 'Não foi possível excluir o comentário.');
+    } finally {
+      mutationRef.current = false;
+      if (mountedRef.current) setMutation(undefined);
+    }
+  }
+
+  function renderActions(target: CommentTarget) {
+    return (
+      <View style={styles.commentActions}>
+        {canEdit(target) ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={`Editar ${target.parentId ? 'resposta' : 'pergunta'} de ${target.name}`} disabled={isBusy} onPress={() => startEdit(target)} style={[styles.iconButton, isBusy ? styles.disabled : undefined]}>
+            <Edit width={18} height={18} fill="#A15E6D" />
+          </Pressable>
+        ) : null}
+        {canDelete(target) ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={`Excluir ${target.parentId ? 'resposta' : 'pergunta'} de ${target.name}`} disabled={isBusy} onPress={() => requestDelete(target)} style={[styles.iconButton, isBusy ? styles.disabled : undefined]}>
+            <Delete width={18} height={18} fill="#E64B63" />
+          </Pressable>
+        ) : null}
+      </View>
+    );
+  }
+
+  function renderContent(target: CommentTarget) {
+    if (editing?.id !== target.id) return <Text style={styles.commentText}>{target.content}</Text>;
+    return (
+      <View style={styles.replyComposer}>
+        <View style={[styles.composer, styles.replyBox, editError ? styles.composerError : undefined]}>
+          <TextInput autoFocus accessibilityLabel="Editar comentário" value={editText} onChangeText={value => { setEditText(value); setEditError(''); }} multiline textAlignVertical="top" editable={!isBusy} style={[styles.input, styles.replyInput]} />
+          <View style={styles.composerActions}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Cancelar edição do comentário" disabled={isBusy} onPress={() => { setEditing(undefined); setEditText(''); setEditError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isBusy ? styles.disabled : undefined]}>
+              <Text style={styles.cancelText}>Cancelar</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Salvar comentário" accessibilityState={{ busy: mutation === 'saving' }} disabled={isBusy} onPress={saveEdit} style={[styles.sendButton, isBusy ? styles.disabled : undefined]}>
+              {mutation === 'saving' ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Salvar</Text>}
+            </Pressable>
+          </View>
+        </View>
+        {editError ? <Text accessibilityRole="alert" style={styles.error}>{editError}</Text> : null}
+      </View>
+    );
   }
 
   return (
@@ -152,14 +301,14 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
           onChangeText={value => { setText(value); setSendError(''); setSuccessMessage(''); }}
           multiline
           textAlignVertical="top"
-          editable={!isSending && Boolean(user)}
+          editable={!isBusy && Boolean(user)}
           style={styles.input}
         />
         <View style={styles.composerActions}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Cancelar pergunta" disabled={isSending} onPress={() => { setText(''); setSendError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isSending ? styles.disabled : undefined]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Cancelar pergunta" disabled={isBusy} onPress={() => { setText(''); setSendError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isBusy ? styles.disabled : undefined]}>
             <Text style={styles.cancelText}>Cancelar</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Enviar pergunta" accessibilityState={{ busy: isSending && !sendingReplyId }} disabled={isSending || !user} onPress={() => handleSend()} style={[styles.sendButton, isSending || !user ? styles.disabled : undefined]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Enviar pergunta" accessibilityState={{ busy: isSending && !sendingReplyId }} disabled={isBusy || !user} onPress={() => handleSend()} style={[styles.sendButton, isBusy || !user ? styles.disabled : undefined]}>
             {isSending && !sendingReplyId ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
           </Pressable>
         </View>
@@ -177,16 +326,22 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
         </View>
       ) : !isLoading && comments.length === 0 ? <Text style={styles.empty}>Ainda não há perguntas. Seja o primeiro a perguntar!</Text> : null}
       <View style={styles.list}>
-        {comments.map(comment => (
+        {comments.map(comment => {
+          const target: CommentTarget = { id: comment.id, content: comment.conteudo, ownerId: comment.user.id, name: comment.user.nome, hasReply: Boolean(comment.childComment) };
+          const replyTarget: CommentTarget | undefined = comment.childComment ? { id: comment.childComment.id, content: comment.childComment.conteudo, ownerId: authorId, name: authorName ?? 'Autor da aula', parentId: comment.id } : undefined;
+          return (
           <View key={comment.id}>
             <View style={styles.comment}>
               <CommentAvatar id={comment.user.id} image={comment.image} name={comment.user.nome} />
               <View style={styles.commentBody}>
-                <Text style={styles.name}>{comment.user.nome}</Text>
+                <View style={styles.commentHeader}>
+                  <Text style={styles.commentName}>{comment.user.nome}</Text>
+                  {renderActions(target)}
+                </View>
                 <Text style={styles.time}>{relativeTime(comment.dataCriacao)}</Text>
-                <Text style={styles.commentText}>{comment.conteudo}</Text>
-                {user?.id === authorId && !comment.childComment && replyTo?.id !== comment.id && !isLoading && !loadError ? (
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Responder a ${comment.user.nome}`} disabled={isSending} onPress={() => startReply(comment)} style={styles.textButton}>
+                {renderContent(target)}
+                {user?.id === authorId && !comment.childComment && replyTo?.id !== comment.id && editing?.id !== comment.id && !isLoading && !loadError ? (
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Responder a ${comment.user.nome}`} disabled={isBusy} onPress={() => startReply(comment)} style={styles.textButton}>
                     <Text style={styles.actionText}>Responder</Text>
                   </Pressable>
                 ) : null}
@@ -204,14 +359,14 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
                         onChangeText={value => { setReplyText(value); setReplyError(''); }}
                         multiline
                         textAlignVertical="top"
-                        editable={!isSending}
+                        editable={!isBusy}
                         style={[styles.input, styles.replyInput]}
                       />
                       <View style={styles.composerActions}>
-                        <Pressable accessibilityRole="button" accessibilityLabel={`Cancelar resposta para ${comment.user.nome}`} disabled={isSending} onPress={() => { setReplyTo(undefined); setReplyText(''); setReplyError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isSending ? styles.disabled : undefined]}>
+                        <Pressable accessibilityRole="button" accessibilityLabel={`Cancelar resposta para ${comment.user.nome}`} disabled={isBusy} onPress={() => { setReplyTo(undefined); setReplyText(''); setReplyError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isBusy ? styles.disabled : undefined]}>
                           <Text style={styles.cancelText}>Cancelar</Text>
                         </Pressable>
-                        <Pressable accessibilityRole="button" accessibilityLabel={`Enviar resposta para ${comment.user.nome}`} accessibilityState={{ busy: sendingReplyId === comment.id }} disabled={isSending} onPress={() => handleSend(comment)} style={[styles.sendButton, isSending ? styles.disabled : undefined]}>
+                        <Pressable accessibilityRole="button" accessibilityLabel={`Enviar resposta para ${comment.user.nome}`} accessibilityState={{ busy: sendingReplyId === comment.id }} disabled={isBusy} onPress={() => handleSend(comment)} style={[styles.sendButton, isBusy ? styles.disabled : undefined]}>
                           {sendingReplyId === comment.id ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
                         </Pressable>
                       </View>
@@ -228,16 +383,37 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
                 <View style={styles.comment}>
                   <CommentAvatar id={authorId ?? comment.childComment.id} image={comment.childComment.image} name={authorName ?? 'Autor da aula'} />
                   <View style={styles.commentBody}>
-                    <Text style={styles.name}>{authorName ?? 'Autor da aula'}</Text>
+                    <View style={styles.commentHeader}>
+                      <Text style={styles.commentName}>{authorName ?? 'Autor da aula'}</Text>
+                      {replyTarget ? renderActions(replyTarget) : null}
+                    </View>
                     <Text style={styles.time}>{relativeTime(comment.childComment.dataCriacao)}</Text>
-                    <Text style={styles.commentText}>{comment.childComment.conteudo}</Text>
+                    {replyTarget ? renderContent(replyTarget) : null}
                   </View>
                 </View>
               </View>
             ) : null}
           </View>
-        ))}
+          );
+        })}
       </View>
+      <Modal visible={Boolean(pendingDelete)} transparent animationType="fade" onRequestClose={() => { if (!mutationRef.current) setPendingDelete(undefined); }}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteDialog} accessibilityViewIsModal>
+            <Text accessibilityRole="header" style={styles.dialogTitle}>Excluir comentário</Text>
+            <Text style={styles.dialogText}>Deseja excluir este comentário?{pendingDelete?.hasReply ? ' A resposta também será excluída.' : ''} Esta ação não pode ser desfeita.</Text>
+            {deleteError ? <Text accessibilityRole="alert" style={styles.error}>{deleteError}</Text> : null}
+            <View style={styles.composerActions}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Cancelar exclusão do comentário" disabled={isBusy} onPress={() => setPendingDelete(undefined)} style={[styles.cancelButton, isBusy ? styles.disabled : undefined]}>
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Confirmar exclusão do comentário" accessibilityState={{ busy: mutation === 'deleting' }} disabled={isBusy} onPress={confirmDelete} style={[styles.deleteButton, isBusy ? styles.disabled : undefined]}>
+                {mutation === 'deleting' ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.deleteText}>Excluir</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
