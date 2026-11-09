@@ -13,7 +13,8 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
 import { useUser } from '../../context/AuthContext';
-import { createPost } from '../../services/post.service';
+import { createPost, getPostById, updatePost } from '../../services/post.service';
+import { buildApiImageUrl } from '../../utils/functions';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { createStyles } from './styles';
 import redDoodle from '../../../assets/images/red-doodle.png';
@@ -27,7 +28,12 @@ const requiredMessages: Record<PostField, string> = {
   content: 'O conteúdo é obrigatório.',
 };
 
-export default function PostCreate() {
+export default function PostCreate({ postId }: { postId?: string } = {}) {
+  const isEditing = Boolean(postId);
+  const [isLoadingPost, setIsLoadingPost] = useState(Boolean(postId));
+  const [postLoadError, setPostLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [existingPhoto, setExistingPhoto] = useState<string>();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
@@ -49,6 +55,44 @@ export default function PostCreate() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
   const closeToast = useCallback(() => setNotification(undefined), []);
 
+  const photoUri = photo?.uri ?? existingPhoto;
+  const submitLabel = isEditing ? 'Salvar' : 'Enviar';
+
+  useEffect(() => {
+    if (!postId || !user) return;
+    let active = true;
+    const currentUser = user;
+
+    async function loadPost() {
+      setIsLoadingPost(true);
+      setPostLoadError('');
+      try {
+        const selectedPost = await getPostById(postId!);
+        if (!active) return;
+        if (currentUser.role !== 'ADMIN' && selectedPost.userId !== currentUser.id) {
+          setPostLoadError('Você só pode editar suas próprias aulas.');
+          return;
+        }
+        setTitle(selectedPost.titulo);
+        setDescription(selectedPost.descricao);
+        setSubject(selectedPost.subject?.nome ?? '');
+        setContent(selectedPost.conteudo ?? '');
+        setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image) : undefined);
+        setPhoto(undefined);
+        setPhotoError('');
+        setPhotoLoadFailed(false);
+        setErrors({});
+      } catch (error) {
+        if (active) setPostLoadError(error instanceof Error ? error.message : 'Não foi possível carregar a aula.');
+      } finally {
+        if (active) setIsLoadingPost(false);
+      }
+    }
+
+    loadPost();
+    return () => { active = false; };
+  }, [postId, user?.id, user?.role, loadAttempt]);
+
   function validateField(field: PostField, value: string) {
     setErrors(current => ({ ...current, [field]: value.trim() ? undefined : requiredMessages[field] }));
   }
@@ -58,7 +102,7 @@ export default function PostCreate() {
   }
 
   async function handleSubmit() {
-    if (savingRef.current || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
+    if (savingRef.current || isLoadingPost || postLoadError || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
     const values = { title, description, subject, content };
     const validationErrors: Partial<Record<PostField, string>> = {};
     for (const field of Object.keys(values) as PostField[]) {
@@ -108,18 +152,23 @@ export default function PostCreate() {
           data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
         }
       }
-      await createPost(data);
-      setTitle('');
-      setDescription('');
-      setSubject('');
-      setContent('');
+      if (postId) {
+        await updatePost(postId, data);
+        if (photo) setExistingPhoto(buildApiImageUrl(`/api/posts/${postId}/image`, Date.now()));
+      } else {
+        await createPost(data);
+        setTitle('');
+        setDescription('');
+        setSubject('');
+        setContent('');
+      }
       setErrors({});
       setPhoto(undefined);
       setPhotoError('');
       setPhotoLoadFailed(false);
-      setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
+      setNotification({ message: isEditing ? 'Aula atualizada com sucesso!' : 'Aula criada com sucesso!', type: 'success' });
     } catch (error) {
-      setNotification({ message: error instanceof Error ? error.message : 'Não foi possível criar a aula.', type: 'error' });
+      setNotification({ message: error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar a aula.' : 'Não foi possível criar a aula.', type: 'error' });
     } finally {
       savingRef.current = false;
       setIsSaving(false);
@@ -178,7 +227,7 @@ export default function PostCreate() {
       element.removeEventListener('dragover', preventNavigation);
       element.removeEventListener('drop', handleDrop);
     };
-  }, []);
+  }, [isLoadingPost, postLoadError]);
 
   useEffect(() => () => {
     if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
@@ -201,9 +250,22 @@ export default function PostCreate() {
             <Text style={styles.backText}>Voltar à tela de início</Text>
           </Pressable>
           <View style={styles.titleRow}>
-            <Text style={styles.title} accessibilityRole="header">Nova aula</Text>
+            <Text style={styles.title} accessibilityRole="header">{isEditing ? 'Editar aula' : 'Nova aula'}</Text>
             <Image source={redDoodle} style={styles.decoration} resizeMode="contain" accessible={false} />
           </View>
+          {isLoadingPost ? (
+            <View style={styles.loadStatus}>
+              <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando aula" />
+            </View>
+          ) : postLoadError ? (
+            <View style={styles.loadStatus}>
+              <Text style={styles.fieldError} accessibilityRole="alert">{postLoadError}</Text>
+              <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={() => setLoadAttempt(value => value + 1)}>
+                <Text style={styles.cancelText}>Tentar novamente</Text>
+              </Pressable>
+            </View>
+          ) : (
+          <>
           <View style={styles.form}>
             <View style={styles.field}>
               <View style={styles.photoContainer}>
@@ -217,11 +279,11 @@ export default function PostCreate() {
                   onPress={selectPhoto}
                   disabled={isSaving}
                   accessibilityRole="button"
-                  accessibilityLabel={photo ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
+                  accessibilityLabel={photoUri ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
                 >
-                  {photo ? (
+                  {photoUri ? (
                     <Image
-                      source={{ uri: photo.uri }}
+                      source={{ uri: photoUri }}
                       style={styles.photoPreview}
                       resizeMode="cover"
                       accessibilityLabel="Prévia da foto da aula"
@@ -334,16 +396,18 @@ export default function PostCreate() {
             <Pressable
               style={[styles.cancelButton, isSaving && styles.disabled]}
               accessibilityRole="button"
-              accessibilityLabel="Cancelar criação da aula"
+              accessibilityLabel={isEditing ? 'Cancelar edição da aula' : 'Cancelar criação da aula'}
               disabled={isSaving}
               onPress={() => router.replace('/home')}
             >
               <Text style={styles.cancelText}>Cancelar</Text>
             </Pressable>
-            <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel="Enviar aula" accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
-              {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>Enviar</Text>}
+            <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel={isEditing ? 'Salvar aula' : 'Enviar aula'} accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
+              {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>{submitLabel}</Text>}
             </Pressable>
           </View>
+          </>
+          )}
         </View>
         <Footer />
       </Scroll>

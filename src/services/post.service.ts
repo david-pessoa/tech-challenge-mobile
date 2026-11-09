@@ -1,6 +1,6 @@
 import { api } from './api';
 
-import type { Post } from '../types/Posts';
+import type { Post, PostDetails } from '../types/Posts';
 import { getBackendErrorMessage } from './auth.service';
 
 export async function getAllPosts() {
@@ -26,7 +26,7 @@ export async function createPost(postData: FormData): Promise<void> {
 
 export async function getPostById(id: string) {
   try {
-    const response = await api.get(`/posts/${id}`);
+    const response = await api.get<PostDetails>(`/posts/${id}`);
     return response.data;
   } catch (error) {
     console.error('Erro na obtenção de post pelo ID:', error);

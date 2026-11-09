@@ -25,3 +25,5 @@ export type Post = {
   dataCriacao?: Date;
   dataModificacao?: Date;
 };
+
+export type PostDetails = Pick<Post, 'postId' | 'userId' | 'titulo' | 'descricao' | 'conteudo' | 'image' | 'subject'>;
