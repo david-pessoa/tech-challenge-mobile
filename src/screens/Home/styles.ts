@@ -14,7 +14,6 @@ export const MainContentContainer = styled.View<ResponsiveProps>`
 `;
 
 export const TopContainer = styled.View<ResponsiveProps>`
-  z-index: 0;
   flex-direction: row;
   gap: ${({ $screenWidth }) => ($screenWidth > 1000 ? 36 : 0)}px;
   align-items: center;

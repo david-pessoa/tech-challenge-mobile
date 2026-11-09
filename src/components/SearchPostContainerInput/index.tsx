@@ -70,7 +70,6 @@ export default function SearchPostContainerInput() {
           nestedScrollEnabled={true}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={true}
-          persistentScrollbar
         >
           {searchedPostsList.map((post, i) => (
             <ListItemButton
