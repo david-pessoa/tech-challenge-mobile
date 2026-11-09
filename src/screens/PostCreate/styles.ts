@@ -6,6 +6,7 @@ export function createStyles(width: number) {
 
   return StyleSheet.create({
     screen: { backgroundColor: '#FFFFFF' },
+    keyboard: { flex: 1 },
     content: { flexGrow: 1 },
     main: { flexGrow: 1, width: tablet ? '90%' : '100%', maxWidth: 900, alignSelf: 'center', paddingHorizontal: tablet ? 0 : 20, paddingTop: tablet ? 24 : 16, paddingBottom: tablet ? 64 : 48 },
     backButton: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 10, minHeight: 44 },

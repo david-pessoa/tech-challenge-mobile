@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
 import Svg, { Rect } from 'react-native-svg';
-import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
 import { Download } from '@material-symbols-svg/react-native/icons/download';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
@@ -35,6 +35,7 @@ export default function PostCreate() {
   const photoPickerRef = useRef<ComponentRef<typeof Pressable>>(null);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
   const [photoError, setPhotoError] = useState('');
+  const [photoLoadFailed, setPhotoLoadFailed] = useState(false);
   const [photoBounds, setPhotoBounds] = useState({ width: 0, height: 0 });
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -66,6 +67,11 @@ export default function PostCreate() {
     setErrors(validationErrors);
     setNotification(undefined);
     if (Object.keys(validationErrors).length) return;
+    if (photo && photoLoadFailed) {
+      setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+      return;
+    }
+    Keyboard.dismiss();
     savingRef.current = true;
     setIsSaving(true);
     setShowSubjects(false);
@@ -80,7 +86,23 @@ export default function PostCreate() {
         const type = photo.mimeType ?? 'image/jpeg';
         const fileName = photo.fileName ?? (type === 'image/png' ? 'foto.png' : 'foto.jpg');
         if (Platform.OS === 'web') {
-          const file = photo.file ?? (await (await fetch(photo.uri)).blob());
+          let file: Blob;
+          try {
+            if (photo.file) {
+              file = photo.file;
+            } else {
+              const response = await fetch(photo.uri);
+              if (!response.ok) throw new Error('Não foi possível ler a foto.');
+              file = await response.blob();
+            }
+          } catch {
+            setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            setPhotoError('A foto deve ter no máximo 5 MB.');
+            return;
+          }
           data.append('image', file, fileName);
         } else {
           data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
@@ -94,6 +116,7 @@ export default function PostCreate() {
       setErrors({});
       setPhoto(undefined);
       setPhotoError('');
+      setPhotoLoadFailed(false);
       setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
     } catch (error) {
       setNotification({ message: error instanceof Error ? error.message : 'Não foi possível criar a aula.', type: 'error' });
@@ -114,6 +137,7 @@ export default function PostCreate() {
       return;
     }
     setPhoto(asset);
+    setPhotoLoadFailed(false);
     setPhotoError('');
   }
 
@@ -162,6 +186,7 @@ export default function PostCreate() {
 
   return (
     <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Header />
         <View style={styles.main}>
@@ -195,7 +220,16 @@ export default function PostCreate() {
                   accessibilityLabel={photo ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
                 >
                   {photo ? (
-                    <Image source={{ uri: photo.uri }} style={styles.photoPreview} resizeMode="cover" accessibilityLabel="Prévia da foto da aula" />
+                    <Image
+                      source={{ uri: photo.uri }}
+                      style={styles.photoPreview}
+                      resizeMode="cover"
+                      accessibilityLabel="Prévia da foto da aula"
+                      onError={() => {
+                        setPhotoLoadFailed(true);
+                        setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+                      }}
+                    />
                   ) : (
                     <>
                       <Download width={20} height={20} fill="#DC9A9A" />
@@ -219,7 +253,7 @@ export default function PostCreate() {
                   )}
                 </Pressable>
                 {photo && (
-                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); }}>
+                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setPhotoError(''); setPhotoLoadFailed(false); }}>
                     <View style={styles.removePhotoIcon}>
                       <Cancel width={24} height={24} fill={theme.colors.primary} />
                     </View>
@@ -313,6 +347,7 @@ export default function PostCreate() {
         </View>
         <Footer />
       </Scroll>
+      </KeyboardAvoidingView>
       <Modal visible={showSubjects} transparent animationType="fade" onRequestClose={() => setShowSubjects(false)}>
         <Pressable style={styles.optionsOverlay} onPress={() => setShowSubjects(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de matéria">
           <View style={styles.options} accessibilityViewIsModal>
