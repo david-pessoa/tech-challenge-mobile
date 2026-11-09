@@ -23,7 +23,7 @@ export default function Footer() {
       <Box $screenWidth={width}>
         <UpperContainer $screenWidth={width}>
           <DescriptionContainer $screenWidth={width}>
-            <LogoContainer>
+            <LogoContainer $screenWidth={width}>
               <Image
                 source={logo}
                 accessibilityLabel="Edify Logo"

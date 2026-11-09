@@ -6,5 +6,5 @@ export type User = {
   nome: string;
   role: Role;
   image?: string;
-  birthDate?: Date
+  birthDate?: string | null
 };

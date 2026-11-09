@@ -1,43 +1,54 @@
+import {
+  AccountBalance,
+  Category,
+  Church,
+  Function,
+  Globe,
+  MaterialSymbolsComponent,
+  MenuBook,
+  Microbiology,
+} from '@material-symbols-svg/react-native';
+
 export type MateriaConfig = {
   backgroundColor: string;
   color: string;
-  icon: string;
+  icon: MaterialSymbolsComponent;
 };
 
 export const materias: Record<string, MateriaConfig> = {
-  'Ciências': {
+  Ciências: {
     backgroundColor: '#A4CDC6',
     color: '#287C6D',
-    icon: 'microbiology',
+    icon: Microbiology,
   },
-  'História': {
+  História: {
     backgroundColor: '#E0A7E3',
     color: '#902995',
-    icon: 'account_balance',
+    icon: AccountBalance,
   },
-  'Português': {
+  Português: {
     backgroundColor: '#FCBBA3',
     color: '#AE4E2B',
-    icon: 'menu_book',
+    icon: MenuBook,
   },
-  'Matemática': {
+  Matemática: {
     backgroundColor: '#A7CEE3',
     color: '#1D648A',
-    icon: 'function',
+    icon: Function,
   },
   Geografia: {
     backgroundColor: '#F3CE99',
     color: '#9D6719',
-    icon: 'globe',
+    icon: Globe,
   },
   Geral: {
     backgroundColor: '#D9D9D9',
     color: '#666666',
-    icon: 'category',
+    icon: Category,
   },
   'Ensino Religioso': {
     backgroundColor: '#D8C4E8',
     color: '#7A4E9B',
-    icon: 'church',
+    icon: Church,
   },
 };

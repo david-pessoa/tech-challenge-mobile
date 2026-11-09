@@ -17,9 +17,9 @@ import { useUser } from '../../context/AuthContext';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { deleteUser, getAllUsers } from '../../services/user.service';
 import type { Role } from '../../types/Roles';
-import type { UserListItem } from '../../types/UserList';
-import { buildApiImageUrl } from '../../utils/functions';
+import { buildApiImageUrl, formatarData } from '../../utils/functions';
 import defaultUserImage from '../../../assets/images/user-default-image.png';
+import { User } from '@/types/User';
 
 function formatBirthDate(date: string | null) {
   if (!date) return '--';
@@ -31,7 +31,7 @@ type UserListSectionProps = {
   title: string;
   role: Role;
   reloadKey: number;
-  onDelete: (selectedUser: UserListItem) => void;
+  onDelete: (selectedUser: User) => void;
 };
 
 function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionProps) {
@@ -39,7 +39,7 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
   const { width } = useWindowDimensions();
   const iconSize = width >= 600 ? 20 : 14;
   const styles = createStyles(width);
-  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
@@ -132,7 +132,7 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
               </Text>
             </View>
             <View style={[styles.column, styles.dateColumn]}>
-              <Text style={styles.cellText}>{formatBirthDate(listedUser.birthDate)}</Text>
+              <Text style={styles.cellText}>{formatarData(listedUser.birthDate)}</Text>
             </View>
             <View style={styles.column}>
               <Text style={styles.cellText}>{listedUser.matricula}</Text>
@@ -223,7 +223,7 @@ export default function UserList() {
   const { result } = useLocalSearchParams<{ result?: string }>();
   const { setParams } = useRouter();
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
-  const [pendingDelete, setPendingDelete] = useState<UserListItem>();
+  const [pendingDelete, setPendingDelete] = useState<User>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [reloadKeys, setReloadKeys] = useState<Partial<Record<Role, number>>>({});
   const closeToast = useCallback(() => setNotification(undefined), []);
@@ -236,7 +236,7 @@ export default function UserList() {
   const { width } = useWindowDimensions();
   const styles = createStyles(width);
 
-  function requestDelete(selectedUser: UserListItem) {
+  function requestDelete(selectedUser: User) {
     if (user?.role !== 'ADMIN' || selectedUser.id === user.id || isDeleting) return;
     setNotification(undefined);
     setPendingDelete(selectedUser);

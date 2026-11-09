@@ -1,16 +1,7 @@
-import type { Role } from './Roles';
-
-export type UserListItem = {
-  id: string;
-  nome: string;
-  matricula: string;
-  role: Role;
-  birthDate: string | null;
-  image: string | null;
-};
+import { User } from './User';
 
 export type UserListResponse = {
-  users: UserListItem[];
+  users: User[];
   pagination: {
     currentPage: number;
     totalPages: number;

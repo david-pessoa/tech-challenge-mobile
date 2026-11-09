@@ -24,6 +24,9 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
+import SearchPostContainerInput from '@/components/SearchPostContainerInput';
+import PostsContainer from '@/components/PostsContainer';
+import UserListPreview from '@/components/UserListPreview';
 
 export default function Home() {
   const { user, userImageCacheKey } = useUser();
@@ -31,7 +34,7 @@ export default function Home() {
 
   return (
     <Screen edges={['top', 'right', 'bottom', 'left']}>
-      <Scroll>
+      <Scroll nestedScrollEnabled keyboardShouldPersistTaps="handled">
         <Header />
         <Main $screenWidth={width}>
           <ProfileContainer $screenWidth={width}>
@@ -63,10 +66,11 @@ export default function Home() {
                 <Title $screenWidth={width}>Tela Inicial</Title>
                 <SparkleImage source={sparkle} alt="Sparkle" $screenWidth={width} />
               </TitleContainer>
-              {/* <SearchPostContainerInput /> */}
+              <SearchPostContainerInput />
             </TopContainer>
-            {/* <PostsContainer /> */}
+            <PostsContainer />
           </MainContentContainer>
+          <UserListPreview />
         </Main>
         <Footer />
       </Scroll>
