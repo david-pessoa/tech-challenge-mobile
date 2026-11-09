@@ -5,7 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 const mockSetParams = jest.fn();
 import { useUser } from '../context/AuthContext';
 import { deleteUser, getAllUsers } from '../services/user.service';
-import type { UserListItem } from '../types/UserList';
+import type { User } from '../types/User';
 
 jest.mock('../context/AuthContext', () => ({ useUser: jest.fn() }));
 jest.mock('../services/user.service', () => ({ getAllUsers: jest.fn(), deleteUser: jest.fn() }));
@@ -26,11 +26,11 @@ jest.mock('../styles/GlobalStyles', () => {
 
 const users = Array.from({ length: 13 }, (_, index) => ({
   id: String(index + 1), nome: `Aluno ${index + 1}`, matricula: String(index + 1),
-  role: 'ALUNO' as const, birthDate: null, image: null,
+  role: 'ALUNO' as const, birthDate: undefined, image: undefined,
 }));
 
-const adminUser: UserListItem = { id: 'admin-1', nome: 'Administrador', matricula: '999', role: 'ADMIN', birthDate: null, image: null };
-let currentUsers: UserListItem[];
+const adminUser: User = { id: 'admin-1', nome: 'Administrador', matricula: '999', role: 'ADMIN', birthDate: undefined, image: undefined };
+let currentUsers: User[];
 const mockSignOut = jest.fn();
 
 beforeEach(() => {

@@ -49,7 +49,7 @@ export async function deletePost(id: string): Promise<void> {
     const response = await api.delete(`/posts/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Erro na deletar um post:', error);
+    console.error('Erro ao deletar um post:', error);
     throw new Error(getBackendErrorMessage(error));
   }
 }
@@ -63,7 +63,7 @@ export async function searchPost(text: string): Promise<Post[]> {
     });
     return response.data;
   } catch (error) {
-    console.error('Erro na deletar um post:', error);
+    console.error('Erro ao deletar um post:', error);
     throw new Error(getBackendErrorMessage(error));
   }
 }
