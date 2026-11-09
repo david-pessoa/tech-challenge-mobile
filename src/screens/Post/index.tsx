@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
 import Header from '../../components/Header';
@@ -72,7 +72,7 @@ export default function Post({ postId }: Props) {
   return (
     <Screen edges={['top', 'right', 'bottom', 'left']} style={styles.screen}>
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
         <Header />
         <View key={postId} style={styles.main}>
           <View style={styles.navigation}>
@@ -121,7 +121,19 @@ export default function Post({ postId }: Props) {
                   {post.dataModificacao ? <Text style={styles.date}>Editado em {formatarData(post.dataModificacao)}</Text> : null}
                 </View>
               </View>
-              <Text style={styles.body}>{post.conteudo}</Text>
+              <View style={styles.bodyBox}>
+                <ScrollView
+                  accessibilityLabel="Conteúdo da aula"
+                  style={styles.bodyScroll}
+                  contentContainerStyle={styles.bodyContent}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                  persistentScrollbar
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text selectable style={styles.body}>{post.conteudo}</Text>
+                </ScrollView>
+              </View>
               <PostComments key={post.postId} postId={post.postId} authorId={post.userId} authorName={author?.nome} />
             </>
           ) : null}

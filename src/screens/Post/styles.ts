@@ -4,6 +4,7 @@ import { theme } from '../../styles/Theme';
 export function createStyles(width: number) {
   const tablet = width >= 600;
   const regular = theme.typography.fontFamily.regular;
+  const bodyLineHeight = tablet ? 30 : 25;
 
   return StyleSheet.create({
     screen: { backgroundColor: '#FFFFFF' },
@@ -46,6 +47,9 @@ export function createStyles(width: number) {
     retryButton: { minHeight: 44, borderRadius: 24, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: theme.colors.primary, justifyContent: 'center' },
     retryText: { fontFamily: regular, fontSize: 14, color: '#FFFFFF' },
     imageFallback: { width: '100%', aspectRatio: 682 / 309, backgroundColor: theme.colors.fieldBackground, alignItems: 'center', justifyContent: 'center' },
-    body: { fontFamily: regular, fontSize: tablet ? 18 : 16, lineHeight: tablet ? 30 : 25, color: '#242424' },
+    bodyBox: { borderWidth: 1, borderColor: '#E6E0D6', borderRadius: 16, backgroundColor: '#FAF8F0', overflow: 'hidden' },
+    bodyScroll: { maxHeight: bodyLineHeight * 25 + 32, flexGrow: 0 },
+    bodyContent: { padding: 16 },
+    body: { fontFamily: regular, fontSize: tablet ? 18 : 16, lineHeight: bodyLineHeight, color: '#242424' },
   });
 }
