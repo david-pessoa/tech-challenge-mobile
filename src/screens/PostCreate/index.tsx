@@ -170,11 +170,7 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
       setPhoto(undefined);
       setPhotoError('');
       setPhotoLoadFailed(false);
-      if (isEditing) {
-        router.replace({ pathname: '/home', params: { postResult: 'updated' } });
-      } else {
-        setNotification({ message: 'Aula criada com sucesso!', type: 'success' });
-      }
+      router.replace({ pathname: '/home', params: { postResult: isEditing ? 'updated' : 'created' } });
     } catch (error) {
       setNotification({ message: error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar a aula.' : 'Não foi possível criar a aula.', type: 'error' });
     } finally {

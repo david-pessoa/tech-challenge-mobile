@@ -34,12 +34,12 @@ import UserListPreview from '@/components/UserListPreview';
 export default function Home() {
   const { postResult } = useLocalSearchParams<{ postResult?: string }>();
   const { setParams } = useRouter();
-  const [showPostUpdated, setShowPostUpdated] = useState(false);
-  const closeToast = useCallback(() => setShowPostUpdated(false), []);
+  const [postSuccessMessage, setPostSuccessMessage] = useState<string>();
+  const closeToast = useCallback(() => setPostSuccessMessage(undefined), []);
 
   useEffect(() => {
-    if (postResult !== 'updated') return;
-    setShowPostUpdated(true);
+    if (postResult !== 'updated' && postResult !== 'created') return;
+    setPostSuccessMessage(postResult === 'created' ? 'Aula criada com sucesso!' : 'Aula atualizada com sucesso!');
     setParams({ postResult: undefined });
   }, [postResult, setParams]);
 
@@ -88,7 +88,7 @@ export default function Home() {
         </Main>
         <Footer />
       </Scroll>
-      {showPostUpdated ? <Toast message="Aula atualizada com sucesso!" type="success" onClose={closeToast} /> : null}
+      {postSuccessMessage ? <Toast message={postSuccessMessage} type="success" onClose={closeToast} /> : null}
     </Screen>
   );
 }

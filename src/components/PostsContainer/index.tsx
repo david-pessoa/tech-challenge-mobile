@@ -3,9 +3,9 @@ import PostsTable from '../PostsTable';
 
 // import 'swiper/css';
 
-import { Add } from '@material-symbols-svg/react-native';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Add } from '@material-symbols-svg/react-native/icons/add';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useUser } from '../../context/AuthContext';
 import type { Post } from '../../types/Posts';
@@ -29,18 +29,21 @@ export default function PostsContainer() {
   const { width } = useWindowDimensions();
   const router = useRouter();
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    setIsLoading(true);
     async function returnAllPosts() {
       try {
         const postsList = await getAllPosts();
-        setPosts(postsList);
+        if (active) setPosts(postsList);
       } catch (error) {
-        setPosts([]);
+        if (active) setPosts([]);
       }
-      setIsLoading(false);
+      if (active) setIsLoading(false);
     }
     returnAllPosts();
-  }, []);
+    return () => { active = false; };
+  }, []));
 
   function goToCreateNewPost() {
     router.replace({
