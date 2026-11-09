@@ -82,6 +82,15 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
     };
   }, [loadComments]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeout = setTimeout(() => {
+      setSuccessMessage('');
+      setSuccessReplyId(undefined);
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [successMessage, successReplyId]);
+
   async function handleSend(parentComment?: Comment) {
     if (sendingRef.current || !user) return;
     const isReply = Boolean(parentComment);
@@ -146,9 +155,14 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
           editable={!isSending && Boolean(user)}
           style={styles.input}
         />
-        <Pressable accessibilityRole="button" accessibilityLabel="Enviar pergunta" accessibilityState={{ busy: isSending && !sendingReplyId }} disabled={isSending || !user} onPress={() => handleSend()} style={[styles.sendButton, isSending || !user ? styles.disabled : undefined]}>
-          {isSending && !sendingReplyId ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
-        </Pressable>
+        <View style={styles.composerActions}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Cancelar pergunta" disabled={isSending} onPress={() => { setText(''); setSendError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isSending ? styles.disabled : undefined]}>
+            <Text style={styles.cancelText}>Cancelar</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Enviar pergunta" accessibilityState={{ busy: isSending && !sendingReplyId }} disabled={isSending || !user} onPress={() => handleSend()} style={[styles.sendButton, isSending || !user ? styles.disabled : undefined]}>
+            {isSending && !sendingReplyId ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
+          </Pressable>
+        </View>
       </View>
       {sendError ? <Text accessibilityRole="alert" style={styles.error}>{sendError}</Text> : null}
       {successMessage && !successReplyId ? <Text accessibilityLiveRegion="polite" style={styles.success}>{successMessage}</Text> : null}
@@ -179,7 +193,7 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
                 {replyTo?.id === comment.id ? (
                   <View style={styles.replyComposer}>
                     <Text style={styles.replyNoticeText}>Respondendo a {comment.user.nome}</Text>
-                    <View style={[styles.composer, replyError ? styles.composerError : undefined]}>
+                    <View style={[styles.composer, styles.replyBox, replyError ? styles.composerError : undefined]}>
                       <TextInput
                         ref={replyInputRef}
                         autoFocus
@@ -191,16 +205,18 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
                         multiline
                         textAlignVertical="top"
                         editable={!isSending}
-                        style={styles.input}
+                        style={[styles.input, styles.replyInput]}
                       />
-                      <Pressable accessibilityRole="button" accessibilityLabel={`Enviar resposta para ${comment.user.nome}`} accessibilityState={{ busy: sendingReplyId === comment.id }} disabled={isSending} onPress={() => handleSend(comment)} style={[styles.sendButton, isSending ? styles.disabled : undefined]}>
-                        {sendingReplyId === comment.id ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
-                      </Pressable>
+                      <View style={styles.composerActions}>
+                        <Pressable accessibilityRole="button" accessibilityLabel={`Cancelar resposta para ${comment.user.nome}`} disabled={isSending} onPress={() => { setReplyTo(undefined); setReplyText(''); setReplyError(''); Keyboard.dismiss(); }} style={[styles.cancelButton, isSending ? styles.disabled : undefined]}>
+                          <Text style={styles.cancelText}>Cancelar</Text>
+                        </Pressable>
+                        <Pressable accessibilityRole="button" accessibilityLabel={`Enviar resposta para ${comment.user.nome}`} accessibilityState={{ busy: sendingReplyId === comment.id }} disabled={isSending} onPress={() => handleSend(comment)} style={[styles.sendButton, isSending ? styles.disabled : undefined]}>
+                          {sendingReplyId === comment.id ? <ActivityIndicator color="#603C24" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
+                        </Pressable>
+                      </View>
                     </View>
                     {replyError ? <Text accessibilityRole="alert" style={styles.error}>{replyError}</Text> : null}
-                    <Pressable accessibilityRole="button" disabled={isSending} style={styles.textButton} onPress={() => { setReplyTo(undefined); setReplyText(''); setReplyError(''); }}>
-                      <Text style={styles.actionText}>Cancelar resposta</Text>
-                    </Pressable>
                   </View>
                 ) : null}
                 {successMessage && successReplyId === comment.id ? <Text accessibilityLiveRegion="polite" style={styles.success}>{successMessage}</Text> : null}
