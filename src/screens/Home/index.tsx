@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Toast from '@/components/Toast';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { useUser } from '@/context/AuthContext';
@@ -29,6 +32,17 @@ import PostsContainer from '@/components/PostsContainer';
 import UserListPreview from '@/components/UserListPreview';
 
 export default function Home() {
+  const { postResult } = useLocalSearchParams<{ postResult?: string }>();
+  const { setParams } = useRouter();
+  const [postSuccessMessage, setPostSuccessMessage] = useState<string>();
+  const closeToast = useCallback(() => setPostSuccessMessage(undefined), []);
+
+  useEffect(() => {
+    if (postResult !== 'updated' && postResult !== 'created') return;
+    setPostSuccessMessage(postResult === 'created' ? 'Aula criada com sucesso!' : 'Aula atualizada com sucesso!');
+    setParams({ postResult: undefined });
+  }, [postResult, setParams]);
+
   const { user, userImageCacheKey } = useUser();
   const { width } = useWindowDimensions();
 
@@ -74,6 +88,7 @@ export default function Home() {
         </Main>
         <Footer />
       </Scroll>
+      {postSuccessMessage ? <Toast message={postSuccessMessage} type="success" onClose={closeToast} /> : null}
     </Screen>
   );
 }

@@ -1,8 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import PostFormScreen from '../../../screens/PostForm';
+import PostCreate from '../../../screens/PostCreate';
 
-export default function PostFormRoute() {
+export default function PostEdit() {
   const { postId } = useLocalSearchParams<{ postId: string }>();
-
-  return <PostFormScreen postId={postId} />;
+  return <PostCreate key={postId} postId={postId} />;
 }

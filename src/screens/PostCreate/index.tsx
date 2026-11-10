@@ -1,0 +1,447 @@
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
+import Svg, { Rect } from 'react-native-svg';
+import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
+import { Download } from '@material-symbols-svg/react-native/icons/download';
+import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
+import { materias } from '../../types/Materias';
+import { theme } from '../../styles/Theme';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
+import { useUser } from '../../context/AuthContext';
+import { createPost, getPostById, updatePost } from '../../services/post.service';
+import { buildApiImageUrl } from '../../utils/functions';
+import { Screen, Scroll } from '../../styles/GlobalStyles';
+import { createStyles } from './styles';
+import redDoodle from '../../../assets/images/red-doodle.png';
+
+type PostField = 'title' | 'description' | 'subject' | 'content';
+
+const requiredMessages: Record<PostField, string> = {
+  title: 'O título é obrigatório.',
+  description: 'A descrição é obrigatória.',
+  subject: 'Selecione a matéria.',
+  content: 'O conteúdo é obrigatório.',
+};
+
+export default function PostCreate({ postId }: { postId?: string } = {}) {
+  const isEditing = Boolean(postId);
+  const [isLoadingPost, setIsLoadingPost] = useState(Boolean(postId));
+  const [postLoadError, setPostLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [existingPhoto, setExistingPhoto] = useState<string>();
+  const [removeExistingPhoto, setRemoveExistingPhoto] = useState(false);
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const styles = createStyles(width);
+  const [focusedField, setFocusedField] = useState<string>();
+  const photoPickerRef = useRef<ComponentRef<typeof Pressable>>(null);
+  const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset>();
+  const [photoError, setPhotoError] = useState('');
+  const [photoLoadFailed, setPhotoLoadFailed] = useState(false);
+  const [photoBounds, setPhotoBounds] = useState({ width: 0, height: 0 });
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [subject, setSubject] = useState('');
+  const [showSubjects, setShowSubjects] = useState(false);
+  const [content, setContent] = useState('');
+  const [errors, setErrors] = useState<Partial<Record<PostField, string>>>({});
+  const { user } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const closeToast = useCallback(() => setNotification(undefined), []);
+
+  const photoUri = photo?.uri ?? existingPhoto;
+  const submitLabel = isEditing ? 'Salvar' : 'Enviar';
+
+  useEffect(() => {
+    if (!postId || !user) return;
+    let active = true;
+    const currentUser = user;
+
+    async function loadPost() {
+      setIsLoadingPost(true);
+      setPostLoadError('');
+      try {
+        const selectedPost = await getPostById(postId!);
+        if (!active) return;
+        if (currentUser.role !== 'ADMIN' && selectedPost.userId !== currentUser.id) {
+          setPostLoadError('Você só pode editar suas próprias aulas.');
+          return;
+        }
+        setTitle(selectedPost.titulo);
+        setDescription(selectedPost.descricao);
+        setSubject(selectedPost.subject?.nome ?? '');
+        setContent(selectedPost.conteudo ?? '');
+        setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image) : undefined);
+        setPhoto(undefined);
+        setRemoveExistingPhoto(false);
+        setPhotoError('');
+        setPhotoLoadFailed(false);
+        setErrors({});
+      } catch (error) {
+        if (active) setPostLoadError(error instanceof Error ? error.message : 'Não foi possível carregar a aula.');
+      } finally {
+        if (active) setIsLoadingPost(false);
+      }
+    }
+
+    loadPost();
+    return () => { active = false; };
+  }, [postId, user?.id, user?.role, loadAttempt]);
+
+  function validateField(field: PostField, value: string) {
+    setErrors(current => ({ ...current, [field]: value.trim() ? undefined : requiredMessages[field] }));
+  }
+
+  function clearFieldError(field: PostField, value: string) {
+    if (value.trim()) setErrors(current => ({ ...current, [field]: undefined }));
+  }
+
+  async function handleSubmit() {
+    if (savingRef.current || isLoadingPost || postLoadError || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
+    const values = { title, description, subject, content };
+    const validationErrors: Partial<Record<PostField, string>> = {};
+    for (const field of Object.keys(values) as PostField[]) {
+      if (!values[field].trim()) validationErrors[field] = requiredMessages[field];
+    }
+    setErrors(validationErrors);
+    setNotification(undefined);
+    if (Object.keys(validationErrors).length) return;
+    if (photo && photoLoadFailed) {
+      setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+      return;
+    }
+    Keyboard.dismiss();
+    savingRef.current = true;
+    setIsSaving(true);
+    setShowSubjects(false);
+    setNotification(undefined);
+    try {
+      const data = new FormData();
+      data.append('titulo', title.trim());
+      data.append('descricao', description.trim());
+      data.append('subjectName', subject);
+      data.append('conteudo', content.trim());
+      if (photo) {
+        const type = photo.mimeType ?? 'image/jpeg';
+        const fileName = photo.fileName ?? (type === 'image/png' ? 'foto.png' : 'foto.jpg');
+        if (Platform.OS === 'web') {
+          let file: Blob;
+          try {
+            if (photo.file) {
+              file = photo.file;
+            } else {
+              const response = await fetch(photo.uri);
+              if (!response.ok) throw new Error('Não foi possível ler a foto.');
+              file = await response.blob();
+            }
+          } catch {
+            setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+            return;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            setPhotoError('A foto deve ter no máximo 5 MB.');
+            return;
+          }
+          data.append('image', file, fileName);
+        } else {
+          data.append('image', { uri: photo.uri, name: fileName, type } as unknown as Blob);
+        }
+      }
+      if (postId) {
+        if (!photo && removeExistingPhoto) data.append('removeImage', 'true');
+        await updatePost(postId, data);
+        setRemoveExistingPhoto(false);
+        if (photo) setExistingPhoto(buildApiImageUrl(`/api/posts/${postId}/image`, Date.now()));
+      } else {
+        await createPost(data);
+        setTitle('');
+        setDescription('');
+        setSubject('');
+        setContent('');
+      }
+      setErrors({});
+      setPhoto(undefined);
+      setPhotoError('');
+      setPhotoLoadFailed(false);
+      router.replace({ pathname: '/home', params: { postResult: isEditing ? 'updated' : 'created' } });
+    } catch (error) {
+      setNotification({ message: error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar a aula.' : 'Não foi possível criar a aula.', type: 'error' });
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
+  }
+
+  function updatePhoto(asset: ImagePicker.ImagePickerAsset) {
+    if (savingRef.current) return;
+    if (asset.mimeType && !asset.mimeType.startsWith('image/')) {
+      setPhotoError('Selecione um arquivo de imagem.');
+      return;
+    }
+    if ((asset.fileSize ?? asset.file?.size ?? 0) > 5 * 1024 * 1024) {
+      setPhotoError('A foto deve ter no máximo 5 MB.');
+      return;
+    }
+    setPhoto(asset);
+    setPhotoLoadFailed(false);
+    setPhotoError('');
+  }
+
+  async function selectPhoto() {
+    if (savingRef.current) return;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+      if (!result.canceled && result.assets[0]) updatePhoto(result.assets[0]);
+    } catch {
+      setPhotoError('Não foi possível selecionar a foto. Tente novamente.');
+    }
+  }
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !photoPickerRef.current) return;
+    const element = photoPickerRef.current as unknown as HTMLElement;
+    function preventNavigation(event: DragEvent) {
+      event.preventDefault();
+    }
+    function handleDrop(event: DragEvent) {
+      event.preventDefault();
+      if (savingRef.current) return;
+      const file = event.dataTransfer?.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        setPhotoError('Selecione um arquivo de imagem.');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('A foto deve ter no máximo 5 MB.');
+        return;
+      }
+      updatePhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type, fileSize: file.size });
+    }
+    element.addEventListener('dragover', preventNavigation);
+    element.addEventListener('drop', handleDrop);
+    return () => {
+      element.removeEventListener('dragover', preventNavigation);
+      element.removeEventListener('drop', handleDrop);
+    };
+  }, [isLoadingPost, postLoadError]);
+
+  useEffect(() => () => {
+    if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
+  }, [photo]);
+
+  return (
+    <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
+      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Header />
+        <View style={styles.main}>
+          <Pressable
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar à tela de início"
+            disabled={isSaving}
+            onPress={() => router.replace('/home')}
+          >
+            <ArrowBack width={24} height={24} fill="#FFD600" />
+            <Text style={styles.backText}>Voltar à tela de início</Text>
+          </Pressable>
+          <View style={styles.titleRow}>
+            <Text style={styles.title} accessibilityRole="header">{isEditing ? 'Editar aula' : 'Nova aula'}</Text>
+            <Image source={redDoodle} style={styles.decoration} resizeMode="contain" accessible={false} />
+          </View>
+          {isLoadingPost ? (
+            <View style={styles.loadStatus}>
+              <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando aula" />
+            </View>
+          ) : postLoadError ? (
+            <View style={styles.loadStatus}>
+              <Text style={styles.fieldError} accessibilityRole="alert">{postLoadError}</Text>
+              <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={() => setLoadAttempt(value => value + 1)}>
+                <Text style={styles.cancelText}>Tentar novamente</Text>
+              </Pressable>
+            </View>
+          ) : (
+          <>
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <View style={styles.photoContainer}>
+                <Pressable
+                  ref={photoPickerRef}
+                  style={styles.photoPicker}
+                  onLayout={event => {
+                    const { width, height } = event.nativeEvent.layout;
+                    setPhotoBounds({ width, height });
+                  }}
+                  onPress={selectPhoto}
+                  disabled={isSaving}
+                  accessibilityRole="button"
+                  accessibilityLabel={photoUri ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
+                >
+                  {photoUri ? (
+                    <Image
+                      source={{ uri: photoUri }}
+                      style={styles.photoPreview}
+                      resizeMode="cover"
+                      accessibilityLabel="Prévia da foto da aula"
+                      onError={() => {
+                        setPhotoLoadFailed(true);
+                        setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <Download width={20} height={20} fill="#DC9A9A" />
+                      <Text style={styles.photoHint}>{Platform.OS === 'web' ? 'Clique para carregar ou\narraste e solte.' : 'Toque para selecionar\numa foto.'}</Text>
+                    </>
+                  )}
+                  {photoBounds.width > 0 && (
+                    <Svg width={photoBounds.width} height={photoBounds.height} style={styles.photoBorder} pointerEvents="none">
+                      <Rect
+                        x={0.5}
+                        y={0.5}
+                        width={photoBounds.width - 1}
+                        height={photoBounds.height - 1}
+                        rx={15}
+                        fill="none"
+                        stroke="#D34359"
+                        strokeWidth={1}
+                        strokeDasharray="21 21"
+                      />
+                    </Svg>
+                  )}
+                </Pressable>
+                {photoUri && (
+                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setExistingPhoto(undefined); setRemoveExistingPhoto(isEditing); setPhotoError(''); setPhotoLoadFailed(false); }}>
+                    <View style={styles.removePhotoIcon}>
+                      <Cancel width={24} height={24} fill={theme.colors.primary} />
+                    </View>
+                  </Pressable>
+                )}
+              </View>
+              {photoError ? <Text style={styles.photoError} accessibilityRole="alert" accessibilityLiveRegion="polite">{photoError}</Text> : null}
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Título <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                editable={!isSaving}
+                style={[styles.input, focusedField === 'title' && styles.inputFocused, errors.title && styles.inputError]}
+                accessibilityLabel="Título"
+                placeholder="Digite o título..."
+                placeholderTextColor={theme.colors.fieldPlaceholder}
+                onFocus={() => setFocusedField('title')}
+                onBlur={() => { setFocusedField(undefined); validateField('title', title); }}
+                aria-invalid={Boolean(errors.title)}
+                value={title}
+                onChangeText={value => { setTitle(value); clearFieldError('title', value); }}
+              />
+              {errors.title ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.title}</Text> : null}
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Descrição <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                editable={!isSaving}
+                style={[styles.input, focusedField === 'description' && styles.inputFocused, errors.description && styles.inputError]}
+                accessibilityLabel="Descrição"
+                placeholder="Digite a descrição..."
+                placeholderTextColor={theme.colors.fieldPlaceholder}
+                onFocus={() => setFocusedField('description')}
+                onBlur={() => { setFocusedField(undefined); validateField('description', description); }}
+                aria-invalid={Boolean(errors.description)}
+                value={description}
+                onChangeText={value => { setDescription(value); clearFieldError('description', value); }}
+              />
+              {errors.description ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.description}</Text> : null}
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Matéria <Text style={styles.required}>*</Text></Text>
+              <Pressable
+                style={[styles.input, styles.select, showSubjects && styles.inputFocused, errors.subject && styles.inputError]}
+                accessibilityRole="button"
+                accessibilityLabel="Matéria"
+                aria-invalid={Boolean(errors.subject)}
+                accessibilityValue={{ text: subject || 'Escolha a matéria' }}
+                accessibilityState={{ expanded: showSubjects }}
+                disabled={isSaving}
+                onPress={() => setShowSubjects(true)}
+              >
+                <Text style={[styles.selectText, !subject && styles.placeholder]}>{subject || 'Escolha a matéria'}</Text>
+                <KeyboardArrowDown width={24} height={24} fill={theme.colors.fieldPlaceholder} />
+              </Pressable>
+              {errors.subject ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.subject}</Text> : null}
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Conteúdo <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                editable={!isSaving}
+                style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused, errors.content && styles.inputError]}
+                accessibilityLabel="Conteúdo"
+                placeholder="Digite o conteúdo..."
+                placeholderTextColor={theme.colors.fieldPlaceholder}
+                onFocus={() => setFocusedField('content')}
+                onBlur={() => { setFocusedField(undefined); validateField('content', content); }}
+                aria-invalid={Boolean(errors.content)}
+                value={content}
+                onChangeText={value => { setContent(value); clearFieldError('content', value); }}
+                multiline
+                textAlignVertical="top"
+              />
+              {errors.content ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.content}</Text> : null}
+            </View>
+          </View>
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.cancelButton, isSaving && styles.disabled]}
+              accessibilityRole="button"
+              accessibilityLabel={isEditing ? 'Cancelar edição da aula' : 'Cancelar criação da aula'}
+              disabled={isSaving}
+              onPress={() => router.replace('/home')}
+            >
+              <Text style={styles.cancelText}>Cancelar</Text>
+            </Pressable>
+            <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel={isEditing ? 'Salvar aula' : 'Enviar aula'} accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
+              {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>{submitLabel}</Text>}
+            </Pressable>
+          </View>
+          </>
+          )}
+        </View>
+        <Footer />
+      </Scroll>
+      </KeyboardAvoidingView>
+      <Modal visible={showSubjects} transparent animationType="fade" onRequestClose={() => setShowSubjects(false)}>
+        <Pressable style={styles.optionsOverlay} onPress={() => setShowSubjects(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de matéria">
+          <View style={styles.options} accessibilityViewIsModal>
+            <Text style={styles.label}>Escolha a matéria</Text>
+            <ScrollView>
+              {Object.keys(materias).sort((a, b) => a === b ? 0 : a === 'Geral' ? -1 : b === 'Geral' ? 1 : a.localeCompare(b, 'pt-BR')).map(option => (
+                <Pressable
+                  key={option}
+                  style={[styles.option, subject === option && styles.selectedOption]}
+                  accessibilityRole="radio"
+                  accessibilityLabel={option}
+                  accessibilityState={{ checked: subject === option }}
+                  onPress={() => {
+                    setSubject(option);
+                    clearFieldError('subject', option);
+                    setShowSubjects(false);
+                  }}
+                >
+                  <Text style={styles.selectText}>{option}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
+      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
+    </Screen>
+  );
+}

@@ -1,4 +1,6 @@
-import { ArrowRightAlt, Delete, Edit } from '@material-symbols-svg/react-native';
+import { ArrowRightAlt } from '@material-symbols-svg/react-native/icons/arrow-right-alt';
+import { Delete } from '@material-symbols-svg/react-native/icons/delete';
+import { Edit } from '@material-symbols-svg/react-native/icons/edit';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
