@@ -3,39 +3,19 @@ import styled from 'styled-components/native';
 import { theme } from '@/styles/Theme';
 import { StyleSheet } from 'react-native';
 
-export const MessageContainer = styled.View<ResponsiveProps>`
-  align-items: center;
-  width: ${({ $screenWidth }) => ($screenWidth > 600 ? 400 : '70vw')};
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-left: 'auto';
-  margin-right: 'auto';
-`;
-
-export const Message = styled.Text<ResponsiveProps>`
-  font-family: ${({ theme }) => theme.typography.fontFamily.medium};
-  font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 24 : 16)}px;
-  line-height: 100%;
-  letter-spacing: 0%;
-  text-align: center;
-  color: #021c41;
-  width: 250px;
-`;
-
 export const UserListContainer = styled.View<ResponsiveProps>`
   padding-top: ${({ $screenWidth }) => ($screenWidth > 900 ? 29 : 16)}px;
   padding-bottom: ${({ $screenWidth }) => ($screenWidth > 900 ? 29 : 16)}px;
   padding-right: ${({ $screenWidth }) => ($screenWidth > 900 ? 20 : 6)}px;
   padding-left: ${({ $screenWidth }) => ($screenWidth > 900 ? 20 : 6)}px;
-  width: ${({ $screenWidth }) => ($screenWidth > 900 ? '100%' : '90%')};
+  width: ${({ $screenWidth }) => ($screenWidth > 600 ? '70%' : '90%')};
   border-width: 1px;
   border-style: solid;
   border-color: #f0d2c7;
   border-radius: 7px;
   margin-top: 0;
-  margin-right: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 'auto')};
-  margin-bottom: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 58)}px;
-  margin-left: ${({ $screenWidth }) => ($screenWidth > 900 ? 0 : 'auto')};
+  margin-right: auto;
+  margin-left: auto;
 `;
 
 export const UserListTitle = styled.Text<ResponsiveProps>`

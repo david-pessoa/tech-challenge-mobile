@@ -26,4 +26,7 @@ export type Post = {
   dataModificacao?: Date;
 };
 
-export type PostDetails = Pick<Post, 'postId' | 'userId' | 'titulo' | 'descricao' | 'conteudo' | 'image' | 'subject'>;
+export type PostDetails = Pick<Post, 'postId' | 'userId' | 'titulo' | 'descricao' | 'conteudo' | 'image' | 'subject'> & {
+  dataCriacao: string | Date;
+  dataModificacao?: string | Date;
+};

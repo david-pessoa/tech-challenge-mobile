@@ -4,5 +4,5 @@ import PostScreen from '../../screens/Post';
 export default function PostRoute() {
   const { postId } = useLocalSearchParams<{ postId: string }>();
 
-  return <PostScreen postId={postId} />;
+  return <PostScreen key={postId} postId={postId} />;
 }

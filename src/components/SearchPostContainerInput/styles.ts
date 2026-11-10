@@ -29,7 +29,7 @@ export const ResultsList = styled.ScrollView<ResponsiveProps>`
   width: 100%;
   padding: ${({ $screenWidth }) => ($screenWidth > 900 ? 15 : 9)}px;
   left: 0;
-  top: ${({ $screenWidth }) => ($screenWidth > 900 ? '70%' : '55%')};
+  top: 21px;
   box-sizing: border-box;
   z-index: 900;
   margin-top: 5px;
@@ -84,5 +84,6 @@ export const InputSearch = styled.TextInput.attrs({
   width: 100%;
   flex: 1;
   padding: 0;
+  height: 24px;
   align-items: center;
 `;
