@@ -51,6 +51,8 @@ export default function SearchPostContainerInput() {
     });
   }
 
+  console.log(width)
+
   return (
     <InputContainer $screenWidth={width}>
       <InnerInputContainer $screenWidth={width}>
