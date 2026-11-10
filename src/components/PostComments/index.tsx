@@ -163,7 +163,7 @@ export default function PostComments({ postId, authorId, authorName }: Props) {
   }
 
   function canEdit(target: CommentTarget) {
-    return Boolean(user && (user.role === 'ADMIN' || user.id === target.ownerId));
+    return Boolean(user && (user.id === target.ownerId));
   }
 
   function canDelete(target: CommentTarget) {
