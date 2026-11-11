@@ -1,7 +1,6 @@
 import styled from 'styled-components/native';
 import { ResponsiveProps } from '@/types/Props';
 
-
 export const Card = styled.View<ResponsiveProps>`
   height: ${({ $screenWidth }) => ($screenWidth > 900 ? 243 : 215)}px;
   width: ${({ $screenWidth }) => ($screenWidth > 900 ? 200 : $screenWidth > 600 ? 158 : 127)}px;
@@ -9,11 +8,8 @@ export const Card = styled.View<ResponsiveProps>`
   border-top-left-radius: 0px;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 0px;
-  background: #fff6d740;
-  shadow-color: #000;
-  shadow-opacity: 0.8;
-  shadow-radius: 2;
-  elevation: 1;
+  background: #fff6d7;
+  elevation: 4;
 `;
 
 type BackgroundProps = {
