@@ -48,7 +48,7 @@ export const DescriptionContainer = styled.View`
 `;
 
 export const DescriptionText = styled.Text<ResponsiveProps>`
-  font-size: ${({ $screenWidth }) => ($screenWidth > 600 ? 14 : 10)}px;
+  font-size: 12px;
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
   color: ${({ theme }) => theme.colors.text};
 `;
@@ -57,12 +57,12 @@ export const MateriaSubTitle = styled.Text<ColorProps>`
   font-size: 12px;
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
   color: ${({ $color }) => $color};
-  margin-bottom: 10px;
+  margin-bottom: 3px;
 `;
 
 export const PostTitle = styled.Text<ResponsiveProps>`
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : 14)}px;
-  margin-bottom: ${({ $screenWidth }) => ($screenWidth > 900 ? 5 : 8)}px;
+  margin-bottom: 5px;
   display: -webkit-box;
   -webkit-line-clamp: 2;         /* Número máximo de linhas */
   -webkit-box-orient: vertical;
