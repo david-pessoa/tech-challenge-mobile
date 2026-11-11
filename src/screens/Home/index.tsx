@@ -60,7 +60,7 @@ export default function Home() {
                   <ProfileImage
                     source={
                       user?.image
-                        ? { uri: buildApiImageUrl(user.image, userImageCacheKey) }
+                        ? { uri: buildApiImageUrl(user.image, Date.now()) }
                         : userImage
                     }
                     alt={`Foto de ${user?.nome}`}

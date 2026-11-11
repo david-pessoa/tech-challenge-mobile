@@ -121,7 +121,7 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
           <View key={listedUser.id} style={styles.row}>
             <View style={[styles.column, styles.photoColumn]}>
               <Image
-                source={listedUser.image ? { uri: buildApiImageUrl(listedUser.image) } : defaultUserImage}
+                source={listedUser.image ? { uri: buildApiImageUrl(listedUser.image, Date.now()) } : defaultUserImage}
                 style={styles.photo}
                 accessibilityLabel={`Foto de ${listedUser.nome}`}
               />

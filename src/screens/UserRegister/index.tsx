@@ -55,7 +55,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
   const [userLoadError, setUserLoadError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [existingPhoto, setExistingPhoto] = useState<string>();
-  const { user, isLoading } = useUser();
+  const { user, isLoading, refreshUser } = useUser();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -108,7 +108,7 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         setRole(selectedUser.role);
         const date = selectedUser.birthDate?.slice(0, 10).split('-');
         setBirthDate(date ? `${date[2]}/${date[1]}/${date[0]}` : '');
-        setExistingPhoto(selectedUser.image ? buildApiImageUrl(selectedUser.image) : undefined);
+        setExistingPhoto(selectedUser.image ? buildApiImageUrl(selectedUser.image, Date.now()) : undefined);
         setPhoto(undefined);
         setPassword('');
         setConfirmPassword('');
@@ -299,6 +299,9 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
       if (userId) {
         if (!photo && !existingPhoto) data.append('removeImage', 'true');
         const updatedUser = await updateUser(userId, data);
+        if (String(userId) === String(user?.id)) {
+          await refreshUser({ refreshImage: true });
+        }
         setExistingPhoto(
           updatedUser.image ? buildApiImageUrl(updatedUser.image, Date.now()) : undefined
         );

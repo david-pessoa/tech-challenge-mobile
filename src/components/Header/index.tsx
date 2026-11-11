@@ -67,7 +67,7 @@ export default function Header() {
           <LogoutContainer $screenWidth={width}>
             <Circle
               source={
-                user.image ? { uri: buildApiImageUrl(user.image, userImageCacheKey) } : userImage
+                user.image ? { uri: buildApiImageUrl(user.image, Date.now()) } : userImage
               }
               $role={user.role}
               $screenWidth={width}

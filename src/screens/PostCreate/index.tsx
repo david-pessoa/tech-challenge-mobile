@@ -78,7 +78,7 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
         setDescription(selectedPost.descricao);
         setSubject(selectedPost.subject?.nome ?? '');
         setContent(selectedPost.conteudo ?? '');
-        setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image) : undefined);
+        setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image, Date.now()) : undefined);
         setPhoto(undefined);
         setRemoveExistingPhoto(false);
         setPhotoError('');
