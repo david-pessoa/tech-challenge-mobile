@@ -1,5 +1,5 @@
-import styled from 'styled-components/native';
 import { ResponsiveProps } from '@/types/Props';
+import styled from 'styled-components/native';
 
 export const Card = styled.View<ResponsiveProps>`
   height: ${({ $screenWidth }) => ($screenWidth > 900 ? 243 : 215)}px;
@@ -60,7 +60,7 @@ export const PostTitle = styled.Text<ResponsiveProps>`
   font-size: ${({ $screenWidth }) => ($screenWidth > 900 ? 16 : 14)}px;
   margin-bottom: 5px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;         /* Número máximo de linhas */
+  -webkit-line-clamp: 2; /* Número máximo de linhas */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

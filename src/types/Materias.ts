@@ -1,9 +1,9 @@
+import type { MaterialSymbolsComponent } from '@material-symbols-svg/react-native';
 import { AccountBalance } from '@material-symbols-svg/react-native/icons/account-balance';
 import { Category } from '@material-symbols-svg/react-native/icons/category';
 import { Church } from '@material-symbols-svg/react-native/icons/church';
 import { Function } from '@material-symbols-svg/react-native/icons/function';
 import { Globe } from '@material-symbols-svg/react-native/icons/globe';
-import type { MaterialSymbolsComponent } from '@material-symbols-svg/react-native';
 import { MenuBook } from '@material-symbols-svg/react-native/icons/menu-book';
 import { Microbiology } from '@material-symbols-svg/react-native/icons/microbiology';
 

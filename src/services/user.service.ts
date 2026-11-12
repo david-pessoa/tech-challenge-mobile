@@ -1,9 +1,9 @@
+import { User } from '@/types/User';
 import { isAxiosError } from 'axios';
-import { api } from './api';
 import type { Role } from '../types/Roles';
 import type { UserListResponse } from '../types/UserList';
+import { api } from './api';
 import { getBackendErrorMessage } from './auth.service';
-import { User } from '@/types/User';
 
 export async function getAllUsers(params?: { role?: Role; p?: number; l?: number }) {
   try {

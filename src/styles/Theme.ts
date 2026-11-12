@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 export const theme = {
   colors: {
     primary: '#C0765A',

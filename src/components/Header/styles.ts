@@ -29,9 +29,12 @@ const userCircleColors = {
   },
 };
 
-export const Circle = styled.Image.attrs({ resizeMode: 'cover' })<{ $role: Role, $screenWidth: number }>`
-  width: ${({ $screenWidth }) => $screenWidth > 500 ? 40 : 25}px;
-  height: ${({ $screenWidth }) => $screenWidth > 500 ? 40 : 25}px;
+export const Circle = styled.Image.attrs({ resizeMode: 'cover' })<{
+  $role: Role;
+  $screenWidth: number;
+}>`
+  width: ${({ $screenWidth }) => ($screenWidth > 500 ? 40 : 25)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 500 ? 40 : 25)}px;
   border-radius: 20px;
   border-width: 2px;
   border-style: solid;
@@ -52,33 +55,33 @@ export const LogoButton = styled.TouchableOpacity<ResponsiveProps>`
   justify-content: center;
   align-items: center;
   text-decoration: none;
-  margin-left: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px;
+  margin-left: ${({ $screenWidth }) => ($screenWidth > 834 ? 100 : 16)}px;
   gap: 10px;
 `;
 
 export const LogoImage = styled.Image<ResponsiveProps>`
-  width: ${({ $screenWidth }) => $screenWidth > 500 ? 61 : 30}px;
-  height: ${({ $screenWidth }) => $screenWidth > 500 ? 57 : 28}px;
+  width: ${({ $screenWidth }) => ($screenWidth > 500 ? 61 : 30)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 500 ? 57 : 28)}px;
 `;
 
 export const Title = styled.Text<ResponsiveProps>`
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
-  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 24 : 12}px;
+  font-size: ${({ $screenWidth }) => ($screenWidth > 500 ? 24 : 12)}px;
 `;
 
 export const UserName = styled.Text<ResponsiveProps>`
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.typography.fontFamily.regular};
-  font-size: ${({ $screenWidth }) => $screenWidth > 500 ? 16 : 12}px;
+  font-size: ${({ $screenWidth }) => ($screenWidth > 500 ? 16 : 12)}px;
 `;
 
 export const LogoutContainer = styled.View<ResponsiveProps>`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: ${({ $screenWidth }) => $screenWidth >= 600 ? 16 : 5}px;
-  margin-right: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px;
+  gap: ${({ $screenWidth }) => ($screenWidth >= 600 ? 16 : 5)}px;
+  margin-right: ${({ $screenWidth }) => ($screenWidth > 834 ? 100 : 16)}px;
 `;
 
 export const LogoutButton = styled.TouchableOpacity`

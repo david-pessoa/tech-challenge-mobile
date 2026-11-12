@@ -2,8 +2,8 @@ import { ResponsiveProps } from '@/types/Props';
 import styled from 'styled-components/native';
 
 export const ContentContainer = styled.View`
- width: 100%;
- z-index: 0;
+  width: 100%;
+  z-index: 0;
 `;
 
 export const Container = styled.View<ResponsiveProps>`

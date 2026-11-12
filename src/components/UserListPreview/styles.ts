@@ -1,7 +1,7 @@
-import { ResponsiveProps } from '@/types/Props';
-import styled from 'styled-components/native';
 import { theme } from '@/styles/Theme';
+import { ResponsiveProps } from '@/types/Props';
 import { StyleSheet } from 'react-native';
+import styled from 'styled-components/native';
 
 export const UserListContainer = styled.View<ResponsiveProps>`
   padding-top: ${({ $screenWidth }) => ($screenWidth > 900 ? 29 : 16)}px;
@@ -155,7 +155,7 @@ export function createStyles(width: number) {
     },
     disabled: { opacity: 0.35 },
     UserList: {
-      boxShadow: '0px 1px 4.9px 0px rgba(0,0,0, 0.36)'
-    }
+      boxShadow: '0px 1px 4.9px 0px rgba(0,0,0, 0.36)',
+    },
   });
 }

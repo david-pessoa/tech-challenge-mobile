@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import Toast from '@/components/Toast';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import PostsContainer from '@/components/PostsContainer';
+import SearchPostContainerInput from '@/components/SearchPostContainerInput';
+import Toast from '@/components/Toast';
+import UserListPreview from '@/components/UserListPreview';
 import { useUser } from '@/context/AuthContext';
 import { Screen, Scroll } from '@/styles/GlobalStyles';
 import { buildApiImageUrl, capitalize } from '@/utils/functions';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import redDoodle from '../../../assets/images/red-doodle.png';
 import sparkle from '../../../assets/images/sparkle.png';
@@ -27,9 +30,6 @@ import {
   TitleContainer,
   TopContainer,
 } from './styles';
-import SearchPostContainerInput from '@/components/SearchPostContainerInput';
-import PostsContainer from '@/components/PostsContainer';
-import UserListPreview from '@/components/UserListPreview';
 
 export default function Home() {
   const { postResult } = useLocalSearchParams<{ postResult?: string }>();
@@ -39,7 +39,9 @@ export default function Home() {
 
   useEffect(() => {
     if (postResult !== 'updated' && postResult !== 'created') return;
-    setPostSuccessMessage(postResult === 'created' ? 'Aula criada com sucesso!' : 'Aula atualizada com sucesso!');
+    setPostSuccessMessage(
+      postResult === 'created' ? 'Aula criada com sucesso!' : 'Aula atualizada com sucesso!'
+    );
     setParams({ postResult: undefined });
   }, [postResult, setParams]);
 
@@ -59,9 +61,7 @@ export default function Home() {
                   <DoodleImage source={redDoodle} alt="" $screenWidth={width} />
                   <ProfileImage
                     source={
-                      user?.image
-                        ? { uri: buildApiImageUrl(user.image, Date.now()) }
-                        : userImage
+                      user?.image ? { uri: buildApiImageUrl(user.image, Date.now()) } : userImage
                     }
                     alt={`Foto de ${user?.nome}`}
                     $screenWidth={width}
@@ -88,7 +88,9 @@ export default function Home() {
         </Main>
         <Footer />
       </Scroll>
-      {postSuccessMessage ? <Toast message={postSuccessMessage} type="success" onClose={closeToast} /> : null}
+      {postSuccessMessage ? (
+        <Toast message={postSuccessMessage} type="success" onClose={closeToast} />
+      ) : null}
     </Screen>
   );
 }

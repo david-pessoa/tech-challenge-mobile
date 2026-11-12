@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Image, Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { User } from '@/types/User';
 import { Add } from '@material-symbols-svg/react-native/icons/add';
 import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
 import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
@@ -8,18 +6,28 @@ import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-r
 import { Delete } from '@material-symbols-svg/react-native/icons/delete';
 import { Edit } from '@material-symbols-svg/react-native/icons/edit';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
-import { createStyles } from './styles';
-import { theme } from '../../styles/Theme';
-import Header from '../../components/Header';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import defaultUserImage from '../../../assets/images/user-default-image.png';
 import Footer from '../../components/Footer';
+import Header from '../../components/Header';
 import Toast from '../../components/Toast';
 import { useUser } from '../../context/AuthContext';
-import { Screen, Scroll } from '../../styles/GlobalStyles';
 import { deleteUser, getAllUsers } from '../../services/user.service';
+import { Screen, Scroll } from '../../styles/GlobalStyles';
+import { theme } from '../../styles/Theme';
 import type { Role } from '../../types/Roles';
 import { buildApiImageUrl, formatarData } from '../../utils/functions';
-import defaultUserImage from '../../../assets/images/user-default-image.png';
-import { User } from '@/types/User';
+import { createStyles } from './styles';
 
 function formatBirthDate(date: string | null) {
   if (!date) return '--';
@@ -68,7 +76,9 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
         }
       } catch (error) {
         if (active) {
-          setError(error instanceof Error ? error.message : 'Não foi possível carregar os usuários.');
+          setError(
+            error instanceof Error ? error.message : 'Não foi possível carregar os usuários.'
+          );
         }
       } finally {
         if (active) setIsLoading(false);
@@ -83,7 +93,9 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">
+        {title}
+      </Text>
       <View style={styles.tableHeader}>
         <View style={[styles.column, styles.photoColumn]}>
           <Text style={styles.headerText}>Foto</Text>
@@ -103,12 +115,21 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
       </View>
       {isLoading ? (
         <View style={styles.status}>
-          <ActivityIndicator color={theme.colors.primary} accessibilityLabel={`Carregando ${title.toLowerCase()}`} />
+          <ActivityIndicator
+            color={theme.colors.primary}
+            accessibilityLabel={`Carregando ${title.toLowerCase()}`}
+          />
         </View>
       ) : error ? (
         <View style={styles.status}>
-          <Text style={[styles.statusText, styles.errorText]} accessibilityRole="alert">{error}</Text>
-          <Pressable accessibilityRole="button" style={styles.retryButton} onPress={() => setRetryCount(value => value + 1)}>
+          <Text style={[styles.statusText, styles.errorText]} accessibilityRole="alert">
+            {error}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.retryButton}
+            onPress={() => setRetryCount(value => value + 1)}
+          >
             <Text style={styles.retryText}>Tentar novamente</Text>
           </Pressable>
         </View>
@@ -121,14 +142,25 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
           <View key={listedUser.id} style={styles.row}>
             <View style={[styles.column, styles.photoColumn]}>
               <Image
-                source={listedUser.image ? { uri: buildApiImageUrl(listedUser.image, Date.now()) } : defaultUserImage}
+                source={
+                  listedUser.image
+                    ? { uri: buildApiImageUrl(listedUser.image, Date.now()) }
+                    : defaultUserImage
+                }
                 style={styles.photo}
                 accessibilityLabel={`Foto de ${listedUser.nome}`}
               />
             </View>
             <View style={[styles.column, styles.nameColumn]}>
-              <Text style={[styles.cellText, { maxWidth: '100%' }]} numberOfLines={1} ellipsizeMode="tail" accessibilityLabel={listedUser.nome}>
-                {Array.from(listedUser.nome).length > 10 ? `${Array.from(listedUser.nome).slice(0, 10).join('')}...` : listedUser.nome}
+              <Text
+                style={[styles.cellText, { maxWidth: '100%' }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                accessibilityLabel={listedUser.nome}
+              >
+                {Array.from(listedUser.nome).length > 10
+                  ? `${Array.from(listedUser.nome).slice(0, 10).join('')}...`
+                  : listedUser.nome}
               </Text>
             </View>
             <View style={[styles.column, styles.dateColumn]}>
@@ -138,13 +170,25 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
               <Text style={styles.cellText}>{listedUser.matricula}</Text>
             </View>
             <View style={[styles.column, styles.actionsColumn, styles.actionIcons]}>
-              <Link href={{ pathname: '/user-edit/[userId]', params: { userId: listedUser.id } }} asChild>
-                <Pressable accessibilityRole="link" accessibilityLabel={`Editar ${listedUser.nome}`} style={styles.editButton}>
+              <Link
+                href={{ pathname: '/user-edit/[userId]', params: { userId: listedUser.id } }}
+                asChild
+              >
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel={`Editar ${listedUser.nome}`}
+                  style={styles.editButton}
+                >
                   <Edit width={iconSize} height={iconSize} fill="#A15E6D" />
                 </Pressable>
               </Link>
               {user?.role === 'ADMIN' && listedUser.id !== user.id && (
-                <Pressable accessibilityRole="button" accessibilityLabel={`Excluir ${listedUser.nome}`} style={styles.editButton} onPress={() => onDelete(listedUser)}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Excluir ${listedUser.nome}`}
+                  style={styles.editButton}
+                  onPress={() => onDelete(listedUser)}
+                >
                   <Delete width={iconSize} height={iconSize} fill="#E64B63" />
                 </Pressable>
               )}
@@ -169,7 +213,8 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
             </Pressable>
           </View>
           <Text style={styles.pageText} accessibilityLiveRegion="polite">
-            {users.length ? (page - 1) * pageLength + 1 : 0}–{users.length ? (page - 1) * pageLength + users.length : 0} de {totalItems}
+            {users.length ? (page - 1) * pageLength + 1 : 0}–
+            {users.length ? (page - 1) * pageLength + users.length : 0} de {totalItems}
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -191,8 +236,18 @@ function UserListSection({ title, role, reloadKey, onDelete }: UserListSectionPr
           </Pressable>
         </View>
       )}
-      <Modal visible={showPageLengths} transparent animationType="fade" onRequestClose={() => setShowPageLengths(false)}>
-        <Pressable style={styles.optionsOverlay} onPress={() => setShowPageLengths(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de quantidade">
+      <Modal
+        visible={showPageLengths}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPageLengths(false)}
+      >
+        <Pressable
+          style={styles.optionsOverlay}
+          onPress={() => setShowPageLengths(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar seleção de quantidade"
+        >
           <View style={styles.pageLengthOptions} accessibilityViewIsModal>
             <Text style={styles.optionsTitle}>Itens por página</Text>
             {[5, 10, 20].map(quantity => (
@@ -222,7 +277,10 @@ export default function UserList() {
   const { user } = useUser();
   const { result } = useLocalSearchParams<{ result?: string }>();
   const { setParams } = useRouter();
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  }>();
   const [pendingDelete, setPendingDelete] = useState<User>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [reloadKeys, setReloadKeys] = useState<Partial<Record<Role, number>>>({});
@@ -230,7 +288,13 @@ export default function UserList() {
 
   useEffect(() => {
     if (result !== 'created' && result !== 'updated') return;
-    setNotification({ message: result === 'updated' ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!', type: 'success' });
+    setNotification({
+      message:
+        result === 'updated'
+          ? 'Usuário atualizado com sucesso!'
+          : 'Usuário cadastrado com sucesso!',
+      type: 'success',
+    });
     setParams({ result: undefined });
   }, [result, setParams]);
   const { width } = useWindowDimensions();
@@ -243,17 +307,24 @@ export default function UserList() {
   }
 
   async function confirmDelete() {
-    if (user?.role !== 'ADMIN' || !pendingDelete || pendingDelete.id === user.id || isDeleting) return;
+    if (user?.role !== 'ADMIN' || !pendingDelete || pendingDelete.id === user.id || isDeleting)
+      return;
     const selectedUser = pendingDelete;
     setIsDeleting(true);
     try {
       await deleteUser(selectedUser.id);
       setPendingDelete(undefined);
-      setReloadKeys(current => ({ ...current, [selectedUser.role]: (current[selectedUser.role] ?? 0) + 1 }));
+      setReloadKeys(current => ({
+        ...current,
+        [selectedUser.role]: (current[selectedUser.role] ?? 0) + 1,
+      }));
       setNotification({ message: 'Usuário excluído com sucesso!', type: 'success' });
     } catch (error) {
       setPendingDelete(undefined);
-      setNotification({ message: error instanceof Error ? error.message : 'Não foi possível excluir o usuário.', type: 'error' });
+      setNotification({
+        message: error instanceof Error ? error.message : 'Não foi possível excluir o usuário.',
+        type: 'error',
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -264,7 +335,9 @@ export default function UserList() {
       <Scroll contentContainerStyle={styles.content}>
         <Header />
         <View style={styles.main}>
-          <Text style={styles.title} accessibilityRole="header">Lista completa</Text>
+          <Text style={styles.title} accessibilityRole="header">
+            Lista completa
+          </Text>
           <View style={styles.navigation}>
             <Link href="/home" asChild>
               <Pressable style={styles.link} accessibilityRole="link">
@@ -281,31 +354,82 @@ export default function UserList() {
           </View>
           {user?.role === 'ADMIN' && (
             <>
-              <UserListSection title="Administradores" role="ADMIN" reloadKey={reloadKeys.ADMIN ?? 0} onDelete={requestDelete} />
-              <UserListSection title="Professores" role="PROFESSOR" reloadKey={reloadKeys.PROFESSOR ?? 0} onDelete={requestDelete} />
+              <UserListSection
+                title="Administradores"
+                role="ADMIN"
+                reloadKey={reloadKeys.ADMIN ?? 0}
+                onDelete={requestDelete}
+              />
+              <UserListSection
+                title="Professores"
+                role="PROFESSOR"
+                reloadKey={reloadKeys.PROFESSOR ?? 0}
+                onDelete={requestDelete}
+              />
             </>
           )}
-          <UserListSection title="Alunos" role="ALUNO" reloadKey={reloadKeys.ALUNO ?? 0} onDelete={requestDelete} />
+          <UserListSection
+            title="Alunos"
+            role="ALUNO"
+            reloadKey={reloadKeys.ALUNO ?? 0}
+            onDelete={requestDelete}
+          />
         </View>
         <Footer />
       </Scroll>
-      <Modal visible={Boolean(pendingDelete && user?.role === 'ADMIN')} transparent animationType="fade" onRequestClose={() => { if (!isDeleting) setPendingDelete(undefined); }}>
+      <Modal
+        visible={Boolean(pendingDelete && user?.role === 'ADMIN')}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isDeleting) setPendingDelete(undefined);
+        }}
+      >
         <View style={styles.optionsOverlay}>
           <View style={styles.deleteDialog} accessibilityViewIsModal>
             <Text style={styles.optionsTitle}>Excluir usuário</Text>
-            <Text style={styles.deleteMessage}>Deseja excluir {pendingDelete?.nome}? Esta ação não pode ser desfeita.</Text>
+            <Text style={styles.deleteMessage}>
+              Deseja excluir {pendingDelete?.nome}? Esta ação não pode ser desfeita.
+            </Text>
             <View style={styles.deleteActions}>
-              <Pressable style={[styles.dialogButton, styles.cancelDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Cancelar exclusão" disabled={isDeleting} onPress={() => setPendingDelete(undefined)}>
+              <Pressable
+                style={[
+                  styles.dialogButton,
+                  styles.cancelDeleteButton,
+                  isDeleting && styles.disabled,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Cancelar exclusão"
+                disabled={isDeleting}
+                onPress={() => setPendingDelete(undefined)}
+              >
                 <Text style={styles.cancelDeleteText}>Cancelar</Text>
               </Pressable>
-              <Pressable style={[styles.dialogButton, styles.confirmDeleteButton, isDeleting && styles.disabled]} accessibilityRole="button" accessibilityLabel="Confirmar exclusão" accessibilityState={{ disabled: isDeleting, busy: isDeleting }} disabled={isDeleting} onPress={confirmDelete}>
-                {isDeleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.confirmDeleteText}>Excluir</Text>}
+              <Pressable
+                style={[
+                  styles.dialogButton,
+                  styles.confirmDeleteButton,
+                  isDeleting && styles.disabled,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Confirmar exclusão"
+                accessibilityState={{ disabled: isDeleting, busy: isDeleting }}
+                disabled={isDeleting}
+                onPress={confirmDelete}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.confirmDeleteText}>Excluir</Text>
+                )}
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
-      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
+      {notification ? (
+        <Toast message={notification.message} type={notification.type} onClose={closeToast} />
+      ) : null}
     </Screen>
   );
 }

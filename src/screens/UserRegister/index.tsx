@@ -108,7 +108,9 @@ export default function UserRegister({ userId }: { userId?: string } = {}) {
         setRole(selectedUser.role);
         const date = selectedUser.birthDate?.slice(0, 10).split('-');
         setBirthDate(date ? `${date[2]}/${date[1]}/${date[0]}` : '');
-        setExistingPhoto(selectedUser.image ? buildApiImageUrl(selectedUser.image, Date.now()) : undefined);
+        setExistingPhoto(
+          selectedUser.image ? buildApiImageUrl(selectedUser.image, Date.now()) : undefined
+        );
         setPhoto(undefined);
         setPassword('');
         setConfirmPassword('');

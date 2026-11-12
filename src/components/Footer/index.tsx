@@ -11,10 +11,9 @@ import {
   UpperContainer,
 } from './styles';
 
-
 export default function Footer() {
   const { width } = useWindowDimensions();
-  
+
   return (
     <FooterContainer $screenWidth={width}>
       <Box $screenWidth={width}>
@@ -28,7 +27,7 @@ export default function Footer() {
               />
               <Title>Edify</Title>
             </LogoContainer>
-            <Paragraph $screenWidth={width} >
+            <Paragraph $screenWidth={width}>
               O Edify conecta professores e alunos da rede pública, oferecendo um espaço seguro,
               {width > 900 ? '\n' : ' '}
               gratuito e divertido para reforço escolar e muito aprendizado.

@@ -4,7 +4,12 @@ export function parseBirthDate(value: string) {
 
   const [, day, month, year] = match;
   const date = new Date(Number(year), Number(month) - 1, Number(day));
-  if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day) || date > new Date()) {
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day) ||
+    date > new Date()
+  ) {
     return new Date();
   }
   return date;

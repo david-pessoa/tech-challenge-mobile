@@ -13,7 +13,6 @@ export async function getAllPosts() {
   }
 }
 
-
 export async function createPost(postData: FormData): Promise<void> {
   try {
     const response = await api.post('/posts', postData);
@@ -58,7 +57,7 @@ export async function searchPost(text: string): Promise<Post[]> {
   try {
     const response = await api.get('/posts/search', {
       params: {
-        termo: text
+        termo: text,
       },
     });
     return response.data;
