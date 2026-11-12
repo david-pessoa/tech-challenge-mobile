@@ -5,10 +5,7 @@ import {
   Box,
   DescriptionContainer,
   FooterContainer,
-  LinksContainer,
-  ListItem,
   LogoContainer,
-  OtherLinksList,
   Paragraph,
   Title,
   UpperContainer,
@@ -37,18 +34,6 @@ export default function Footer() {
               gratuito e divertido para reforço escolar e muito aprendizado.
             </Paragraph>
           </DescriptionContainer>
-          <LinksContainer $screenWidth={width}>
-            <OtherLinksList>
-              <ListItem $screenWidth={width}>Como Funciona</ListItem>
-              <ListItem $screenWidth={width}>Central de Ajuda</ListItem>
-              <ListItem $screenWidth={width}>Suporte Técnico</ListItem>
-            </OtherLinksList>
-            <OtherLinksList>
-              <ListItem $screenWidth={width}>Nossas Matérias</ListItem>
-              <ListItem $screenWidth={width}>Dicas de Estudo</ListItem>
-              <ListItem $screenWidth={width}>Fale Conosco</ListItem>
-            </OtherLinksList>
-          </LinksContainer>
         </UpperContainer>
         <BottomContainer $screenWidth={width}>
           <Paragraph $screenWidth={width}>

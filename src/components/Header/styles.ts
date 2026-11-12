@@ -78,7 +78,7 @@ export const LogoutContainer = styled.View<ResponsiveProps>`
   align-items: center;
   justify-content: space-between;
   gap: ${({ $screenWidth }) => $screenWidth >= 600 ? 16 : 5}px;
-  margin-right: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px
+  margin-right: ${({ $screenWidth }) => $screenWidth > 834 ? 100 : 16}px;
 `;
 
 export const LogoutButton = styled.TouchableOpacity`
