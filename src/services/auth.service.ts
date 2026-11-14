@@ -84,7 +84,7 @@ export async function login(matricula: string, password: string) {
     await SecureStore.setItemAsync('authToken', token);
     return response.data;
   } catch (error) {
-    console.log('Falha na requisição de login:', error);
+    console.error('Falha na requisição de login:', error);
     throw new Error(getBackendErrorMessage(error));
   }
 }
