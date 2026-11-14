@@ -1,12 +1,8 @@
+import { theme } from '@/styles/Theme';
+import { ResponsiveProps } from '@/types/Props';
+import { Animated } from 'react-native';
 import styled from 'styled-components/native';
 
-/**
- * Estilos da tela de Login (mobile).
- * No React Native não existem "rem" nem CSS global: os valores são em
- * números/px e cada componente é estilizado individualmente.
- */
-
-// Rola o conteúdo quando o teclado ocupa a tela; centraliza o card na vertical.
 export const Container = styled.ScrollView.attrs({
   keyboardShouldPersistTaps: 'handled',
   contentContainerStyle: { flexGrow: 1, justifyContent: 'center' },
@@ -15,28 +11,12 @@ export const Container = styled.ScrollView.attrs({
   background-color: ${({ theme }) => theme.colors.background};
 `;
 
-export const Card = styled.View`
+export const Card = styled(Animated.View)`
   width: 100%;
   max-width: 420px;
   align-self: center;
   padding: 32px 24px;
   gap: 20px;
-`;
-
-// Selo "Fy" com a cor primária (no RN não há linear-gradient nativo sem biblioteca)
-export const LogoBadge = styled.View`
-  width: 52px;
-  height: 52px;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  align-items: center;
-  justify-content: center;
-  background-color: ${({ theme }) => theme.colors.primary};
-`;
-
-export const LogoText = styled.Text`
-  color: #fffcf2;
-  font-weight: 600;
-  font-size: 18px;
 `;
 
 export const Greeting = styled.Text`
@@ -59,7 +39,6 @@ export const Label = styled.Text`
   color: ${({ theme }) => theme.colors.text};
 `;
 
-// Caixa do campo: borda, fundo e sombra suave na cor secundária
 export const InputBox = styled.View`
   flex-direction: row;
   align-items: center;
@@ -84,10 +63,7 @@ export const Input = styled.TextInput.attrs(({ theme }) => ({
   color: ${({ theme }) => theme.colors.text};
 `;
 
-export const ToggleText = styled.Text`
-  color: ${({ theme }) => theme.colors.primary};
-  font-size: 14px;
-  font-weight: 600;
+export const ToggleVisibilityButton = styled.Pressable`
   padding-left: 8px;
 `;
 
@@ -110,3 +86,61 @@ export const LoginButtonText = styled.Text`
   font-weight: 600;
   font-size: 17px;
 `;
+
+export const ToastContainer = styled(Animated.View)`
+  position: absolute;
+  top: 56px;
+  left: 24px;
+  right: 24px;
+  max-width: 420px;
+  align-self: center;
+  background-color: #fffcf2;
+  border-left-width: 6px;
+  border-left-color: #c0392b;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.secondary};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  padding: 14px 16px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  shadow-color: #000;
+  shadow-opacity: 0.15;
+  shadow-radius: 10px;
+  shadow-offset: 0px 4px;
+  elevation: 6;
+  z-index: 999;
+`;
+
+export const ToastContent = styled.View`
+  flex: 1;
+  padding-right: 12px;
+  gap: 2px;
+`;
+
+export const ToastTitle = styled.Text`
+  color: #8a4126;
+  font-weight: 700;
+  font-size: 14px;
+`;
+
+export const ToastMessage = styled.Text`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+`;
+
+export const ToastCloseText = styled.Text`
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 700;
+  font-size: 13px;
+`;
+
+export const LogoImage = styled.Image<ResponsiveProps>`
+  width: ${({ $screenWidth }) => ($screenWidth > 500 ? 61 : 60)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 500 ? 57 : 58)}px;
+`;
+
+export const VisibilityIconStyle = {
+  color: theme.colors.secondary,
+  size: 25,
+};

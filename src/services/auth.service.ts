@@ -2,38 +2,73 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { api } from './api';
 
-/**
- * Extrai uma mensagem amigável de um erro vindo do back-end.
- * Se não for um erro do axios (ou não tiver mensagem), devolve um texto genérico.
- */
+function isCleanMessage(text: unknown): text is string {
+  if (typeof text !== 'string') return false;
+  const trimmed = text.trim();
+
+  if (!trimmed || trimmed.length > 180) return false;
+
+  const technicalPatterns = [
+    '<!doctype',
+    '<html',
+    '<body',
+    'cannot post',
+    'cannot get',
+    'cannot put',
+    'cannot delete',
+    'cannot patch',
+    'bad gateway',
+    'internal server error',
+    'not found',
+    'method not allowed',
+  ];
+
+  const lower = trimmed.toLowerCase();
+  return !technicalPatterns.some(pattern => lower.includes(pattern));
+}
+
 export function getBackendErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { message?: unknown; error?: unknown }
-      | string
-      | undefined;
-
-    if (typeof data === 'string') return data;
-    if (typeof data?.message === 'string') return data.message;
-    if (typeof data?.error === 'string') return data.error;
-
-    if (error.response?.status === 500) {
-      return 'Ocorreu um erro interno no servidor.';
+    if (!error.response) {
+      return 'Não foi possível conectar ao servidor. Verifique sua internet.';
     }
 
-    // Sem response = a requisição nem chegou no servidor (API fora do ar, sem rede...)
-    if (!error.response) {
-      return 'Não foi possível conectar ao servidor.';
+    const { status, data } = error.response;
+    const payload = data as { message?: unknown; error?: unknown } | string | undefined;
+
+    if (status === 404 || status === 405) {
+      return 'O serviço de acesso está indisponível no momento. Tente novamente em instantes.';
+    }
+
+    if (status >= 500) {
+      return 'Nosso sistema está temporariamente indisponível. Tente novamente mais tarde.';
+    }
+
+    if (isCleanMessage(payload)) return payload.trim();
+    if (typeof payload === 'object' && payload !== null) {
+      if (isCleanMessage(payload.message)) return payload.message.trim();
+      if (isCleanMessage(payload.error)) return payload.error.trim();
+    }
+    if (status === 400) {
+      return 'Dados inválidos. Verifique as informações preenchidas.';
+    }
+
+    if (status === 401) {
+      return 'Matrícula ou senha inválida.';
+    }
+
+    if (status === 403) {
+      return 'Você não tem permissão para acessar o aplicativo.';
+    }
+
+    if (status === 429) {
+      return 'Muitas tentativas seguidas. Aguarde um momento antes de tentar novamente.';
     }
   }
 
-  return 'Não foi possível concluir a operação.';
+  return 'Não foi possível concluir a operação. Tente novamente.';
 }
 
-/**
- * Faz login mobile e persiste o JWT no armazenamento seguro do dispositivo.
- * Em caso de erro lança um Error com a mensagem já tratada.
- */
 export async function login(matricula: string, password: string) {
   try {
     const response = await api.post('/auth/login/mobile', {
@@ -43,13 +78,13 @@ export async function login(matricula: string, password: string) {
 
     const token = response.data?.token;
     if (typeof token !== 'string' || !token) {
-      throw new Error('A resposta de login não contém um token válido.');
+      throw new Error('Não foi possível iniciar a sessão no aplicativo.');
     }
 
     await SecureStore.setItemAsync('authToken', token);
     return response.data;
   } catch (error) {
-    console.error('Erro de login:', error);
+    console.log('Falha na requisição de login:', error);
     throw new Error(getBackendErrorMessage(error));
   }
 }
