@@ -117,7 +117,7 @@ npm run start
 Pressione **`w`** para abrir no navegador ou **`a`** para abrir no emulador Android configurado. Para utilizar o QR code no celular, use uma versão do Expo compatível com o projeto.
 
 ### Arquivo `.pkg` disponível
-A versão do aplicativo para Android está disponível e pode ser obtida fazendo o download do arquivo `application-android.apk` num dispositivo android. [Clique aqui para obter o arquivo](https://github.com/david-pessoa/tech-challenge-mobile/application-android.apk)
+A versão do aplicativo para Android está disponível e pode ser obtida fazendo o download do arquivo `application-android.apk` num dispositivo android. [Clique aqui para obter o arquivo](https://github.com/david-pessoa/tech-challenge-mobile/blob/main/application-android.apk)
 
 ### Back-end
 
