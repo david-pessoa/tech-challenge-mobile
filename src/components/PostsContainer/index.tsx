@@ -1,6 +1,7 @@
 import Carousel from '../Carousel';
 import PostsTable from '../PostsTable';
 
+import { getAllPosts } from '@/services/post.service';
 import { Add } from '@material-symbols-svg/react-native/icons/add';
 import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
 import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-right';

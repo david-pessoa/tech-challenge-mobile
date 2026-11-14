@@ -1,6 +1,7 @@
+import { theme } from '@/styles/Theme';
+import { ResponsiveProps } from '@/types/Props';
 import { Animated } from 'react-native';
 import styled from 'styled-components/native';
-import { ResponsiveProps } from '@/types/Props';
 
 export const Container = styled.ScrollView.attrs({
   keyboardShouldPersistTaps: 'handled',
@@ -62,10 +63,7 @@ export const Input = styled.TextInput.attrs(({ theme }) => ({
   color: ${({ theme }) => theme.colors.text};
 `;
 
-export const ToggleText = styled.Text`
-  color: ${({ theme }) => theme.colors.primary};
-  font-size: 14px;
-  font-weight: 600;
+export const ToggleVisibilityButton = styled.Pressable`
   padding-left: 8px;
 `;
 
@@ -141,3 +139,8 @@ export const LogoImage = styled.Image<ResponsiveProps>`
   width: ${({ $screenWidth }) => ($screenWidth > 500 ? 61 : 60)}px;
   height: ${({ $screenWidth }) => ($screenWidth > 500 ? 57 : 58)}px;
 `;
+
+export const VisibilityIconStyle = {
+  color: theme.colors.secondary,
+  size: 25,
+};

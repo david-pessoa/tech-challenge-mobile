@@ -1,3 +1,5 @@
+import { VisibilityW600 } from '@material-symbols-svg/react-native/icons/visibility';
+import { VisibilityOffW600 } from '@material-symbols-svg/react-native/icons/visibility-off';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Animated, Keyboard, Platform, useWindowDimensions } from 'react-native';
 import Logo from '../../../assets/public/Logo.png';
@@ -20,7 +22,8 @@ import {
   ToastContent,
   ToastMessage,
   ToastTitle,
-  ToggleText,
+  ToggleVisibilityButton,
+  VisibilityIconStyle,
 } from './styles';
 
 export default function Login() {
@@ -106,9 +109,7 @@ export default function Login() {
     try {
       await signIn(matricula.trim(), senha);
     } catch (error) {
-      exibirToast(
-        error instanceof Error ? error.message : 'Erro inesperado. Tente novamente.'
-      );
+      exibirToast(error instanceof Error ? error.message : 'Erro inesperado. Tente novamente.');
     } finally {
       setCarregando(false);
     }
@@ -173,12 +174,19 @@ export default function Login() {
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
             />
-            <ToggleText
+            <ToggleVisibilityButton
               accessibilityRole="button"
               onPress={() => setMostrarSenha(anterior => !anterior)}
             >
-              {mostrarSenha ? 'Ocultar' : 'Mostrar'}
-            </ToggleText>
+              {mostrarSenha ? (
+                <VisibilityOffW600
+                  color={VisibilityIconStyle.color}
+                  size={VisibilityIconStyle.size}
+                />
+              ) : (
+                <VisibilityW600 color={VisibilityIconStyle.color} size={VisibilityIconStyle.size} />
+              )}
+            </ToggleVisibilityButton>
           </InputBox>
         </FieldGroup>
 
