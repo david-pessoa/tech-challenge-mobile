@@ -1,7 +1,6 @@
+import type { Comment } from '../types/Comment';
 import { api } from './api';
 import { getBackendErrorMessage } from './auth.service';
-import type { Comment } from '../types/Comment';
-
 
 export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
   try {

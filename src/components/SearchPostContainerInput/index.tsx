@@ -1,3 +1,4 @@
+import { searchPost } from '@/services/post.service';
 import { Search } from '@material-symbols-svg/react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -14,7 +15,6 @@ import {
   ListItemTitle,
   ResultsList,
 } from './styles';
-import { searchPost } from '@/services/post.service';
 
 export default function SearchPostContainerInput() {
   const [searchedPostsList, setSearchedPostsList] = useState<Post[]>([]);
@@ -25,7 +25,7 @@ export default function SearchPostContainerInput() {
   const { width } = useWindowDimensions();
 
   async function handleInputChange() {
-    console.log(searchedText)
+    console.log(searchedText);
     if (searchedText === '') {
       setSearchedPostsList([]);
       return;

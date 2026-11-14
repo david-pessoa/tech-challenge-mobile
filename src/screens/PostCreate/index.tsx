@@ -1,23 +1,36 @@
-import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
 import { ArrowBack } from '@material-symbols-svg/react-native/icons/arrow-back';
-import Svg, { Rect } from 'react-native-svg';
-import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Cancel } from '@material-symbols-svg/react-native/icons/cancel';
 import { Download } from '@material-symbols-svg/react-native/icons/download';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
-import { materias } from '../../types/Materias';
-import { theme } from '../../styles/Theme';
-import Header from '../../components/Header';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import Svg, { Rect } from 'react-native-svg';
+import redDoodle from '../../../assets/images/red-doodle.png';
 import Footer from '../../components/Footer';
+import Header from '../../components/Header';
 import Toast from '../../components/Toast';
 import { useUser } from '../../context/AuthContext';
 import { createPost, getPostById, updatePost } from '../../services/post.service';
-import { buildApiImageUrl } from '../../utils/functions';
 import { Screen, Scroll } from '../../styles/GlobalStyles';
+import { theme } from '../../styles/Theme';
+import { materias } from '../../types/Materias';
+import { buildApiImageUrl } from '../../utils/functions';
 import { createStyles } from './styles';
-import redDoodle from '../../../assets/images/red-doodle.png';
 
 type PostField = 'title' | 'description' | 'subject' | 'content';
 
@@ -53,7 +66,10 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
   const { user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' }>();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  }>();
   const closeToast = useCallback(() => setNotification(undefined), []);
 
   const photoUri = photo?.uri ?? existingPhoto;
@@ -78,25 +94,35 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
         setDescription(selectedPost.descricao);
         setSubject(selectedPost.subject?.nome ?? '');
         setContent(selectedPost.conteudo ?? '');
-        setExistingPhoto(selectedPost.image ? buildApiImageUrl(selectedPost.image) : undefined);
+        setExistingPhoto(
+          selectedPost.image ? buildApiImageUrl(selectedPost.image, Date.now()) : undefined
+        );
         setPhoto(undefined);
         setRemoveExistingPhoto(false);
         setPhotoError('');
         setPhotoLoadFailed(false);
         setErrors({});
       } catch (error) {
-        if (active) setPostLoadError(error instanceof Error ? error.message : 'Não foi possível carregar a aula.');
+        if (active)
+          setPostLoadError(
+            error instanceof Error ? error.message : 'Não foi possível carregar a aula.'
+          );
       } finally {
         if (active) setIsLoadingPost(false);
       }
     }
 
     loadPost();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [postId, user?.id, user?.role, loadAttempt]);
 
   function validateField(field: PostField, value: string) {
-    setErrors(current => ({ ...current, [field]: value.trim() ? undefined : requiredMessages[field] }));
+    setErrors(current => ({
+      ...current,
+      [field]: value.trim() ? undefined : requiredMessages[field],
+    }));
   }
 
   function clearFieldError(field: PostField, value: string) {
@@ -104,7 +130,14 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
   }
 
   async function handleSubmit() {
-    if (savingRef.current || isLoadingPost || postLoadError || !user || !['ADMIN', 'PROFESSOR'].includes(user.role)) return;
+    if (
+      savingRef.current ||
+      isLoadingPost ||
+      postLoadError ||
+      !user ||
+      !['ADMIN', 'PROFESSOR'].includes(user.role)
+    )
+      return;
     const values = { title, description, subject, content };
     const validationErrors: Partial<Record<PostField, string>> = {};
     for (const field of Object.keys(values) as PostField[]) {
@@ -142,7 +175,9 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
               file = await response.blob();
             }
           } catch {
-            setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
+            setPhotoError(
+              'Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.'
+            );
             return;
           }
           if (file.size > 5 * 1024 * 1024) {
@@ -170,9 +205,20 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
       setPhoto(undefined);
       setPhotoError('');
       setPhotoLoadFailed(false);
-      router.replace({ pathname: '/home', params: { postResult: isEditing ? 'updated' : 'created' } });
+      router.replace({
+        pathname: '/home',
+        params: { postResult: isEditing ? 'updated' : 'created' },
+      });
     } catch (error) {
-      setNotification({ message: error instanceof Error ? error.message : isEditing ? 'Não foi possível atualizar a aula.' : 'Não foi possível criar a aula.', type: 'error' });
+      setNotification({
+        message:
+          error instanceof Error
+            ? error.message
+            : isEditing
+              ? 'Não foi possível atualizar a aula.'
+              : 'Não foi possível criar a aula.',
+        type: 'error',
+      });
     } finally {
       savingRef.current = false;
       setIsSaving(false);
@@ -197,7 +243,10 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
   async function selectPhoto() {
     if (savingRef.current) return;
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
       if (!result.canceled && result.assets[0]) updatePhoto(result.assets[0]);
     } catch {
       setPhotoError('Não foi possível selecionar a foto. Tente novamente.');
@@ -223,7 +272,15 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
         setPhotoError('A foto deve ter no máximo 5 MB.');
         return;
       }
-      updatePhoto({ uri: URL.createObjectURL(file), width: 0, height: 0, file, fileName: file.name, mimeType: file.type, fileSize: file.size });
+      updatePhoto({
+        uri: URL.createObjectURL(file),
+        width: 0,
+        height: 0,
+        file,
+        fileName: file.name,
+        mimeType: file.type,
+        fileSize: file.size,
+      });
     }
     element.addEventListener('dragover', preventNavigation);
     element.addEventListener('drop', handleDrop);
@@ -233,215 +290,381 @@ export default function PostCreate({ postId }: { postId?: string } = {}) {
     };
   }, [isLoadingPost, postLoadError]);
 
-  useEffect(() => () => {
-    if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
-  }, [photo]);
+  useEffect(
+    () => () => {
+      if (Platform.OS === 'web' && photo?.uri.startsWith('blob:')) URL.revokeObjectURL(photo.uri);
+    },
+    [photo]
+  );
 
   return (
     <Screen style={styles.screen} edges={['top', 'right', 'bottom', 'left']}>
-      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Header />
-        <View style={styles.main}>
-          <Pressable
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar à tela de início"
-            disabled={isSaving}
-            onPress={() => router.replace('/home')}
-          >
-            <ArrowBack width={24} height={24} fill="#FFD600" />
-            <Text style={styles.backText}>Voltar à tela de início</Text>
-          </Pressable>
-          <View style={styles.titleRow}>
-            <Text style={styles.title} accessibilityRole="header">{isEditing ? 'Editar aula' : 'Nova aula'}</Text>
-            <Image source={redDoodle} style={styles.decoration} resizeMode="contain" accessible={false} />
-          </View>
-          {isLoadingPost ? (
-            <View style={styles.loadStatus}>
-              <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando aula" />
-            </View>
-          ) : postLoadError ? (
-            <View style={styles.loadStatus}>
-              <Text style={styles.fieldError} accessibilityRole="alert">{postLoadError}</Text>
-              <Pressable style={styles.cancelButton} accessibilityRole="button" onPress={() => setLoadAttempt(value => value + 1)}>
-                <Text style={styles.cancelText}>Tentar novamente</Text>
-              </Pressable>
-            </View>
-          ) : (
-          <>
-          <View style={styles.form}>
-            <View style={styles.field}>
-              <View style={styles.photoContainer}>
-                <Pressable
-                  ref={photoPickerRef}
-                  style={styles.photoPicker}
-                  onLayout={event => {
-                    const { width, height } = event.nativeEvent.layout;
-                    setPhotoBounds({ width, height });
-                  }}
-                  onPress={selectPhoto}
-                  disabled={isSaving}
-                  accessibilityRole="button"
-                  accessibilityLabel={photoUri ? 'Trocar foto da aula' : 'Selecionar foto da aula'}
-                >
-                  {photoUri ? (
-                    <Image
-                      source={{ uri: photoUri }}
-                      style={styles.photoPreview}
-                      resizeMode="cover"
-                      accessibilityLabel="Prévia da foto da aula"
-                      onError={() => {
-                        setPhotoLoadFailed(true);
-                        setPhotoError('Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.');
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <Download width={20} height={20} fill="#DC9A9A" />
-                      <Text style={styles.photoHint}>{Platform.OS === 'web' ? 'Clique para carregar ou\narraste e solte.' : 'Toque para selecionar\numa foto.'}</Text>
-                    </>
-                  )}
-                  {photoBounds.width > 0 && (
-                    <Svg width={photoBounds.width} height={photoBounds.height} style={styles.photoBorder} pointerEvents="none">
-                      <Rect
-                        x={0.5}
-                        y={0.5}
-                        width={photoBounds.width - 1}
-                        height={photoBounds.height - 1}
-                        rx={15}
-                        fill="none"
-                        stroke="#D34359"
-                        strokeWidth={1}
-                        strokeDasharray="21 21"
-                      />
-                    </Svg>
-                  )}
-                </Pressable>
-                {photoUri && (
-                  <Pressable disabled={isSaving} style={styles.removePhotoButton} accessibilityRole="button" accessibilityLabel="Remover foto da aula" onPress={() => { setPhoto(undefined); setExistingPhoto(undefined); setRemoveExistingPhoto(isEditing); setPhotoError(''); setPhotoLoadFailed(false); }}>
-                    <View style={styles.removePhotoIcon}>
-                      <Cancel width={24} height={24} fill={theme.colors.primary} />
-                    </View>
-                  </Pressable>
-                )}
-              </View>
-              {photoError ? <Text style={styles.photoError} accessibilityRole="alert" accessibilityLiveRegion="polite">{photoError}</Text> : null}
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Título <Text style={styles.required}>*</Text></Text>
-              <TextInput
-                editable={!isSaving}
-                style={[styles.input, focusedField === 'title' && styles.inputFocused, errors.title && styles.inputError]}
-                accessibilityLabel="Título"
-                placeholder="Digite o título..."
-                placeholderTextColor={theme.colors.fieldPlaceholder}
-                onFocus={() => setFocusedField('title')}
-                onBlur={() => { setFocusedField(undefined); validateField('title', title); }}
-                aria-invalid={Boolean(errors.title)}
-                value={title}
-                onChangeText={value => { setTitle(value); clearFieldError('title', value); }}
-              />
-              {errors.title ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.title}</Text> : null}
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Descrição <Text style={styles.required}>*</Text></Text>
-              <TextInput
-                editable={!isSaving}
-                style={[styles.input, focusedField === 'description' && styles.inputFocused, errors.description && styles.inputError]}
-                accessibilityLabel="Descrição"
-                placeholder="Digite a descrição..."
-                placeholderTextColor={theme.colors.fieldPlaceholder}
-                onFocus={() => setFocusedField('description')}
-                onBlur={() => { setFocusedField(undefined); validateField('description', description); }}
-                aria-invalid={Boolean(errors.description)}
-                value={description}
-                onChangeText={value => { setDescription(value); clearFieldError('description', value); }}
-              />
-              {errors.description ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.description}</Text> : null}
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Matéria <Text style={styles.required}>*</Text></Text>
-              <Pressable
-                style={[styles.input, styles.select, showSubjects && styles.inputFocused, errors.subject && styles.inputError]}
-                accessibilityRole="button"
-                accessibilityLabel="Matéria"
-                aria-invalid={Boolean(errors.subject)}
-                accessibilityValue={{ text: subject || 'Escolha a matéria' }}
-                accessibilityState={{ expanded: showSubjects }}
-                disabled={isSaving}
-                onPress={() => setShowSubjects(true)}
-              >
-                <Text style={[styles.selectText, !subject && styles.placeholder]}>{subject || 'Escolha a matéria'}</Text>
-                <KeyboardArrowDown width={24} height={24} fill={theme.colors.fieldPlaceholder} />
-              </Pressable>
-              {errors.subject ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.subject}</Text> : null}
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Conteúdo <Text style={styles.required}>*</Text></Text>
-              <TextInput
-                editable={!isSaving}
-                style={[styles.input, styles.contentInput, focusedField === 'content' && styles.inputFocused, errors.content && styles.inputError]}
-                accessibilityLabel="Conteúdo"
-                placeholder="Digite o conteúdo..."
-                placeholderTextColor={theme.colors.fieldPlaceholder}
-                onFocus={() => setFocusedField('content')}
-                onBlur={() => { setFocusedField(undefined); validateField('content', content); }}
-                aria-invalid={Boolean(errors.content)}
-                value={content}
-                onChangeText={value => { setContent(value); clearFieldError('content', value); }}
-                multiline
-                textAlignVertical="top"
-              />
-              {errors.content ? <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">{errors.content}</Text> : null}
-            </View>
-          </View>
-          <View style={styles.actions}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <Scroll contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <Header />
+          <View style={styles.main}>
             <Pressable
-              style={[styles.cancelButton, isSaving && styles.disabled]}
+              style={styles.backButton}
               accessibilityRole="button"
-              accessibilityLabel={isEditing ? 'Cancelar edição da aula' : 'Cancelar criação da aula'}
+              accessibilityLabel="Voltar à tela de início"
               disabled={isSaving}
               onPress={() => router.replace('/home')}
             >
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <ArrowBack width={24} height={24} fill="#FFD600" />
+              <Text style={styles.backText}>Voltar à tela de início</Text>
             </Pressable>
-            <Pressable style={[styles.submitButton, isSaving && styles.disabled]} accessibilityRole="button" accessibilityLabel={isEditing ? 'Salvar aula' : 'Enviar aula'} accessibilityState={{ disabled: isSaving, busy: isSaving }} disabled={isSaving} onPress={handleSubmit}>
-              {isSaving ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>{submitLabel}</Text>}
-            </Pressable>
+            <View style={styles.titleRow}>
+              <Text style={styles.title} accessibilityRole="header">
+                {isEditing ? 'Editar aula' : 'Nova aula'}
+              </Text>
+              <Image
+                source={redDoodle}
+                style={styles.decoration}
+                resizeMode="contain"
+                accessible={false}
+              />
+            </View>
+            {isLoadingPost ? (
+              <View style={styles.loadStatus}>
+                <ActivityIndicator
+                  color={theme.colors.primary}
+                  accessibilityLabel="Carregando aula"
+                />
+              </View>
+            ) : postLoadError ? (
+              <View style={styles.loadStatus}>
+                <Text style={styles.fieldError} accessibilityRole="alert">
+                  {postLoadError}
+                </Text>
+                <Pressable
+                  style={styles.cancelButton}
+                  accessibilityRole="button"
+                  onPress={() => setLoadAttempt(value => value + 1)}
+                >
+                  <Text style={styles.cancelText}>Tentar novamente</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <View style={styles.form}>
+                  <View style={styles.field}>
+                    <View style={styles.photoContainer}>
+                      <Pressable
+                        ref={photoPickerRef}
+                        style={styles.photoPicker}
+                        onLayout={event => {
+                          const { width, height } = event.nativeEvent.layout;
+                          setPhotoBounds({ width, height });
+                        }}
+                        onPress={selectPhoto}
+                        disabled={isSaving}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          photoUri ? 'Trocar foto da aula' : 'Selecionar foto da aula'
+                        }
+                      >
+                        {photoUri ? (
+                          <Image
+                            source={{ uri: photoUri }}
+                            style={styles.photoPreview}
+                            resizeMode="cover"
+                            accessibilityLabel="Prévia da foto da aula"
+                            onError={() => {
+                              setPhotoLoadFailed(true);
+                              setPhotoError(
+                                'Não foi possível carregar a foto. Selecione outra imagem ou remova a foto.'
+                              );
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <Download width={20} height={20} fill="#DC9A9A" />
+                            <Text style={styles.photoHint}>
+                              {Platform.OS === 'web'
+                                ? 'Clique para carregar ou\narraste e solte.'
+                                : 'Toque para selecionar\numa foto.'}
+                            </Text>
+                          </>
+                        )}
+                        {photoBounds.width > 0 && (
+                          <Svg
+                            width={photoBounds.width}
+                            height={photoBounds.height}
+                            style={styles.photoBorder}
+                            pointerEvents="none"
+                          >
+                            <Rect
+                              x={0.5}
+                              y={0.5}
+                              width={photoBounds.width - 1}
+                              height={photoBounds.height - 1}
+                              rx={15}
+                              fill="none"
+                              stroke="#D34359"
+                              strokeWidth={1}
+                              strokeDasharray="21 21"
+                            />
+                          </Svg>
+                        )}
+                      </Pressable>
+                      {photoUri && (
+                        <Pressable
+                          disabled={isSaving}
+                          style={styles.removePhotoButton}
+                          accessibilityRole="button"
+                          accessibilityLabel="Remover foto da aula"
+                          onPress={() => {
+                            setPhoto(undefined);
+                            setExistingPhoto(undefined);
+                            setRemoveExistingPhoto(isEditing);
+                            setPhotoError('');
+                            setPhotoLoadFailed(false);
+                          }}
+                        >
+                          <View style={styles.removePhotoIcon}>
+                            <Cancel width={24} height={24} fill={theme.colors.primary} />
+                          </View>
+                        </Pressable>
+                      )}
+                    </View>
+                    {photoError ? (
+                      <Text
+                        style={styles.photoError}
+                        accessibilityRole="alert"
+                        accessibilityLiveRegion="polite"
+                      >
+                        {photoError}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Título <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      editable={!isSaving}
+                      style={[
+                        styles.input,
+                        focusedField === 'title' && styles.inputFocused,
+                        errors.title && styles.inputError,
+                      ]}
+                      accessibilityLabel="Título"
+                      placeholder="Digite o título..."
+                      placeholderTextColor={theme.colors.fieldPlaceholder}
+                      onFocus={() => setFocusedField('title')}
+                      onBlur={() => {
+                        setFocusedField(undefined);
+                        validateField('title', title);
+                      }}
+                      aria-invalid={Boolean(errors.title)}
+                      value={title}
+                      onChangeText={value => {
+                        setTitle(value);
+                        clearFieldError('title', value);
+                      }}
+                    />
+                    {errors.title ? (
+                      <Text
+                        style={styles.fieldError}
+                        accessibilityRole="alert"
+                        accessibilityLiveRegion="polite"
+                      >
+                        {errors.title}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Descrição <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      editable={!isSaving}
+                      style={[
+                        styles.input,
+                        focusedField === 'description' && styles.inputFocused,
+                        errors.description && styles.inputError,
+                      ]}
+                      accessibilityLabel="Descrição"
+                      placeholder="Digite a descrição..."
+                      placeholderTextColor={theme.colors.fieldPlaceholder}
+                      onFocus={() => setFocusedField('description')}
+                      onBlur={() => {
+                        setFocusedField(undefined);
+                        validateField('description', description);
+                      }}
+                      aria-invalid={Boolean(errors.description)}
+                      value={description}
+                      onChangeText={value => {
+                        setDescription(value);
+                        clearFieldError('description', value);
+                      }}
+                    />
+                    {errors.description ? (
+                      <Text
+                        style={styles.fieldError}
+                        accessibilityRole="alert"
+                        accessibilityLiveRegion="polite"
+                      >
+                        {errors.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Matéria <Text style={styles.required}>*</Text>
+                    </Text>
+                    <Pressable
+                      style={[
+                        styles.input,
+                        styles.select,
+                        showSubjects && styles.inputFocused,
+                        errors.subject && styles.inputError,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Matéria"
+                      aria-invalid={Boolean(errors.subject)}
+                      accessibilityValue={{ text: subject || 'Escolha a matéria' }}
+                      accessibilityState={{ expanded: showSubjects }}
+                      disabled={isSaving}
+                      onPress={() => setShowSubjects(true)}
+                    >
+                      <Text style={[styles.selectText, !subject && styles.placeholder]}>
+                        {subject || 'Escolha a matéria'}
+                      </Text>
+                      <KeyboardArrowDown
+                        width={24}
+                        height={24}
+                        fill={theme.colors.fieldPlaceholder}
+                      />
+                    </Pressable>
+                    {errors.subject ? (
+                      <Text
+                        style={styles.fieldError}
+                        accessibilityRole="alert"
+                        accessibilityLiveRegion="polite"
+                      >
+                        {errors.subject}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Conteúdo <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      editable={!isSaving}
+                      style={[
+                        styles.input,
+                        styles.contentInput,
+                        focusedField === 'content' && styles.inputFocused,
+                        errors.content && styles.inputError,
+                      ]}
+                      accessibilityLabel="Conteúdo"
+                      placeholder="Digite o conteúdo..."
+                      placeholderTextColor={theme.colors.fieldPlaceholder}
+                      onFocus={() => setFocusedField('content')}
+                      onBlur={() => {
+                        setFocusedField(undefined);
+                        validateField('content', content);
+                      }}
+                      aria-invalid={Boolean(errors.content)}
+                      value={content}
+                      onChangeText={value => {
+                        setContent(value);
+                        clearFieldError('content', value);
+                      }}
+                      multiline
+                      textAlignVertical="top"
+                    />
+                    {errors.content ? (
+                      <Text
+                        style={styles.fieldError}
+                        accessibilityRole="alert"
+                        accessibilityLiveRegion="polite"
+                      >
+                        {errors.content}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+                <View style={styles.actions}>
+                  <Pressable
+                    style={[styles.cancelButton, isSaving && styles.disabled]}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isEditing ? 'Cancelar edição da aula' : 'Cancelar criação da aula'
+                    }
+                    disabled={isSaving}
+                    onPress={() => router.replace('/home')}
+                  >
+                    <Text style={styles.cancelText}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.submitButton, isSaving && styles.disabled]}
+                    accessibilityRole="button"
+                    accessibilityLabel={isEditing ? 'Salvar aula' : 'Enviar aula'}
+                    accessibilityState={{ disabled: isSaving, busy: isSaving }}
+                    disabled={isSaving}
+                    onPress={handleSubmit}
+                  >
+                    {isSaving ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.submitText}>{submitLabel}</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </>
+            )}
           </View>
-          </>
-          )}
-        </View>
-        <Footer />
-      </Scroll>
+          <Footer />
+        </Scroll>
       </KeyboardAvoidingView>
-      <Modal visible={showSubjects} transparent animationType="fade" onRequestClose={() => setShowSubjects(false)}>
-        <Pressable style={styles.optionsOverlay} onPress={() => setShowSubjects(false)} accessibilityRole="button" accessibilityLabel="Fechar seleção de matéria">
+      <Modal
+        visible={showSubjects}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSubjects(false)}
+      >
+        <Pressable
+          style={styles.optionsOverlay}
+          onPress={() => setShowSubjects(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar seleção de matéria"
+        >
           <View style={styles.options} accessibilityViewIsModal>
             <Text style={styles.label}>Escolha a matéria</Text>
             <ScrollView>
-              {Object.keys(materias).sort((a, b) => a === b ? 0 : a === 'Geral' ? -1 : b === 'Geral' ? 1 : a.localeCompare(b, 'pt-BR')).map(option => (
-                <Pressable
-                  key={option}
-                  style={[styles.option, subject === option && styles.selectedOption]}
-                  accessibilityRole="radio"
-                  accessibilityLabel={option}
-                  accessibilityState={{ checked: subject === option }}
-                  onPress={() => {
-                    setSubject(option);
-                    clearFieldError('subject', option);
-                    setShowSubjects(false);
-                  }}
-                >
-                  <Text style={styles.selectText}>{option}</Text>
-                </Pressable>
-              ))}
+              {Object.keys(materias)
+                .sort((a, b) =>
+                  a === b ? 0 : a === 'Geral' ? -1 : b === 'Geral' ? 1 : a.localeCompare(b, 'pt-BR')
+                )
+                .map(option => (
+                  <Pressable
+                    key={option}
+                    style={[styles.option, subject === option && styles.selectedOption]}
+                    accessibilityRole="radio"
+                    accessibilityLabel={option}
+                    accessibilityState={{ checked: subject === option }}
+                    onPress={() => {
+                      setSubject(option);
+                      clearFieldError('subject', option);
+                      setShowSubjects(false);
+                    }}
+                  >
+                    <Text style={styles.selectText}>{option}</Text>
+                  </Pressable>
+                ))}
             </ScrollView>
           </View>
         </Pressable>
       </Modal>
-      {notification ? <Toast message={notification.message} type={notification.type} onClose={closeToast} /> : null}
+      {notification ? (
+        <Toast message={notification.message} type={notification.type} onClose={closeToast} />
+      ) : null}
     </Screen>
   );
 }

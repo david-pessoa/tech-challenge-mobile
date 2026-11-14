@@ -31,7 +31,6 @@ import {
   ParagraphMarginBottom,
   Title,
 } from './styles';
-import { getAllPosts } from '@/services/post.service';
 
 type PaginatedPostsTableProps = {
   title: string;

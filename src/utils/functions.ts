@@ -14,13 +14,12 @@ export function buildApiImageUrl(image: string | null, cacheKey?: string | numbe
     return `${image}${cacheParam}`;
   }
 
-
   return `${BASE_URL}${image}${cacheParam}`;
 }
 
 export function formatarData(data: string | Date | undefined) {
-  if(!data) {
-    return '--'
+  if (!data) {
+    return '--';
   }
 
   const dataConvertida = new Date(data);
@@ -30,4 +29,4 @@ export function formatarData(data: string | Date | undefined) {
   }
 
   return new Intl.DateTimeFormat('pt-BR').format(dataConvertida);
-};
+}

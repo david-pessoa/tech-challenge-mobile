@@ -1,8 +1,8 @@
+import * as SecureStore from 'expo-secure-store';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { login as loginRequest } from '../services/auth.service';
 import { getMe } from '../services/user.service';
 import type { User } from '../types/User';
-import * as SecureStore from 'expo-secure-store';
 
 type UserContextType = {
   user: User | undefined;

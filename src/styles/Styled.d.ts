@@ -1,13 +1,13 @@
-import "styled-components";
-import "styled-components/native";
-import type { theme } from "./Theme";
+import 'styled-components';
+import 'styled-components/native';
+import type { theme } from './Theme';
 
 type AppTheme = typeof theme;
 
-declare module "styled-components" {
+declare module 'styled-components' {
   export interface DefaultTheme extends AppTheme {}
 }
 
-declare module "styled-components/native" {
+declare module 'styled-components/native' {
   export interface DefaultTheme extends AppTheme {}
 }

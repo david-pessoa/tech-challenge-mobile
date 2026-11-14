@@ -52,8 +52,7 @@ export default function Header() {
   }
 
   function handleLogoButtonPress() {
-    if (pathname !== '/home')
-      router.replace('/home');
+    if (pathname !== '/home') router.replace('/home');
   }
 
   return (
@@ -66,9 +65,7 @@ export default function Header() {
           </LogoButton>
           <LogoutContainer $screenWidth={width}>
             <Circle
-              source={
-                user.image ? { uri: buildApiImageUrl(user.image, userImageCacheKey) } : userImage
-              }
+              source={user.image ? { uri: buildApiImageUrl(user.image, Date.now()) } : userImage}
               $role={user.role}
               $screenWidth={width}
             />
