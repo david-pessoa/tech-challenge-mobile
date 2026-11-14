@@ -18,6 +18,7 @@ type PostsTableProps = {
 export default function PostsTable({ dados, type }: PostsTableProps) {
   const { width } = useWindowDimensions();
   const { user } = useUser();
+  const [postList, setPostList] = useState<Post[]>(dados);
   const [pendingDelete, setPendingDelete] = useState<Post>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [notification, setNotification] = useState<{
@@ -41,6 +42,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
     setIsDeleting(true);
     try {
       await deletePost(selectedPost.postId);
+      setPostList(prev => prev.filter(post => post.postId !== selectedPost.postId));
       setPendingDelete(undefined);
       setNotification({ message: 'Post excluído com sucesso!', type: 'success' });
     } catch (error) {
@@ -87,7 +89,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
           </View>
         )}
       </View>
-      {dados.length === 0 ? (
+      {postList.length === 0 ? (
         <View style={styles.status}>
           <Text style={styles.statusText}>
             {user?.role === 'ALUNO'
@@ -100,7 +102,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
           </Text>
         </View>
       ) : (
-        dados.map(post => (
+        postList.map(post => (
           <View key={post.postId} style={styles.row}>
             <View style={[styles.column, styles.photoColumn]}>
               <MateriaIcon subject={post?.subject?.nome ?? 'Geral'} />
