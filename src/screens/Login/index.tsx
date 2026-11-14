@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { VisibilityW600 } from '@material-symbols-svg/react-native/icons/visibility';
+import { VisibilityOffW600 } from '@material-symbols-svg/react-native/icons/visibility-off';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
+import { Animated, Keyboard, Platform, useWindowDimensions } from 'react-native';
+import Logo from '../../../assets/public/Logo.png';
 import { useUser } from '../../context/AuthContext';
 import {
   Card,
@@ -11,20 +15,17 @@ import {
   Label,
   LoginButton,
   LoginButtonText,
-  LogoBadge,
-  LogoText,
+  LogoImage,
   Title,
-  ToggleText,
+  ToastCloseText,
+  ToastContainer,
+  ToastContent,
+  ToastMessage,
+  ToastTitle,
+  ToggleVisibilityButton,
+  VisibilityIconStyle,
 } from './styles';
 
-/**
- * Tela de login.
- *
- * Fluxo: o usuário digita matrícula e senha -> signIn() (AuthContext) chama
- * a API, salva o token e carrega o usuário. Quando `user` passa a existir,
- * o <Stack.Protected> de app/routes.tsx redireciona sozinho para a Home,
- * então não precisamos navegar manualmente aqui.
- */
 export default function Login() {
   const { signIn } = useUser();
 
@@ -33,22 +34,82 @@ export default function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const { width, height } = useWindowDimensions();
+
+  const senhaInputRef = useRef<ComponentRef<typeof Input>>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const keyboardAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const deslocamentoSutil = height < 720 ? -80 : height < 850 ? -55 : -35;
+
+    const showSubscription = Keyboard.addListener(showEvent, () => {
+      Animated.timing(keyboardAnim, {
+        toValue: deslocamentoSutil,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      Animated.timing(keyboardAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [height, keyboardAnim]);
+
+  function exibirToast(mensagem: string) {
+    setErro(mensagem);
+    toastAnim.setValue(0);
+
+    Animated.spring(toastAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
+  }
+
+  function fecharToast() {
+    Animated.timing(toastAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setErro(null));
+  }
+
+  useEffect(() => {
+    if (!erro) return;
+    const timer = setTimeout(() => {
+      fecharToast();
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [erro]);
 
   async function handleSubmit() {
-    // Evita clique duplo e envio de campos vazios
     if (carregando) return;
     if (!matricula.trim() || !senha) {
-      setErro('Informe matrícula e senha.');
+      exibirToast('Informe matrícula e senha.');
       return;
     }
 
+    Keyboard.dismiss();
     setErro(null);
     setCarregando(true);
     try {
       await signIn(matricula.trim(), senha);
     } catch (error) {
-      // signIn lança Error com a mensagem já tratada (ex: "Matrícula ou senha inválidas")
-      setErro(error instanceof Error ? error.message : 'Erro inesperado. Tente novamente.');
+      exibirToast(error instanceof Error ? error.message : 'Erro inesperado. Tente novamente.');
     } finally {
       setCarregando(false);
     }
@@ -56,16 +117,36 @@ export default function Login() {
 
   return (
     <Container>
-      <Card>
-        <LogoBadge>
-          <LogoText>Fy</LogoText>
-        </LogoBadge>
+      {erro && (
+        <ToastContainer
+          style={{
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          <ToastContent>
+            <ToastTitle>Atenção</ToastTitle>
+            <ToastMessage>{erro}</ToastMessage>
+          </ToastContent>
+          <ToastCloseText onPress={fecharToast}>Fechar</ToastCloseText>
+        </ToastContainer>
+      )}
+
+      <Card style={{ transform: [{ translateY: keyboardAnim }] }}>
+        <LogoImage source={Logo} alt="Edify Logo" $screenWidth={width} />
 
         <Greeting>Bem vindo(a) ao</Greeting>
         <Title>Edify</Title>
 
         <FieldGroup>
-          <Label>Matrícula</Label>
+          <Label>Matrícula*</Label>
           <InputBox>
             <Input
               placeholder="Sua matrícula..."
@@ -74,14 +155,16 @@ export default function Login() {
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
+              onSubmitEditing={() => senhaInputRef.current?.focus()}
             />
           </InputBox>
         </FieldGroup>
 
         <FieldGroup>
-          <Label>Senha</Label>
+          <Label>Senha*</Label>
           <InputBox>
             <Input
+              ref={senhaInputRef}
               placeholder="Sua senha..."
               value={senha}
               onChangeText={setSenha}
@@ -91,12 +174,19 @@ export default function Login() {
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
             />
-            <ToggleText
+            <ToggleVisibilityButton
               accessibilityRole="button"
               onPress={() => setMostrarSenha(anterior => !anterior)}
             >
-              {mostrarSenha ? 'Ocultar' : 'Mostrar'}
-            </ToggleText>
+              {mostrarSenha ? (
+                <VisibilityOffW600
+                  color={VisibilityIconStyle.color}
+                  size={VisibilityIconStyle.size}
+                />
+              ) : (
+                <VisibilityW600 color={VisibilityIconStyle.color} size={VisibilityIconStyle.size} />
+              )}
+            </ToggleVisibilityButton>
           </InputBox>
         </FieldGroup>
 

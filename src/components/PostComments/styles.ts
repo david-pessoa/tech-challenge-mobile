@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
   cancelButton: {
     minHeight: 44,
     minWidth: 112,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF8F0',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 24,
@@ -54,6 +54,7 @@ export const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 14,
     color: theme.colors.primary,
+    backgroundColor: '#FAF8F0',
   },
   sendText: { fontFamily: theme.typography.fontFamily.regular, fontSize: 14, color: '#603C24' },
   disabled: { opacity: 0.55 },
