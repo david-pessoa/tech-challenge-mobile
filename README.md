@@ -116,6 +116,9 @@ npm run start
 
 Pressione **`w`** para abrir no navegador ou **`a`** para abrir no emulador Android configurado. Para utilizar o QR code no celular, use uma versão do Expo compatível com o projeto.
 
+### Arquivo `.pkg` disponível
+A versão do aplicativo para Android está disponível e pode ser obtida fazendo o download do arquivo `application-android.apk` num dispositivo android. [Clique aqui para obter o arquivo](https://github.com/david-pessoa/tech-challenge-mobile/application-android.apk)
+
 ### Back-end
 
 Para rodar a aplicação no modo desenvolvimento, rode apenas
@@ -130,11 +133,6 @@ docker compose up -d --build
 ```
 
 As instruções completas estão no [repositório do back-end](https://github.com/david-pessoa/tech-challenge-backend). A documentação dos endpoints fica em `http://localhost:3000/docs`.
-
-Para testar a aplicação de qualquer origem com back-end em modo desenvolvimento, digite no arquivo .env:
-```text
-IS_PRODUCTION='false'
-```
 
 ### Outros comandos
 
