@@ -27,7 +27,7 @@ import {
 } from './styles';
 
 export default function Login() {
-  const { signIn } = useUser();
+  const { signIn, sessionExpired, clearSessionExpired } = useUser();
 
   const [matricula, setMatricula] = useState('');
   const [senha, setSenha] = useState('');
@@ -95,6 +95,14 @@ export default function Login() {
 
     return () => clearTimeout(timer);
   }, [erro]);
+
+  // Sessão expirou: ao chegar no login, avisa o usuário (uma vez só).
+  // No logout manual o contexto não marca expiração, então nada aparece.
+  useEffect(() => {
+    if (!sessionExpired) return;
+    exibirToast('Sua sessão expirou. Faça login novamente.');
+    clearSessionExpired();
+  }, [sessionExpired]);
 
   async function handleSubmit() {
     if (carregando) return;
@@ -176,6 +184,8 @@ export default function Login() {
             />
             <ToggleVisibilityButton
               accessibilityRole="button"
+              accessibilityLabel={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+              hitSlop={8}
               onPress={() => setMostrarSenha(anterior => !anterior)}
             >
               {mostrarSenha ? (

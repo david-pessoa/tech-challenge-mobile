@@ -15,6 +15,38 @@ export function resetErrorNavigationLock() {
   isShowingError = false;
 }
 
+// ---------------------------------------------------------------------------
+// Sessão expirada (401) e logout
+//
+// Antes, qualquer 401 mandava o usuário para a tela de erro "/error".
+// Agora o 401 de uma sessão expirada chama um "handler" registrado pelo
+// AuthContext, que limpa o usuário e deixa as rotas protegidas redirecionarem
+// para o login (onde mostramos um aviso). Assim não existe tela de erro
+// para expiração nem para logout.
+// ---------------------------------------------------------------------------
+type UnauthorizedHandler = () => void;
+
+let unauthorizedHandler: UnauthorizedHandler | undefined;
+let isHandlingUnauthorized = false;
+let ignoreUnauthorized = false;
+
+// O AuthContext registra aqui o que fazer quando a sessão expira
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | undefined) {
+  unauthorizedHandler = handler;
+}
+
+// Chamado no logout: respostas 401 de requisições que ainda estavam
+// em andamento (ou de telas que ainda não desmontaram) são ignoradas
+export function ignoreUnauthorizedResponses() {
+  ignoreUnauthorized = true;
+}
+
+// Chamado no login: volta a tratar 401 normalmente
+export function resumeUnauthorizedHandling() {
+  ignoreUnauthorized = false;
+  isHandlingUnauthorized = false;
+}
+
 function isCleanBackendString(text: unknown): text is string {
   if (typeof text !== 'string') return false;
   const trimmed = text.trim();
@@ -65,17 +97,28 @@ api.interceptors.response.use(
       const isLoginRequest = requestUrl.includes('/auth/login');
       const isInitialMeUnauthorized = requestUrl.includes('/user/me') && status === 401;
 
+      // 401 fora do login = sessão expirada (ou token inválido).
+      // Só conta se a requisição foi enviada com token; sem token
+      // não havia sessão para expirar.
+      if (status === 401 && !isLoginRequest && !isInitialMeUnauthorized) {
+        const hadToken = Boolean(error.config?.headers?.Authorization);
+
+        if (hadToken && !ignoreUnauthorized && !isHandlingUnauthorized) {
+          isHandlingUnauthorized = true;
+          await SecureStore.deleteItemAsync('authToken');
+          unauthorizedHandler?.();
+        }
+
+        return Promise.reject(error);
+      }
+
       if (
         !isLoginRequest &&
         !isInitialMeUnauthorized &&
         !isShowingError &&
-        [401, 403, 404, 500].includes(status)
+        [403, 404, 500].includes(status)
       ) {
         isShowingError = true;
-
-        if (status === 401) {
-          await SecureStore.deleteItemAsync('authToken');
-        }
 
         const message = extractBackendMessage(error);
 

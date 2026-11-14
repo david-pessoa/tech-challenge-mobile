@@ -63,8 +63,11 @@ export const Input = styled.TextInput.attrs(({ theme }) => ({
   color: ${({ theme }) => theme.colors.text};
 `;
 
+// Área de toque maior e ícone centralizado verticalmente no campo
 export const ToggleVisibilityButton = styled.Pressable`
-  padding-left: 8px;
+  padding: 8px 0 8px 8px;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const ErrorMessage = styled.Text`
