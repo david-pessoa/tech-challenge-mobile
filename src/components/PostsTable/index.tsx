@@ -55,7 +55,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
   }
 
   return (
-    <View style={styles.section}>
+    <View style={type !== 'MY_POSTS' ? {} : styles.section}>
       <View style={styles.tableHeader}>
         <View style={[styles.column, styles.photoColumn]}>
           <Text style={styles.headerText}>Matérias</Text>

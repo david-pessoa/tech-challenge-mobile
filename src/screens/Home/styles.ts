@@ -52,9 +52,7 @@ export const FigureContainer = styled.View`
   min-width: 0;
 `;
 
-export const ProfileContainer = styled.View<ResponsiveProps>`
-  
-`;
+export const ProfileContainer = styled.View<ResponsiveProps>``;
 
 export const ProfileImageContainer = styled.View`
   align-items: center;
@@ -67,7 +65,7 @@ export const ProfileImageContainer = styled.View`
 
 export const DoodleImage = styled.Image<ResponsiveProps>`
   width: ${({ $screenWidth }) => ($screenWidth > 600 ? 84.28 : 45)}px;
-  height: ${({ $screenWidth }) => ($screenWidth > 600 ? 84.28 * 82/98 : 45 * 82/98)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 600 ? (84.28 * 82) / 98 : (45 * 82) / 98)}px;
   position: absolute;
   top: ${({ $screenWidth }) => ($screenWidth > 900 ? -15 : $screenWidth > 600 ? -35 : -20)}px;
   left: ${({ $screenWidth }) => ($screenWidth > 900 ? 67 : $screenWidth > 600 ? 85 : 45)}px;
@@ -76,7 +74,8 @@ export const DoodleImage = styled.Image<ResponsiveProps>`
 
 export const ProfileImage = styled.Image<ResponsiveProps>`
   position: relative;
-  border-radius: ${({ $screenWidth }) => ($screenWidth > 900 ? 70 : $screenWidth > 600 ? 61 : 45)}px;
+  border-radius: ${({ $screenWidth }) =>
+    $screenWidth > 900 ? 70 : $screenWidth > 600 ? 61 : 45}px;
   width: ${({ $screenWidth }) => ($screenWidth > 900 ? 140 : $screenWidth > 600 ? 162 : 90)}px;
   height: ${({ $screenWidth }) => ($screenWidth > 900 ? 140 : $screenWidth > 600 ? 162 : 90)}px;
   margin-top: ${({ $screenWidth }) => ($screenWidth > 900 ? 20 : 0)}px;
@@ -94,6 +93,4 @@ export const Figcaption = styled.View`
   gap: 5px;
 `;
 
-export const Figure = styled.View`
-  
-`;
+export const Figure = styled.View``;

@@ -211,7 +211,7 @@ export function createStyles(width: number) {
     },
     disabled: { opacity: 0.35 },
     pressedRow: {
-      backgroundColor: '#e2b82f6b'
-    }
+      backgroundColor: '#e2b82f6b',
+    },
   });
 }

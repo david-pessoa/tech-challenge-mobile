@@ -15,7 +15,7 @@ const shadowStyle = {
 export const FooterContainer = styled.View<ResponsiveProps>`
   background-color: #fff7de;
   width: 100%;
-  height: ${({ $screenWidth }) => ($screenWidth > 700 ? 330 : 304)}px;
+  height: ${({ $screenWidth }) => ($screenWidth > 700 ? 300 : 260)}px;
   border-top-left-radius: 45px;
   border-top-right-radius: 45px;
   justify-content: center;
@@ -25,14 +25,12 @@ export const FooterContainer = styled.View<ResponsiveProps>`
 
 export const Box = styled.View.attrs({ style: shadowStyle })<ResponsiveProps>`
   width: 90%;
-  height: ${({ $screenWidth }) =>
-    $screenWidth > 700 ? '245px' : '93.12%'};
   border-width: 2px;
   border-style: solid;
   border-color: #d3cbaf;
   border-radius: 25px;
   padding-top: ${({ $screenWidth }) => ($screenWidth > 700 ? 26 : 16)}px;
-  padding-bottom: ${({ $screenWidth }) => ($screenWidth > 700 ? 0 : 16)}px;
+  padding-bottom: 16px;
   padding-left: ${({ $screenWidth }) => ($screenWidth > 700 ? 39 : 11)}px;
   padding-right: ${({ $screenWidth }) => ($screenWidth > 700 ? 24 : 11)}px;
 `;
@@ -79,23 +77,4 @@ export const BottomContainer = styled.View<ResponsiveProps>`
   flex-direction: row;
   justify-content: space-between;
   gap: ${({ $screenWidth }) => ($screenWidth > 700 ? 0 : 27)}px;
-`;
-
-export const LinksContainer = styled.View<ResponsiveProps>`
-  width: 265px;
-  flex-direction: row;
-  gap: ${({ $screenWidth }) => ($screenWidth > 700 ? 51 : 10)}px;
-  margin-top: ${({ $screenWidth }) => ($screenWidth > 700 ? 17 : 14)}px;
-`;
-
-export const OtherLinksList = styled.View`
-  flex-direction: column;
-  gap: 10px;
-`;
-
-export const ListItem = styled.Text<ResponsiveProps>`
-  font-size: ${({ $screenWidth }) => ($screenWidth > 700 ? 13 : 10)}px;
-  font-family: ${({ theme }) => theme.typography.fontFamily.regular};
-  color: ${({ theme }) => theme.colors.text};
-  text-decoration-line: underline;
 `;

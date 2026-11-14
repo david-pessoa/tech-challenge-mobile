@@ -1,8 +1,7 @@
 import Carousel from '../Carousel';
 import PostsTable from '../PostsTable';
 
-// import 'swiper/css';
-
+import { getAllPosts } from '@/services/post.service';
 import { Add } from '@material-symbols-svg/react-native/icons/add';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -20,7 +19,6 @@ import {
   ParagraphMarginBottom,
   Title,
 } from './styles';
-import { getAllPosts } from '@/services/post.service';
 
 export default function PostsContainer() {
   const { user } = useUser();
@@ -29,21 +27,25 @@ export default function PostsContainer() {
   const { width } = useWindowDimensions();
   const router = useRouter();
 
-  useFocusEffect(useCallback(() => {
-    let active = true;
-    setIsLoading(true);
-    async function returnAllPosts() {
-      try {
-        const postsList = await getAllPosts();
-        if (active) setPosts(postsList);
-      } catch (error) {
-        if (active) setPosts([]);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setIsLoading(true);
+      async function returnAllPosts() {
+        try {
+          const postsList = await getAllPosts();
+          if (active) setPosts(postsList);
+        } catch (error) {
+          if (active) setPosts([]);
+        }
+        if (active) setIsLoading(false);
       }
-      if (active) setIsLoading(false);
-    }
-    returnAllPosts();
-    return () => { active = false; };
-  }, []));
+      returnAllPosts();
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
 
   function goToCreateNewPost() {
     router.replace({
@@ -77,7 +79,7 @@ export default function PostsContainer() {
           <ParagraphMarginBottom $screenWidth={width}>
             Você já finalizou estas atividades
           </ParagraphMarginBottom>
-          <PostsTable type='VIEWED' dados={isLoading ? [] : viewedPosts} />
+          <PostsTable type="VIEWED" dados={isLoading ? [] : viewedPosts} />
         </Container>
       </ContentContainer>
     );
@@ -101,7 +103,7 @@ export default function PostsContainer() {
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
           ) : (
-            <PostsTable type='MY_POSTS' dados={myPosts} />
+            <PostsTable type="MY_POSTS" dados={myPosts} />
           )}
         </Container>
         <Container $screenWidth={width}>
@@ -112,7 +114,7 @@ export default function PostsContainer() {
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
           ) : (
-            <PostsTable type='VIEWED' dados={otherPosts} />
+            <PostsTable type="VIEWED" dados={otherPosts} />
           )}
         </Container>
       </ContentContainer>
@@ -150,7 +152,7 @@ export default function PostsContainer() {
           <ParagraphMarginBottom $screenWidth={width}>
             Todas as aulas postadas
           </ParagraphMarginBottom>
-          <PostsTable type='ALL_POSTS' dados={isLoading ? [] : posts} />
+          <PostsTable type="ALL_POSTS" dados={isLoading ? [] : posts} />
         </Container>
       </ContentContainer>
     );
