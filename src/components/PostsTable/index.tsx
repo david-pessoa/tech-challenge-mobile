@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import MateriaIcon from './MateriaIcon';
 import { createStyles } from './styles';
+import { useDeletePost } from '@/context/PostDeleteContext';
 
 type PostsTableProps = {
   dados: Post[];
@@ -18,43 +19,11 @@ type PostsTableProps = {
 export default function PostsTable({ dados, type }: PostsTableProps) {
   const { width } = useWindowDimensions();
   const { user } = useUser();
-  const [postList, setPostList] = useState<Post[]>(dados);
-  const [pendingDelete, setPendingDelete] = useState<Post>();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  }>();
   const [pressedRow, setPressedRow] = useState('');
+  const { isDeleting, pendingDelete, requestDelete, confirmDelete } = useDeletePost();
 
   const iconSize = width >= 600 ? 20 : 14;
   const styles = createStyles(width);
-
-  function requestDelete(post: Post) {
-    if (user?.role === 'ALUNO' || isDeleting) return;
-    setNotification(undefined);
-    setPendingDelete(post);
-  }
-
-  async function confirmDelete() {
-    if (!pendingDelete || isDeleting) return;
-    const selectedPost = pendingDelete;
-    setIsDeleting(true);
-    try {
-      await deletePost(selectedPost.postId);
-      setPostList(prev => prev.filter(post => post.postId !== selectedPost.postId));
-      setPendingDelete(undefined);
-      setNotification({ message: 'Post excluído com sucesso!', type: 'success' });
-    } catch (error) {
-      setPendingDelete(undefined);
-      setNotification({
-        message: error instanceof Error ? error.message : 'Não foi possível excluir o post.',
-        type: 'error',
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  }
 
   return (
     <View style={type !== 'MY_POSTS' ? {} : styles.section}>
@@ -89,7 +58,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
           </View>
         )}
       </View>
-      {postList.length === 0 ? (
+      {dados?.length === 0 ? (
         <View style={styles.status}>
           <Text style={styles.statusText}>
             {user?.role === 'ALUNO'
@@ -102,7 +71,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
           </Text>
         </View>
       ) : (
-        postList.map(post => (
+        dados?.map(post => (
           <View key={post.postId} style={styles.row}>
             <View style={[styles.column, styles.photoColumn]}>
               <MateriaIcon subject={post?.subject?.nome ?? 'Geral'} />
@@ -189,7 +158,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
         transparent
         animationType="fade"
         onRequestClose={() => {
-          if (!isDeleting) setPendingDelete(undefined);
+          if (!isDeleting) requestDelete(undefined);
         }}
       >
         <View style={styles.optionsOverlay}>
@@ -209,7 +178,7 @@ export default function PostsTable({ dados, type }: PostsTableProps) {
                 accessibilityRole="button"
                 accessibilityLabel="Cancelar exclusão"
                 disabled={isDeleting}
-                onPress={() => setPendingDelete(undefined)}
+                onPress={() => requestDelete(undefined)}
               >
                 <Text style={styles.cancelDeleteText}>Cancelar</Text>
               </Pressable>

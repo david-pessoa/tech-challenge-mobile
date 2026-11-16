@@ -5,6 +5,7 @@ import SearchPostContainerInput from '@/components/SearchPostContainerInput';
 import Toast from '@/components/Toast';
 import UserListPreview from '@/components/UserListPreview';
 import { useUser } from '@/context/AuthContext';
+import { DeletePostProvider } from '@/context/PostDeleteContext';
 import { Screen, Scroll } from '@/styles/GlobalStyles';
 import { buildApiImageUrl, capitalize } from '@/utils/functions';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -82,7 +83,9 @@ export default function Home() {
               </TitleContainer>
               <SearchPostContainerInput />
             </TopContainer>
-            <PostsContainer />
+            <DeletePostProvider>
+              <PostsContainer />
+            </DeletePostProvider>
           </MainContentContainer>
           <UserListPreview />
         </Main>

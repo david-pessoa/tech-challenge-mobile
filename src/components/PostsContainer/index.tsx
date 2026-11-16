@@ -1,13 +1,12 @@
 import Carousel from '../Carousel';
 import PostsTable from '../PostsTable';
 
-import { getAllPosts } from '@/services/post.service';
 import { Add } from '@material-symbols-svg/react-native/icons/add';
 import { ChevronLeft } from '@material-symbols-svg/react-native/icons/chevron-left';
 import { ChevronRight } from '@material-symbols-svg/react-native/icons/chevron-right';
 import { KeyboardArrowDown } from '@material-symbols-svg/react-native/icons/keyboard-arrow-down';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Modal, useWindowDimensions } from 'react-native';
 import { useUser } from '../../context/AuthContext';
 import type { Post } from '../../types/Posts';
@@ -32,6 +31,7 @@ import {
   ParagraphMarginBottom,
   Title,
 } from './styles';
+import { useDeletePost } from '@/context/PostDeleteContext';
 
 type PaginatedPostsTableProps = {
   title: string;
@@ -155,30 +155,9 @@ function PaginatedPostsTable({
 
 export default function PostsContainer() {
   const { user } = useUser();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {postList, isLoading} = useDeletePost();
   const { width } = useWindowDimensions();
   const router = useRouter();
-
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      setIsLoading(true);
-      async function returnAllPosts() {
-        try {
-          const postsList = await getAllPosts();
-          if (active) setPosts(postsList);
-        } catch (error) {
-          if (active) setPosts([]);
-        }
-        if (active) setIsLoading(false);
-      }
-      returnAllPosts();
-      return () => {
-        active = false;
-      };
-    }, [])
-  );
 
   function goToCreateNewPost() {
     router.replace({
@@ -187,8 +166,8 @@ export default function PostsContainer() {
   }
 
   function renderAlunoContainer() {
-    const viewedPosts = posts.filter(p => p.foiVisto != false);
-    const newPosts = posts.filter(p => p.foiVisto != true);
+    const viewedPosts = postList?.filter(p => p.foiVisto != false);
+    const newPosts = postList?.filter(p => p.foiVisto != true);
 
     return (
       <ContentContainer>
@@ -199,12 +178,12 @@ export default function PostsContainer() {
           </ParagraphMarginBottom>
           {isLoading ? (
             <ParagraphMarginBottom $screenWidth={width}>Carregando aulas...</ParagraphMarginBottom>
-          ) : newPosts.length == 0 ? (
+          ) : newPosts?.length == 0 ? (
             <CenteredParagraph $screenWidth={width}>
               Você já visualizou todas as aulas!
             </CenteredParagraph>
           ) : (
-            <Carousel newPosts={newPosts} />
+            <Carousel newPosts={newPosts ?? []} />
           )}
         </Container>
         <Container $screenWidth={width}>
@@ -215,7 +194,7 @@ export default function PostsContainer() {
           <PaginatedPostsTable
             title="Aulas Finalizadas"
             type="VIEWED"
-            dados={viewedPosts}
+            dados={viewedPosts ?? []}
             isLoading={isLoading}
           />
         </Container>
@@ -224,8 +203,8 @@ export default function PostsContainer() {
   }
 
   function renderTeacherContainer() {
-    const myPosts = posts.filter(p => p.criadoPor?.userId === user?.id);
-    const otherPosts = posts.filter(p => p.criadoPor?.userId !== user?.id);
+    const myPosts = postList?.filter(p => p.criadoPor?.userId === user?.id);
+    const otherPosts = postList?.filter(p => p.criadoPor?.userId !== user?.id);
 
     return (
       <ContentContainer>
@@ -241,7 +220,7 @@ export default function PostsContainer() {
           <PaginatedPostsTable
             title="Suas aulas"
             type="MY_POSTS"
-            dados={myPosts}
+            dados={myPosts ?? []}
             isLoading={isLoading}
             showLoadingText
           />
@@ -254,7 +233,7 @@ export default function PostsContainer() {
           <PaginatedPostsTable
             title="Outras aulas"
             type="VIEWED"
-            dados={otherPosts}
+            dados={otherPosts ?? []}
             isLoading={isLoading}
             showLoadingText
           />
@@ -264,7 +243,7 @@ export default function PostsContainer() {
   }
 
   function renderAdminContainer() {
-    const newPosts = posts.filter(p => p.foiVisto != true);
+    const newPosts = postList?.filter(p => p.foiVisto != true);
 
     return (
       <ContentContainer>
@@ -281,12 +260,12 @@ export default function PostsContainer() {
           </AddClassContainer>
           {isLoading ? (
             <Paragraph $screenWidth={width}>Carregando aulas...</Paragraph>
-          ) : newPosts.length == 0 ? (
+          ) : newPosts?.length == 0 ? (
             <CenteredParagraph $screenWidth={width}>
               Você já visualizou todas as aulas!
             </CenteredParagraph>
           ) : (
-            <Carousel newPosts={newPosts} />
+            <Carousel newPosts={newPosts ?? []} />
           )}
         </Container>
         <Container $screenWidth={width}>
@@ -297,7 +276,7 @@ export default function PostsContainer() {
           <PaginatedPostsTable
             title="Acervo da Escola"
             type="ALL_POSTS"
-            dados={posts}
+            dados={postList ?? []}
             isLoading={isLoading}
           />
         </Container>
