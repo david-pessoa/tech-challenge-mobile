@@ -31,7 +31,7 @@ const roleBackgrounds = {
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, userImageCacheKey, refreshUser, signOut } = useUser();
+  const { user, signOut } = useUser();
   const { width } = useWindowDimensions();
 
   const roleName = {
@@ -42,8 +42,8 @@ export default function Header() {
 
   async function handleLogout() {
     try {
+      // signOut já apaga o token e zera o usuário; não precisa de refreshUser
       await signOut();
-      await refreshUser();
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
